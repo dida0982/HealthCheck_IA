@@ -1,0 +1,1367 @@
+Perfeito. Vamos transformar isso em um **roteiro de desenvolvimento**, para você sempre saber em que etapa está, o que já terminou e qual é o próximo passo.
+
+O projeto final será:
+
+> **Uma extensão do Chrome que analisa resultados de pesquisas de saúde no Google e mostra, embaixo de cada resultado, uma classificação de confiabilidade baseada em evidências e fontes confiáveis.**
+
+Vou dividir em **12 etapas**.
+
+| Etapa | Objetivo                     | Resultado esperado                                           |
+| ----- | ---------------------------- | ------------------------------------------------------------ |
+| 1     | Definir o MVP                | Saber exatamente o que o sistema fará e o que ficará de fora |
+| 2     | Criar extensão Chrome básica | Extensão instalada e funcionando                             |
+| 3     | Ler resultados do Google     | Capturar título, descrição e URL                             |
+| 4     | Inserir análise visual       | Mostrar um selo embaixo de cada resultado                    |
+| 5     | Criar backend                | API em Python/FastAPI funcionando                            |
+| 6     | Conectar extensão + backend  | Extensão envia resultados e recebe resposta                  |
+| 7     | Criar base de evidências     | Ter documentos confiáveis de saúde                           |
+| 8     | Criar busca semântica        | Encontrar evidências relacionadas à pesquisa                 |
+| 9     | Integrar IA                  | IA analisa alegação + evidências                             |
+| 10    | Criar classificação          | Definir resultado e nível de confiança                       |
+| 11    | Testar e avaliar             | Medir erros, acertos e limitações                            |
+| 12    | Preparar apresentação        | README, arquitetura, vídeo/demo e documentação               |
+
+## ETAPA 1 — Definir exatamente o MVP
+
+Antes de programar, vamos especificar o produto.
+
+O **MVP 1.0** deve fazer somente isto:
+
+1. usuário pesquisa alguma coisa no Google;
+2. extensão detecta os resultados;
+3. captura título, descrição e URL;
+4. analisa somente conteúdos relacionados à saúde;
+5. consulta nossa base de evidências;
+6. apresenta uma classificação;
+7. mostra as fontes/evidências utilizadas.
+
+Exemplo:
+
+> 🔴 **Contradita pelas evidências**
+> Confiança da análise: 87%
+> Encontramos evidências que contradizem essa afirmação.
+> Fontes: Ministério da Saúde, Fiocruz e PubMed.
+
+E vamos deixar **fora da versão inicial**:
+
+* vídeos;
+* imagens;
+* Instagram;
+* WhatsApp;
+* política;
+* notícias esportivas;
+* qualquer idioma além de português;
+* análise da internet inteira.
+
+Isso evita o maior risco do projeto: tentar fazer coisa demais.
+
+---
+
+# ETAPA 2 — Extensão Chrome básica
+
+Aqui **não existe IA ainda**.
+
+Você vai estudar:
+
+* HTML;
+* CSS;
+* JavaScript básico;
+* `manifest.json`;
+* Chrome Extensions;
+* Content Scripts;
+* DOM.
+
+Primeiro objetivo:
+
+Você pesquisa alguma coisa no Google e aparece:
+
+> 🔎 HealthCheck IA — aguardando análise
+
+embaixo de cada resultado.
+
+Quando isso funcionar, considero a Etapa 2 concluída.
+
+---
+
+# ETAPA 3 — Capturar os resultados do Google
+
+Agora a extensão precisa entender a página.
+
+Ela deverá capturar algo assim:
+
+```javascript
+{
+    titulo: "Vitamina C cura gripe?",
+    descricao: "Veja o que dizem os estudos...",
+    url: "https://exemplo.com/artigo"
+}
+```
+
+Você vai estudar:
+
+* DOM;
+* `querySelector()`;
+* `querySelectorAll()`;
+* arrays;
+* objetos JavaScript;
+* manipulação de elementos HTML.
+
+Meta:
+
+```text
+Resultado 1
+Título: ...
+URL: ...
+Descrição: ...
+
+Resultado 2
+Título: ...
+URL: ...
+Descrição: ...
+```
+
+aparecendo no console.
+
+---
+
+# ETAPA 4 — Criar o componente visual
+
+Agora vamos criar o visual que aparecerá no Google.
+
+Inicialmente será falso/simulado:
+
+```text
+🟢 Evidências favoráveis
+
+Confiança: 85%
+
+Ver análise
+```
+
+ou:
+
+```text
+🔴 Evidências contraditórias
+
+Confiança: 82%
+
+Ver evidências
+```
+
+Aqui entra:
+
+* CSS;
+* componentes;
+* badges;
+* botões;
+* expansão/recolhimento;
+* acessibilidade básica.
+
+Nesse momento a extensão já vai **parecer um produto real**, mesmo sem IA.
+
+---
+
+# ETAPA 5 — Backend Python
+
+Agora criamos o servidor responsável pela inteligência.
+
+Tecnologia:
+
+**Python + FastAPI**
+
+Você vai estudar:
+
+* API;
+* REST;
+* HTTP;
+* GET;
+* POST;
+* JSON;
+* request;
+* response;
+* FastAPI;
+* Pydantic;
+* CORS.
+
+Teremos algo como:
+
+```text
+POST /analisar
+```
+
+Entrada:
+
+```json
+{
+  "titulo": "Vitamina C cura gripe?",
+  "descricao": "..."
+}
+```
+
+Resposta inicialmente simulada:
+
+```json
+{
+  "classificacao": "enganosa",
+  "confianca": 0.82
+}
+```
+
+Essa etapa é importantíssima porque separa:
+
+```text
+EXTENSÃO
+```
+
+de:
+
+```text
+INTELIGÊNCIA DO SISTEMA
+```
+
+---
+
+# ETAPA 6 — Conectar Chrome com Python
+
+Aqui os dois projetos se encontram.
+
+Fluxo:
+
+```text
+Google
+ ↓
+Extensão
+ ↓
+JavaScript
+ ↓
+HTTP POST
+ ↓
+FastAPI
+ ↓
+JSON
+ ↓
+Extensão
+ ↓
+Google
+```
+
+Vamos utilizar JavaScript:
+
+```javascript
+fetch(...)
+```
+
+A extensão manda a notícia para nosso backend.
+
+E recebe:
+
+```json
+{
+    "classificacao": "contradita",
+    "confianca": 0.91
+}
+```
+
+Então muda automaticamente o selo.
+
+Quando isso acontecer, teremos uma arquitetura cliente-servidor funcionando.
+
+---
+
+# ETAPA 7 — Base de conhecimento em saúde
+
+Aqui começa a parte científica.
+
+Precisaremos construir uma base confiável.
+
+Seu próprio projeto menciona referências como:
+
+* Ministério da Saúde;
+* Anvisa;
+* Fiocruz;
+* SUS;
+* BVS;
+* PubMed;
+* universidades;
+* sociedades médicas. 
+
+Inicialmente eu não tentaria conectar tudo automaticamente.
+
+Pegamos um conjunto pequeno de documentos confiáveis.
+
+Algo como:
+
+```text
+data/
+
+vacinas/
+diabetes/
+hipertensao/
+cancer/
+dengue/
+medicamentos/
+```
+
+E colocamos documentos dentro.
+
+---
+
+# ETAPA 8 — Embeddings + busca semântica
+
+Essa é uma etapa fundamental.
+
+Imagine que sua base possui:
+
+> “Não existem evidências científicas de que vitamina C cure infecções por influenza.”
+
+E o usuário pesquisa:
+
+> “Tomar vitamina C acaba com a gripe?”
+
+As frases não são iguais.
+
+Mas semanticamente estão relacionadas.
+
+Para encontrar isso vamos estudar:
+
+* NLP;
+* embeddings;
+* vetores;
+* similaridade de cosseno;
+* Sentence Transformers;
+* chunking;
+* busca vetorial.
+
+A arquitetura será:
+
+```text
+Pesquisa
+   ↓
+Embedding
+   ↓
+Busca vetorial
+   ↓
+Documentos semelhantes
+```
+
+---
+
+# ETAPA 9 — Construir o RAG
+
+Depois juntamos:
+
+**Retrieval + IA.**
+
+O fluxo será:
+
+```text
+Alegação
+ ↓
+Busca semântica
+ ↓
+Encontrar 3-5 evidências
+ ↓
+LLM
+ ↓
+Análise
+```
+
+A IA receberá algo parecido com:
+
+```text
+ALEGAÇÃO:
+
+"Vitamina C cura gripe."
+
+EVIDÊNCIA 1:
+...
+
+EVIDÊNCIA 2:
+...
+
+EVIDÊNCIA 3:
+...
+
+Utilizando SOMENTE essas evidências,
+avalie a alegação.
+```
+
+Isso reduz bastante o risco de a IA inventar informações.
+
+---
+
+# ETAPA 10 — Integrar o LLM
+
+Para tentar manter tudo gratuito, podemos experimentar:
+
+**Ollama + modelo open-source.**
+
+A IA não precisa saber tudo.
+
+Ela receberá as evidências fornecidas pelo RAG.
+
+Estudaremos:
+
+* LLM;
+* contexto;
+* prompt;
+* system prompt;
+* temperatura;
+* hallucination;
+* structured output;
+* JSON Schema.
+
+Queremos obrigar a IA a retornar algo assim:
+
+```json
+{
+    "classificacao": "contradita",
+    "confianca": 0.91,
+    "explicacao": "As evidências encontradas...",
+    "fontes": [
+        "Fiocruz",
+        "Ministério da Saúde"
+    ]
+}
+```
+
+---
+
+# ETAPA 11 — Sistema de classificação
+
+Vamos padronizar as possíveis respostas.
+
+Eu sugiro usar as categorias já previstas pelo projeto:
+
+```text
+🟢 SUSTENTADA
+
+🟡 PARCIALMENTE SUSTENTADA
+
+🟠 ENGANOSA
+
+🔴 CONTRADITA PELAS EVIDÊNCIAS
+
+⚪ NÃO FOI POSSÍVEL VERIFICAR
+```
+
+Essas categorias estão presentes no planejamento original. 
+
+Isso é melhor que:
+
+> 25% verdadeira
+
+porque uma porcentagem dessas pode parecer cientificamente precisa sem realmente ser.
+
+Podemos ter:
+
+> **Classificação:** contradita pelas evidências
+> **Confiança do sistema:** 86%
+
+---
+
+# ETAPA 12 — Avaliação científica
+
+Aqui você transforma um programa interessante em um **projeto acadêmico sério**.
+
+Criaremos um dataset de teste.
+
+Por exemplo:
+
+```text
+200 alegações
+```
+
+Cada uma já terá um resultado correto conhecido.
+
+Depois:
+
+```text
+Sistema analisa
+       ↓
+comparamos
+       ↓
+resultado esperado
+       X
+resultado produzido
+```
+
+Vamos calcular:
+
+* accuracy;
+* precision;
+* recall;
+* F1-score;
+* matriz de confusão.
+
+Também podemos utilizar **MLflow** para registrar os experimentos.
+
+Você vai conseguir dizer na apresentação:
+
+> “Nosso modelo foi avaliado em 200 alegações verificadas e atingiu F1-score de X.”
+
+Isso é muito mais forte do que apenas:
+
+> “Olha, nossa IA funciona.”
+
+---
+
+# ETAPA 13 — Pensamento crítico
+
+Essa parte precisa existir no produto.
+
+Seu documento deixa claro que uma das questões centrais é evitar que a IA substitua a capacidade de julgamento da pessoa. 
+
+Então não mostraremos apenas:
+
+> ❌ FAKE
+
+Mostraremos:
+
+> 🔴 **Evidências contraditórias**
+>
+> Encontramos três fontes que apresentam evidências diferentes da afirmação.
+>
+> **Veja por quê**
+>
+> [...]
+>
+> **Consulte as fontes**
+>
+> [...]
+>
+> Antes de compartilhar, compare as evidências apresentadas.
+
+A IA vira uma ferramenta de **apoio ao raciocínio**, não uma autoridade absoluta.
+
+---
+
+# ETAPA 14 — Segurança e limitações
+
+Precisaremos estabelecer regras.
+
+Por exemplo:
+
+Se a evidência for insuficiente:
+
+> ⚪ **Não foi possível verificar**
+
+Nunca deixar a IA inventar uma resposta.
+
+Também precisamos documentar:
+
+* limitações;
+* possíveis vieses;
+* atualização da base;
+* falsos positivos;
+* falsos negativos;
+* uso responsável.
+
+O próprio planejamento prevê uma política de **abstenção da IA quando as evidências forem insuficientes ou contraditórias**. 
+
+---
+
+# ETAPA 15 — GitHub e documentação
+
+Depois vamos profissionalizar.
+
+Estrutura aproximada:
+
+```text
+healthcheck-ai/
+
+extension/
+backend/
+ai/
+data/
+tests/
+docs/
+README.md
+requirements.txt
+.gitignore
+```
+
+E vamos trabalhar com commits organizados:
+
+```text
+feat: create chrome extension structure
+
+feat: capture google search results
+
+feat: create analysis api
+
+feat: integrate extension with api
+
+feat: implement semantic retrieval
+
+feat: integrate local llm
+
+test: add classification evaluation
+```
+
+---
+
+# ETAPA 16 — Apresentação
+
+No final teremos uma demonstração extremamente simples.
+
+Você abre o Chrome.
+
+Pesquisa:
+
+```text
+vacina da gripe causa gripe
+```
+
+Google mostra os resultados.
+
+Alguns segundos depois:
+
+```text
+🔴 Evidências contraditórias
+Confiança: 91%
+
+3 evidências encontradas
+
+[Ver evidências]
+```
+
+Clica.
+
+Aparecem as fontes.
+
+Depois você explica:
+
+```text
+Chrome Extension
+       ↓
+FastAPI
+       ↓
+RAG
+       ↓
+Base científica
+       ↓
+LLM
+       ↓
+Resposta explicável
+```
+
+E fecha apresentando as métricas dos testes.
+
+---
+
+## Nosso mapa oficial
+
+Para você não se perder, vamos usar este acompanhamento:
+
+```text
+PROJETO — HEALTHCHECK IA
+
+[ ] 01 — Definir MVP
+[ ] 02 — Criar extensão Chrome
+[ ] 03 — Capturar resultados Google
+[ ] 04 — Criar interface dos selos
+[ ] 05 — Criar FastAPI
+[ ] 06 — Conectar extensão + API
+[ ] 07 — Criar base de saúde
+[ ] 08 — Implementar embeddings
+[ ] 09 — Implementar busca vetorial
+[ ] 10 — Implementar RAG
+[ ] 11 — Integrar LLM local
+[ ] 12 — Criar classificação
+[ ] 13 — Mostrar evidências/fontes
+[ ] 14 — Implementar pensamento crítico
+[ ] 15 — Criar testes
+[ ] 16 — Avaliar métricas
+[ ] 17 — Integrar MLflow
+[ ] 18 — Documentar limitações
+[ ] 19 — Organizar GitHub
+[ ] 20 — Preparar demonstração
+[ ] 21 — Preparar apresentação
+```
+
+E tem uma regra que quero que a gente siga durante todo o desenvolvimento:
+
+> **Não avançamos para a próxima camada até a anterior estar funcionando.**
+
+Então nosso **primeiro objetivo real é muito pequeno**:
+
+**criar uma extensão Chrome local que consiga alterar a página de resultados do Google e escrever “HealthCheck IA — aguardando análise” embaixo dos resultados.**
+
+A partir daí, construímos tudo em cima dela.
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Perfeito. Vamos considerar a **ETAPA 1 oficialmente iniciada** e transformar isso em uma especificação simples do produto, para a gente não se perder depois.
+
+### MVP 1.0 — HealthCheck IA
+
+**Objetivo:** criar uma extensão para Google Chrome que analise resultados de pesquisas relacionadas à saúde e apresente ao usuário uma avaliação baseada em evidências confiáveis.
+
+**Fluxo principal:**
+
+```text
+Usuário pesquisa no Google
+        ↓
+Extensão identifica os resultados
+        ↓
+Captura título + descrição + URL
+        ↓
+Verifica se o assunto é relacionado à saúde
+        ↓
+Busca evidências confiáveis
+        ↓
+IA compara a alegação com as evidências
+        ↓
+Classifica o conteúdo
+        ↓
+Mostra resultado + explicação + fontes
+```
+
+A classificação inicial pode seguir este padrão:
+
+```text
+🟢 Sustentada pelas evidências
+
+🟡 Parcialmente sustentada
+
+🟠 Enganosa
+
+🔴 Contradita pelas evidências
+
+⚪ Não foi possível verificar
+```
+
+E podemos ter separadamente:
+
+```text
+Confiança da análise: 87%
+```
+
+Esse número significa **confiança do sistema na classificação**, e não “87% de chance de a notícia ser verdadeira”.
+
+### O que entra no MVP
+
+O sistema vai trabalhar apenas com **texto em português relacionado à saúde**, inicialmente a partir dos resultados de pesquisas do Google. Ele analisará título, descrição e URL e utilizará uma base de evidências selecionada por nós.
+
+As fontes poderão incluir, por exemplo, Ministério da Saúde, Anvisa, Fiocruz, BVS, PubMed e outras instituições que definirmos durante a construção da base.
+
+### O que não entra agora
+
+Para evitar aumentar demais o projeto, a primeira versão não terá análise de imagens, vídeos, áudio, Instagram, WhatsApp, política, esportes, outros idiomas ou análise automática de qualquer conteúdo da internet.
+
+Também não vamos tentar construir uma IA própria do zero.
+
+### Um exemplo real
+
+Usuário pesquisa:
+
+```text
+chá de boldo cura diabetes
+```
+
+O Google apresenta:
+
+```text
+Chá de boldo pode acabar com diabetes...
+site-exemplo.com
+```
+
+Nossa extensão poderia inserir logo abaixo:
+
+```text
+🔴 Contradita pelas evidências
+
+Confiança da análise: 91%
+
+As evidências encontradas não sustentam
+a alegação de que o chá de boldo seja capaz
+de curar diabetes.
+
+3 evidências encontradas.
+
+[Ver evidências]
+```
+
+Ao clicar em **Ver evidências**, poderiam aparecer as fontes utilizadas.
+
+### Critérios para considerarmos o MVP concluído
+
+A versão 1.0 estará pronta quando conseguirmos fazer uma demonstração completa:
+
+```text
+Pesquisa Google
+      ↓
+Resultado aparece
+      ↓
+Extensão captura
+      ↓
+Backend recebe
+      ↓
+Base encontra evidências
+      ↓
+IA analisa
+      ↓
+Extensão apresenta classificação
+      ↓
+Usuário consegue consultar as evidências
+```
+
+Não precisa ser perfeito, não precisa funcionar para toda doença e nem para toda notícia da internet. Precisa demonstrar que **a arquitetura e a ideia funcionam**.
+
+Então nosso controle fica:
+
+```text
+PROJETO — HEALTHCHECK IA
+
+[X] 01 — Definir MVP
+[ ] 02 — Criar extensão Chrome
+[ ] 03 — Capturar resultados Google
+[ ] 04 — Criar interface dos selos
+[ ] 05 — Criar FastAPI
+[ ] 06 — Conectar extensão + API
+[ ] 07 — Criar base de saúde
+[ ] 08 — Implementar embeddings
+[ ] 09 — Implementar busca semântica
+[ ] 10 — Implementar RAG
+[ ] 11 — Integrar LLM
+[ ] 12 — Criar classificação
+[ ] 13 — Mostrar evidências
+[ ] 14 — Criar testes
+[ ] 15 — Avaliar o sistema
+[ ] 16 — MLflow
+[ ] 17 — Documentação/GitHub
+[ ] 18 — Apresentação
+```
+
+**ETAPA 1 concluída. ✅**
+
+Agora podemos entrar na **ETAPA 2 — criar a primeira extensão Chrome do zero**. Nessa etapa ainda não vamos usar IA: o primeiro objetivo será simplesmente fazer o Chrome mostrar **“HealthCheck IA — aguardando análise”** embaixo dos resultados do Google.
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Certo. Então agora entramos oficialmente na **ETAPA 2**.
+
+O objetivo aqui é bem simples: criar uma extensão local do Chrome que rode na página do Google e escreva, abaixo dos resultados:
+
+> 🔎 HealthCheck IA — aguardando análise
+
+Nesta etapa, **não entra IA, FastAPI, Python, banco de dados nem RAG**. Vamos provar apenas que a extensão consegue entrar na página do Google e modificar visualmente os resultados.
+
+Você vai precisar criar uma pasta assim:
+
+```text
+healthcheck-extension/
+│
+├── manifest.json
+├── content.js
+└── styles.css
+```
+
+O `manifest.json` define a extensão e quais páginas ela pode acessar:
+
+```json
+{
+  "manifest_version": 3,
+  "name": "HealthCheck IA",
+  "version": "1.0",
+  "description": "Extensão para auxiliar na verificação de informações de saúde.",
+  "permissions": [],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.google.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "styles.css"
+      ]
+    }
+  ]
+}
+```
+
+No `content.js`, vamos procurar os resultados do Google e inserir nosso aviso:
+
+```javascript
+function adicionarHealthCheck() {
+  const resultados = document.querySelectorAll("div.MjjYud");
+
+  resultados.forEach((resultado) => {
+    if (resultado.querySelector(".healthcheck-box")) {
+      return;
+    }
+
+    const titulo = resultado.querySelector("h3");
+
+    if (!titulo) {
+      return;
+    }
+
+    const caixa = document.createElement("div");
+
+    caixa.className = "healthcheck-box";
+    caixa.innerHTML = `
+      <strong>🔎 HealthCheck IA</strong>
+      <span>Aguardando análise</span>
+    `;
+
+    resultado.appendChild(caixa);
+  });
+}
+
+adicionarHealthCheck();
+
+const observer = new MutationObserver(() => {
+  adicionarHealthCheck();
+});
+
+observer.observe(document.body, {
+  childList: true,
+  subtree: true
+});
+```
+
+E no `styles.css`:
+
+```css
+.healthcheck-box {
+    margin-top: 8px;
+    padding: 10px 14px;
+
+    border: 1px solid #bcd7f5;
+    border-radius: 8px;
+
+    background-color: #f4f9ff;
+
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    color: #1f4e79;
+}
+
+.healthcheck-box strong {
+    font-weight: bold;
+}
+
+.healthcheck-box span {
+    color: #666;
+}
+```
+
+Depois de criar esses três arquivos, abra no Chrome:
+
+```text
+chrome://extensions
+```
+
+Ative:
+
+```text
+Modo do desenvolvedor
+```
+
+Clique em:
+
+```text
+Carregar sem compactação
+```
+
+E selecione a pasta:
+
+```text
+healthcheck-extension
+```
+
+Depois abra o Google e pesquise, por exemplo:
+
+```text
+vitamina C cura gripe
+```
+
+Se tudo funcionar, abaixo dos resultados deverá aparecer:
+
+```text
+🔎 HealthCheck IA   Aguardando análise
+```
+
+Se aparecer, podemos marcar:
+
+```text
+[X] ETAPA 2 — Extensão Chrome básica
+```
+
+O que você precisa entender nesta etapa é principalmente: **`manifest.json` diz ao Chrome quando executar a extensão; `content.js` entra na página e manipula o DOM; `styles.css` controla o visual; `MutationObserver` observa mudanças porque o Google pode adicionar resultados dinamicamente.**
+
+Quando você criar esses três arquivos e testar, pode me mandar **print da tela ou qualquer erro que aparecer**. Aí eu vou corrigindo com você até a extensão funcionar.
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Perfeito. Agora vamos fazer a **ETAPA 3** de forma bem controlada.
+
+O objetivo é fazer o `content.js` capturar, para cada resultado do Google:
+
+```text
+Título
+URL
+Descrição
+```
+
+e mostrar tudo no console.
+
+Substitua o conteúdo atual do seu `content.js` por este:
+
+```javascript
+function capturarResultados() {
+  const resultados = document.querySelectorAll("div.MjjYud");
+
+  const dados = [];
+
+  resultados.forEach((resultado, index) => {
+    const tituloElemento = resultado.querySelector("h3");
+    const linkElemento = tituloElemento?.closest("a");
+
+    // Alguns resultados podem não ter descrição
+    const descricaoElemento =
+      resultado.querySelector(".VwiC3b") ||
+      resultado.querySelector("[data-sncf]");
+
+    if (!tituloElemento || !linkElemento) {
+      return;
+    }
+
+    const item = {
+      titulo: tituloElemento.innerText.trim(),
+      url: linkElemento.href,
+      descricao: descricaoElemento
+        ? descricaoElemento.innerText.trim()
+        : "Descrição não encontrada"
+    };
+
+    dados.push(item);
+
+    console.log(`Resultado ${dados.length}`);
+    console.log("Título:", item.titulo);
+    console.log("URL:", item.url);
+    console.log("Descrição:", item.descricao);
+    console.log("-----------------------------");
+  });
+
+  console.log("Todos os resultados capturados:");
+  console.log(dados);
+
+  return dados;
+}
+
+capturarResultados();
+```
+
+Agora salve o arquivo.
+
+Depois vá em:
+
+```text
+chrome://extensions
+```
+
+Encontre o **HealthCheck IA** e clique no botão de:
+
+```text
+↻ Recarregar
+```
+
+Depois volte ao Google e faça uma pesquisa, por exemplo:
+
+```text
+vitamina C cura gripe
+```
+
+Agora abra o console:
+
+```text
+F12
+```
+
+e vá na aba:
+
+```text
+Console
+```
+
+Você deve ver algo parecido com:
+
+```text
+Resultado 1
+
+Título: Vitamina C ajuda no tratamento da gripe?
+
+URL: https://exemplo.com/artigo
+
+Descrição: Saiba o que estudos científicos dizem...
+
+-----------------------------
+
+Resultado 2
+
+Título: Vitamina C previne resfriados?
+
+URL: https://outrosite.com/artigo
+
+Descrição: Pesquisas analisam os efeitos...
+
+-----------------------------
+```
+
+E no final:
+
+```javascript
+[
+  {
+    titulo: "...",
+    url: "...",
+    descricao: "..."
+  },
+  {
+    titulo: "...",
+    url: "...",
+    descricao: "..."
+  }
+]
+```
+
+O ponto mais importante dessa etapa é você entender o que cada linha faz.
+
+`document.querySelectorAll("div.MjjYud")` procura **vários elementos** da página do Google que representam resultados.
+
+`resultado.querySelector("h3")` procura o título dentro daquele resultado.
+
+`tituloElemento?.closest("a")` sobe na estrutura HTML até encontrar o link `<a>` associado ao título.
+
+Então conseguimos:
+
+```javascript
+tituloElemento.innerText
+```
+
+para pegar o texto do título.
+
+E:
+
+```javascript
+linkElemento.href
+```
+
+para pegar a URL.
+
+Já a descrição é procurada aqui:
+
+```javascript
+resultado.querySelector(".VwiC3b")
+```
+
+Esse nome vem da estrutura atual do Google e pode mudar no futuro. Isso é normal em scraping/manipulação de DOM de páginas que não controlamos.
+
+Depois criamos um **objeto JavaScript**:
+
+```javascript
+const item = {
+  titulo: "...",
+  url: "...",
+  descricao: "..."
+};
+```
+
+E colocamos esse objeto dentro de um array:
+
+```javascript
+dados.push(item);
+```
+
+Então conceitualmente temos:
+
+```text
+Google
+   ↓
+querySelectorAll()
+   ↓
+resultado individual
+   ↓
+querySelector()
+   ↓
+título
+URL
+descrição
+   ↓
+objeto JavaScript
+   ↓
+array
+```
+
+### Um detalhe importante
+
+Nesta etapa, **não coloque ainda IA nem classificação**.
+
+A única pergunta que queremos responder agora é:
+
+> "Minha extensão consegue transformar os resultados visuais do Google em dados estruturados?"
+
+Se a resposta for sim, a Etapa 3 está praticamente concluída.
+
+Quando testar, me mande o que apareceu no Console. Se algum campo vier vazio, URL errada ou descrição como `"Descrição não encontrada"`, eu ajusto o seletor com você.
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Sim! 🎉 **A ETAPA 3 funcionou.** O resultado do seu console mostra exatamente o que queríamos obter.
+
+Você conseguiu capturar **10 resultados do Google** e transformar cada um em um objeto JavaScript com:
+
+```javascript
+{
+    titulo: "...",
+    url: "...",
+    descricao: "..."
+}
+```
+
+Por exemplo, seu Resultado 1 foi capturado corretamente:
+
+```text
+Resultado 1
+
+Título:
+Vitamina C previne gripe e resfriados?
+
+URL:
+https://drauziovarella.uol.com.br/...
+
+Descrição:
+A vitamina C não reduz de forma significativa...
+```
+
+E, mais importante ainda, no final você tem:
+
+```text
+Todos os resultados capturados:
+
+Array(10)
+```
+
+Ou seja, conceitualmente sua extensão já fez:
+
+```text
+Página do Google
+      ↓
+Encontra os resultados no DOM
+      ↓
+querySelectorAll()
+      ↓
+Percorre cada resultado
+      ↓
+Extrai:
+Título
+URL
+Descrição
+      ↓
+Cria objetos JavaScript
+      ↓
+dados.push(item)
+      ↓
+Array com 10 objetos
+```
+
+### Um pequeno detalhe que NÃO é erro
+
+No Resultado 2 apareceu:
+
+```text
+Descrição: Descrição não encontrada
+```
+
+Isso é esperado. O Google não necessariamente usa exatamente a mesma estrutura HTML para todos os tipos de resultados.
+
+E nosso código já foi preparado para lidar com isso:
+
+```javascript
+descricao: descricaoElemento
+    ? descricaoElemento.innerText.trim()
+    : "Descrição não encontrada"
+```
+
+Portanto, ele não quebrou. Pelo contrário: **tratou corretamente a ausência do elemento.**
+
+Esse tipo de tratamento vai ser importante mais adiante porque não podemos presumir que todo resultado do Google terá os mesmos campos.
+
+## 🏆 Status do projeto
+
+```text
+HEALTHCHECK IA
+
+[X] ETAPA 1 — Definir o MVP
+[X] ETAPA 2 — Extensão Chrome básica
+[X] ETAPA 3 — Capturar resultados do Google ✅
+
+[ ] ETAPA 4 — Criar interface dos selos
+[ ] ETAPA 5 — Criar FastAPI
+[ ] ETAPA 6 — Conectar extensão + API
+[ ] ETAPA 7 — Criar base de saúde
+[ ] ETAPA 8 — Embeddings
+[ ] ETAPA 9 — Busca semântica
+[ ] ETAPA 10 — RAG
+[ ] ETAPA 11 — LLM
+[ ] ETAPA 12 — Classificação
+[ ] ETAPA 13 — Evidências/fontes
+[ ] ETAPA 14 — Pensamento crítico / UX
+[ ] ETAPA 15 — Testes
+[ ] ETAPA 16 — Métricas
+[ ] ETAPA 17 — MLflow
+[ ] ETAPA 18 — Limitações
+[ ] ETAPA 19 — GitHub
+[ ] ETAPA 20 — Demonstração
+[ ] ETAPA 21 — Apresentação
+```
+
+E agora temos uma coisa muito importante: **dados estruturados**.
+
+Antes o Google tinha apenas elementos HTML. Agora o HealthCheck consegue transformar esses elementos em informação que nosso sistema consegue processar:
+
+```javascript
+const dados = [
+    {
+        titulo: "Vitamina C previne gripe e resfriados?",
+        url: "https://...",
+        descricao: "A vitamina C não reduz..."
+    },
+
+    {
+        titulo: "Vitamina C Para Diabetes",
+        url: "https://...",
+        descricao: "Descrição não encontrada"
+    },
+
+    // ...
+];
+```
+
+Mais para frente, é justamente algo parecido com isso que vamos mandar para:
+
+**Extensão → FastAPI → RAG → evidências → LLM → classificação → extensão.**
+
+**ETAPA 3 CONCLUÍDA. ✅**
+
+Agora podemos partir para a **ETAPA 4 — transformar aquele simples “🔎 HealthCheck IA — aguardando análise” em um selo/card visual profissional abaixo de cada resultado.**
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
