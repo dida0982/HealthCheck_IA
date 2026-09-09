@@ -1,3 +1,212 @@
+“Desenvolver uma solução baseada em Inteligência Artificial para auxiliar na identificação e verificação de desinformação relacionada à saúde, apresentando evidências e fontes confiáveis sem substituir o pensamento crítico do usuário.”
+
+Fazer o projeto só com ferramentas gratuitas. Arquitetura 100% gratuita assim:
+
+**Usuário → Streamlit → Python → busca de evidências → IA local → classificação/explicação → fontes**
+
+| Parte | Ferramenta gratuita |
+| --- | --- |
+| Linguagem | Python |
+| Interface/site | Streamlit |
+| Manipulação de dados | Pandas |
+| Machine Learning | Scikit-learn |
+| IA generativa | Ollama + modelo open-source |
+| Embeddings | Sentence Transformers |
+| Banco vetorial/RAG | FAISS |
+| Banco tradicional | SQLite |
+| APIs/backend, se necessário | FastAPI |
+| Código/versionamento | Git + GitHub |
+| Experimentos | MLflow |
+| Desenvolvimento | VS Code/Jupyter |
+| Protótipo visual | Figma gratuito |
+
+O Streamlit, por exemplo, é open source e permite construir a interface diretamente em Python. A própria documentação mostra como criar interfaces de chatbot e aplicações de IA. (Streamlit Docs)
+
+### Como ficaria seu projeto
+
+Imagine que alguém recebe no WhatsApp:
+
+> **"Tomar determinada substância cura diabetes."**
+> 
+
+A pessoa cola essa informação no seu sistema.
+
+Seu programa poderia executar:
+
+**1. Identificar a alegação**
+
+→ "Substância X cura diabetes."
+
+**2. Procurar evidências**
+
+O sistema consulta uma base que vocês montaram com conteúdos provenientes de fontes confiáveis, como órgãos de saúde e literatura científica.
+
+**3. Recuperar as evidências mais relacionadas**
+
+Aqui você pode implementar **RAG** gratuitamente com embeddings locais + FAISS.
+
+**4. IA analisa as evidências**
+
+Você não precisa necessariamente da API da OpenAI. Pode rodar um modelo open-source **localmente pelo Ollama**.
+
+**5. O sistema apresenta algo como:**
+
+> **🟠 Contradita pelas evidências**
+> 
+> 
+> Foram encontradas evidências que contradizem essa alegação.
+> 
+> **Evidências encontradas**
+> 
+> Ministério da Saúde — [...]
+> 
+> Fiocruz — [...]
+> 
+> Artigo científico — [...]
+> 
+> **Por que merece atenção?**
+> 
+> A publicação afirma existir uma "cura", mas as evidências consultadas não sustentam essa conclusão.
+> 
+> **Analise as fontes abaixo antes de compartilhar.**
+> 
+
+Isso está muito alinhado ao documento de vocês, que propõe justamente categorias como **Sustentada, Parcialmente sustentada, Enganosa, Contradita pelas evidências e Não foi possível verificar**.
+
+### E tem uma vantagem importante
+
+Você **não precisa treinar uma IA gigantesca do zero**.
+
+Isso tornaria o projeto caro e desnecessariamente complicado.
+
+Para um MVP, eu seguiria:
+
+**LLM local + RAG + base confiável de evidências.**
+
+O sistema recupera documentos relevantes e utiliza o modelo para **analisar a alegação em relação às evidências recuperadas**, em vez de esperar que o modelo "saiba sozinho" se a notícia é verdadeira.
+
+E isso combina muito bem com a própria investigação prevista no trabalho, que manda comparar **ML tradicional, modelo especializado, LLM e RAG + LLM**.
+
+### Inclusive seu computador consegue ajudar bastante
+
+Como você já tem uma **RTX 2060 6 GB + 32 GB RAM**, dá para experimentar modelos locais relativamente pequenos sem depender de API paga. Não significa que qualquer LLM vai rodar bem — modelos grandes serão pesados —, mas modelos menores/quantizados são suficientes para experimentar um MVP desse tipo.
+
+Eu estruturaria o projeto em **6 etapas**:
+
+1. **Dataset** — conseguir exemplos de desinformação relacionada à saúde.
+2. **Fontes confiáveis** — montar a base de evidências.
+3. **RAG** — recuperar evidências relacionadas à afirmação.
+4. **LLM local** — analisar alegação + evidências.
+5. **Streamlit** — criar a interface.
+6. **MLflow/testes** — avaliar se o sistema está acertando e documentar os experimentos.
+
+E nem a hospedagem precisa necessariamente custar. A documentação do Streamlit atualmente mantém uma opção de **Community Cloud gratuita** para compartilhar aplicações. (Streamlit Docs)
+
+**Então sim: eu considero perfeitamente viável vocês entregarem um MVP funcional sem gastar dinheiro com software.**
+
+O cuidado principal é não tentar fazer um "detector universal de fake news". **Restrinjam o MVP à saúde, texto e um conjunto controlado de fontes/evidências.** Isso deixa o projeto realizável e, tecnicamente, muito mais defensável.
+
+# Entanção
+
+Sim, **tem como fazer** — e para um MVP acadêmico dá para fazer praticamente tudo com ferramentas gratuitas.
+
+A ideia da extensão seria esta: quando o usuário fizer uma busca no Google, a extensão lê os resultados exibidos na página e injeta, logo abaixo de cada resultado, uma análise como “Baixa confiabilidade”, “Evidências fortes”, “Fonte duvidosa” ou até uma porcentagem estimada. Extensões do Chrome conseguem injetar JavaScript em páginas e modificar o conteúdo exibido, então tecnicamente essa parte é viável. (Chrome for Developers)
+
+Mas eu mudaria uma coisa importante no seu conceito: **não usaria “30% de chance de ser verdade” ou “80% de chance de ser verdade” como se fosse uma probabilidade objetiva**, porque isso é muito difícil de justificar cientificamente. Para o projeto de vocês, seria mais seguro e tecnicamente defensável mostrar algo como:
+
+- **Evidências fortes a favor**
+- **Parcialmente sustentada**
+- **Evidências contraditórias**
+- **Fonte com baixa confiabilidade**
+- **Não foi possível verificar**
+- **Confiança da análise: 82%**
+
+Essa última porcentagem seria a **confiança do modelo na própria classificação**, e não “82% de chance da notícia ser verdadeira”. Isso combina muito melhor com o projeto do documento, que já propõe categorias como “Sustentada”, “Parcialmente sustentada”, “Enganosa”, “Contradita pelas evidências” e “Não foi possível verificar”.
+
+A arquitetura poderia ser totalmente gratuita:
+
+**Google → Extensão Chrome → lê título/snippet/link → envia para um backend local → RAG/IA analisa → devolve classificação → extensão mostra abaixo do resultado**
+
+Você poderia usar **JavaScript + Manifest V3** na extensão, **Python + FastAPI** no backend, **FAISS** para busca vetorial, **Sentence Transformers** para embeddings, **Ollama + modelo open-source** para análise e **SQLite** para guardar dados. Tudo isso pode ser usado sem pagar licença.
+
+O fluxo ficaria mais ou menos assim:
+
+> Pesquisa: “chá X cura câncer”
+> 
+
+A página do Google mostra vários resultados.
+
+A extensão captura cada título, trecho e URL.
+
+Depois consulta sua IA.
+
+E abaixo de um resultado apareceria algo como:
+
+> 🟠 **Evidências contraditórias**
+> 
+> 
+> Confiança da análise: 87%
+> 
+> A alegação não é sustentada pelas fontes científicas consultadas.
+> 
+> **Fontes verificadas:** Fiocruz, Ministério da Saúde, PubMed
+> 
+> “Ver evidências”
+> 
+
+Isso seria, inclusive, **um produto muito mais interessante do que simplesmente criar um site onde a pessoa cola uma notícia**, porque a ferramenta entra exatamente no momento em que o usuário está consumindo informação.
+
+O principal desafio não é fazer a extensão. **A extensão é relativamente simples. O difícil é construir um sistema confiável de avaliação.** Você vai precisar definir como a IA decide a classificação, quais fontes são consideradas confiáveis, como recuperar evidências e o que fazer quando não existir evidência suficiente. Isso também está exatamente dentro das perguntas de pesquisa previstas no projeto.
+
+Para não deixar o projeto grande demais, eu faria o **MVP somente para buscas de saúde e somente texto**. Nada de tentar analisar qualquer assunto da internet, imagem, vídeo, política etc. inicialmente.
+
+Por exemplo:
+
+**Versão 1 do projeto**
+
+**Extensão Chrome de verificação de informações sobre saúde**
+
+Ela analisaria:
+
+**título + descrição + domínio do resultado + evidências recuperadas de uma base confiável.**
+
+E poderia ter três componentes:
+
+**1. Extensão Chrome**
+
+Mostra a classificação diretamente no Google.
+
+**2. Motor de IA**
+
+Analisa as alegações.
+
+**3. Base de evidências**
+
+Ministério da Saúde, Anvisa, Fiocruz, PubMed e outras fontes previamente selecionadas.
+
+E existe outro ponto interessante: vocês podem instalar a extensão localmente durante o desenvolvimento, sem precisar publicá-la na Chrome Web Store. A documentação oficial do Chrome oferece suporte e exemplos para desenvolvimento e carregamento de extensões. (Chrome for Developers)
+
+Então, para a faculdade, vocês poderiam chegar na apresentação, abrir o Chrome, pesquisar:
+
+> **“vacina da gripe causa gripe?”**
+> 
+
+e os resultados aparecerem já com as avaliações da IA embaixo.
+
+Isso teria **muito mais impacto visual na apresentação** do que simplesmente mostrar um notebook executando um modelo.
+
+E o mais importante: **sim, é um projeto que dá para construir.** Eu só evitaria vender a ideia como “IA que sabe a porcentagem de uma notícia ser verdadeira”. Eu apresentaria como:
+
+> **“Uma extensão inteligente para Chrome que analisa resultados de busca relacionados à saúde, cruza as alegações com fontes confiáveis e apresenta ao usuário evidências e um nível de confiança antes que ele acesse ou compartilhe o conteúdo.”**
+> 
+
+Essa formulação é tecnicamente mais forte e está bem alinhada ao objetivo do trabalho.
+
+Projeto IA Fake  News
+
+----------------------------------------------------------------------------------------------------------
+-
+
 Perfeito. Vamos transformar isso em um **roteiro de desenvolvimento**, para você sempre saber em que etapa está, o que já terminou e qual é o próximo passo.
 
 O projeto final será:
@@ -3057,3 +3266,4 @@ Para concluir a **ETAPA 7**, eu colocaria estas metas:
 Aqui tem uma diferença importante para as etapas anteriores: **não vale inventar o conteúdo científico dos arquivos**. Os textos precisam vir das fontes confiáveis que vocês selecionarem.
 
 Se quiser, podemos fazer essa etapa juntos começando por **vacinas**, montando os primeiros documentos reais da base e o código Python que vai carregá-los.
+
