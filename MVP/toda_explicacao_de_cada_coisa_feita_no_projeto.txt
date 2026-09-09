@@ -2181,3 +2181,608 @@ Se essas três coisas funcionarem, marcamos **ETAPA 5 concluída**.
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+Perfeito. Agora vamos para a **ETAPA 6 — conectar a extensão Chrome com o backend Python**.
+
+Aqui acontece a primeira comunicação real entre o `content.js` e o FastAPI.
+
+Seu backend precisa estar rodando com:
+
+```bash
+uvicorn main:app --reload
+```
+
+e acessível em:
+
+```text
+http://127.0.0.1:8000
+```
+
+Agora vamos alterar o `content.js`.
+
+A ideia será esta:
+
+```text
+resultado do Google
+↓
+captura título + descrição
+↓
+fetch()
+↓
+POST /analisar
+↓
+FastAPI
+↓
+JSON
+↓
+JavaScript recebe
+↓
+card muda sozinho
+```
+
+Use este `content.js`:
+
+```javascript
+async function analisarResultado(item) {
+  try {
+    const resposta = await fetch("http://127.0.0.1:8000/analisar", {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json"
+      },
+
+      body: JSON.stringify({
+        titulo: item.titulo,
+        descricao: item.descricao
+      })
+    });
+
+    if (!resposta.ok) {
+      throw new Error(`Erro HTTP: ${resposta.status}`);
+    }
+
+    const dados = await resposta.json();
+
+    console.log("Resposta do backend:", dados);
+
+    return dados;
+
+  } catch (erro) {
+    console.error("Erro ao conectar com o backend:", erro);
+
+    return null;
+  }
+}
+
+
+async function capturarResultados() {
+  const resultados = document.querySelectorAll("div.MjjYud");
+
+  for (const resultado of resultados) {
+
+    const tituloElemento = resultado.querySelector("h3");
+    const linkElemento = tituloElemento?.closest("a");
+
+    const descricaoElemento =
+      resultado.querySelector(".VwiC3b") ||
+      resultado.querySelector("[data-sncf]");
+
+    if (!tituloElemento || !linkElemento) {
+      continue;
+    }
+
+    if (resultado.querySelector(".healthcheck-card")) {
+      continue;
+    }
+
+    const item = {
+      titulo: tituloElemento.innerText.trim(),
+
+      url: linkElemento.href,
+
+      descricao: descricaoElemento
+        ? descricaoElemento.innerText.trim()
+        : "Descrição não encontrada"
+    };
+
+    criarComponenteHealthCheck(resultado, item);
+  }
+}
+
+
+async function criarComponenteHealthCheck(resultado, item) {
+
+  const card = document.createElement("div");
+
+  card.className = "healthcheck-card";
+
+  /*
+    Primeiro mostramos o estado de carregamento.
+  */
+
+  card.innerHTML = `
+    <div class="healthcheck-header">
+
+      <div class="healthcheck-status">
+        <span>🔎</span>
+
+        <strong>
+          HealthCheck IA
+        </strong>
+      </div>
+
+      <div class="healthcheck-confidence">
+        Analisando...
+      </div>
+
+    </div>
+
+    <div class="healthcheck-loading">
+      Consultando o backend...
+    </div>
+  `;
+
+  resultado.appendChild(card);
+
+
+  /*
+    Agora enviamos o conteúdo para o FastAPI.
+  */
+
+  const analise = await analisarResultado(item);
+
+
+  /*
+    Caso não seja possível conectar ao backend.
+  */
+
+  if (!analise) {
+
+    card.innerHTML = `
+      <div class="healthcheck-header">
+
+        <div class="healthcheck-status healthcheck-erro">
+          <span>⚠️</span>
+
+          <strong>
+            Não foi possível analisar
+          </strong>
+        </div>
+
+      </div>
+
+      <p>
+        O servidor HealthCheck IA não respondeu.
+      </p>
+    `;
+
+    return;
+  }
+
+
+  /*
+    Por enquanto nosso backend sempre retorna:
+
+    {
+      classificacao: "enganosa",
+      confianca: 0.82
+    }
+
+    Portanto ainda é uma resposta simulada.
+  */
+
+
+  const classificacao = analise.classificacao;
+
+  const confianca = Math.round(
+    analise.confianca * 100
+  );
+
+
+  let status;
+  let icone;
+  let classeStatus;
+
+
+  if (classificacao === "enganosa") {
+
+    status = "Evidências contraditórias";
+
+    icone = "🔴";
+
+    classeStatus = "healthcheck-contraditorio";
+
+  } else {
+
+    status = "Resultado recebido";
+
+    icone = "🟡";
+
+    classeStatus = "";
+  }
+
+
+  card.innerHTML = `
+    <div class="healthcheck-header">
+
+      <div class="healthcheck-status ${classeStatus}">
+
+        <span>
+          ${icone}
+        </span>
+
+        <strong>
+          ${status}
+        </strong>
+
+      </div>
+
+      <div class="healthcheck-confidence">
+
+        Confiança:
+        ${confianca}%
+
+      </div>
+
+    </div>
+
+
+    <button
+      class="healthcheck-button"
+      aria-expanded="false"
+      type="button"
+    >
+
+      Ver análise
+
+    </button>
+
+
+    <div
+      class="healthcheck-details"
+      hidden
+    >
+
+      <p>
+
+        <strong>
+          Classificação recebida do backend:
+        </strong>
+
+        ${classificacao}
+
+      </p>
+
+
+      <p>
+
+        <strong>
+          Título analisado:
+        </strong>
+
+        ${item.titulo}
+
+      </p>
+
+
+      <p>
+
+        <strong>
+          Fonte:
+        </strong>
+
+        ${new URL(item.url).hostname}
+
+      </p>
+
+
+      <p class="healthcheck-warning">
+
+        Esta classificação ainda é simulada.
+        A Inteligência Artificial ainda não foi implementada.
+
+      </p>
+
+    </div>
+  `;
+
+
+  const botao =
+    card.querySelector(".healthcheck-button");
+
+  const detalhes =
+    card.querySelector(".healthcheck-details");
+
+
+  botao.addEventListener("click", () => {
+
+    const estaAberto =
+      botao.getAttribute("aria-expanded") === "true";
+
+
+    botao.setAttribute(
+      "aria-expanded",
+      String(!estaAberto)
+    );
+
+
+    detalhes.hidden = estaAberto;
+
+
+    botao.innerText = estaAberto
+      ? "Ver análise"
+      : "Ocultar análise";
+
+  });
+}
+
+
+
+capturarResultados();
+
+
+const observer = new MutationObserver(() => {
+
+  capturarResultados();
+
+});
+
+
+observer.observe(
+  document.body,
+  {
+    childList: true,
+    subtree: true
+  }
+);
+```
+
+Seu `styles.css` pode continuar praticamente igual. Só acrescente no final:
+
+```css
+.healthcheck-loading {
+  font-size: 13px;
+  color: #5f6368;
+}
+
+.healthcheck-erro {
+  color: #b3261e;
+}
+
+.healthcheck-warning {
+  margin-top: 12px;
+  padding: 10px;
+
+  background: #fff8e1;
+
+  border-left: 3px solid #f9ab00;
+
+  border-radius: 4px;
+}
+```
+
+Agora precisamos fazer uma pequena alteração no `manifest.json`, porque a extensão vai acessar nosso servidor local.
+
+Deixe assim:
+
+```json
+{
+  "manifest_version": 3,
+
+  "name": "HealthCheck IA",
+
+  "version": "1.0",
+
+  "description": "Extensão para auxiliar na verificação de informações de saúde.",
+
+  "host_permissions": [
+    "http://127.0.0.1:8000/*"
+  ],
+
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.google.com/*"
+      ],
+
+      "js": [
+        "content.js"
+      ],
+
+      "css": [
+        "styles.css"
+      ]
+    }
+  ]
+}
+```
+
+Agora faça nessa ordem:
+
+1. Deixe o FastAPI ligado:
+
+```bash
+uvicorn main:app --reload
+```
+
+2. Confirme que:
+
+```text
+http://127.0.0.1:8000
+```
+
+está funcionando.
+
+3. Salve `content.js`.
+
+4. Salve `styles.css`.
+
+5. Salve `manifest.json`.
+
+6. Vá em:
+
+```text
+chrome://extensions
+```
+
+7. Clique em **Recarregar** no HealthCheck IA.
+
+8. Volte ao Google e dê:
+
+```text
+Ctrl + F5
+```
+
+9. Pesquise novamente:
+
+```text
+vitamina C cura gripe
+```
+
+Agora observe o card.
+
+Ele deve aparecer primeiro assim:
+
+```text
+🔎 HealthCheck IA                Analisando...
+
+Consultando o backend...
+```
+
+e depois mudar automaticamente para:
+
+```text
+🔴 Evidências contraditórias     Confiança: 82%
+
+Ver análise
+```
+
+Isso será muito diferente da Etapa 4.
+
+Na Etapa 4, o JavaScript inventava o resultado:
+
+```javascript
+const confianca = 82;
+```
+
+Agora não.
+
+Quem envia isso é o Python:
+
+```python
+return AnaliseResponse(
+    classificacao="enganosa",
+    confianca=0.82
+)
+```
+
+O navegador recebe aqui:
+
+```javascript
+const dados = await resposta.json();
+```
+
+Portanto teremos uma comunicação real:
+
+```text
+Chrome
+
+content.js
+   ↓
+fetch()
+   ↓
+
+HTTP POST
+
+{
+ "titulo": "...",
+ "descricao": "..."
+}
+
+   ↓
+
+FastAPI
+
+POST /analisar
+
+   ↓
+
+Python
+
+   ↓
+
+{
+ "classificacao": "enganosa",
+ "confianca": 0.82
+}
+
+   ↓
+
+HTTP Response
+
+   ↓
+
+JavaScript
+
+   ↓
+
+Math.round(0.82 * 100)
+
+   ↓
+
+82%
+
+   ↓
+
+CARD DO GOOGLE
+```
+
+Um detalhe importante: como o backend atualmente retorna `"enganosa"` para qualquer entrada, **todos os cards provavelmente ficarão vermelhos com 82% novamente**.
+
+Mas agora isso estará correto.
+
+Antes:
+
+```text
+vermelho → inventado pelo JavaScript
+```
+
+Agora:
+
+```text
+vermelho
+   ↑
+JSON
+   ↑
+FastAPI
+   ↑
+Python
+```
+
+É exatamente isso que queremos comprovar na Etapa 6.
+
+Para verificar ainda melhor, abra o `F12 → Console`.
+
+Você deve encontrar mensagens como:
+
+```text
+Resposta do backend:
+{
+    classificacao: "enganosa",
+    confianca: 0.82
+}
+```
+
+E no terminal onde está o FastAPI provavelmente aparecerão chamadas como:
+
+```text
+POST /analisar HTTP/1.1 200 OK
+```
+
+Se o card mudar de **“Analisando...”** para **“Evidências contraditórias — Confiança: 82%”**, e o backend registrar os `POST /analisar`, então podemos declarar:
+
+**[X] ETAPA 6 — Chrome ↔ Python concluída. ✅**
+
+
+------------------------------------------------------------------------------------------------------------------------------------
+
