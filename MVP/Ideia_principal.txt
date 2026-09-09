@@ -1,0 +1,1 @@
+“Desenvolver uma solução baseada em Inteligência Artificial para auxiliar na identificação e verificação de desinformação relacionada à saúde, apresentando evidências e fontes confiáveis sem substituir o pensamento crítico do usuário.”

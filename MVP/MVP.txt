@@ -1,0 +1,921 @@
+“Desenvolver uma solução baseada em Inteligência Artificial para auxiliar na identificação e verificação de desinformação relacionada à saúde, apresentando evidências e fontes confiáveis sem substituir o pensamento crítico do usuário.”
+
+Fazer o projeto só com ferramentas gratuitas.
+
+Sim. **Dá para concluir esse projeto sem pagar por software ou API**, principalmente porque o objetivo acadêmico pode ser um **MVP/prova de conceito**, não uma plataforma de produção atendendo milhares de usuários.
+
+Eu faria uma arquitetura 100% gratuita assim:
+
+**Usuário → Streamlit → Python → busca de evidências → IA local → classificação/explicação → fontes**
+
+| Parte | Ferramenta gratuita |
+| --- | --- |
+| Linguagem | Python |
+| Interface/site | Streamlit |
+| Manipulação de dados | Pandas |
+| Machine Learning | Scikit-learn |
+| IA generativa | Ollama + modelo open-source |
+| Embeddings | Sentence Transformers |
+| Banco vetorial/RAG | FAISS |
+| Banco tradicional | SQLite |
+| APIs/backend, se necessário | FastAPI |
+| Código/versionamento | Git + GitHub |
+| Experimentos | MLflow |
+| Desenvolvimento | VS Code/Jupyter |
+| Protótipo visual | Figma gratuito |
+
+O Streamlit, por exemplo, é open source e permite construir a interface diretamente em Python. A própria documentação mostra como criar interfaces de chatbot e aplicações de IA. (Streamlit Docs)
+
+### Como ficaria seu projeto
+
+Imagine que alguém recebe no WhatsApp:
+
+> **"Tomar determinada substância cura diabetes."**
+> 
+
+A pessoa cola essa informação no seu sistema.
+
+Seu programa poderia executar:
+
+**1. Identificar a alegação**
+
+→ "Substância X cura diabetes."
+
+**2. Procurar evidências**
+
+O sistema consulta uma base que vocês montaram com conteúdos provenientes de fontes confiáveis, como órgãos de saúde e literatura científica.
+
+**3. Recuperar as evidências mais relacionadas**
+
+Aqui você pode implementar **RAG** gratuitamente com embeddings locais + FAISS.
+
+**4. IA analisa as evidências**
+
+Você não precisa necessariamente da API da OpenAI. Pode rodar um modelo open-source **localmente pelo Ollama**.
+
+**5. O sistema apresenta algo como:**
+
+> **🟠 Contradita pelas evidências**
+> 
+> 
+> Foram encontradas evidências que contradizem essa alegação.
+> 
+> **Evidências encontradas**
+> 
+> Ministério da Saúde — [...]
+> 
+> Fiocruz — [...]
+> 
+> Artigo científico — [...]
+> 
+> **Por que merece atenção?**
+> 
+> A publicação afirma existir uma "cura", mas as evidências consultadas não sustentam essa conclusão.
+> 
+> **Analise as fontes abaixo antes de compartilhar.**
+> 
+
+Isso está muito alinhado ao documento de vocês, que propõe justamente categorias como **Sustentada, Parcialmente sustentada, Enganosa, Contradita pelas evidências e Não foi possível verificar**.
+
+### E tem uma vantagem importante
+
+Você **não precisa treinar uma IA gigantesca do zero**.
+
+Isso tornaria o projeto caro e desnecessariamente complicado.
+
+Para um MVP, eu seguiria:
+
+**LLM local + RAG + base confiável de evidências.**
+
+O sistema recupera documentos relevantes e utiliza o modelo para **analisar a alegação em relação às evidências recuperadas**, em vez de esperar que o modelo "saiba sozinho" se a notícia é verdadeira.
+
+E isso combina muito bem com a própria investigação prevista no trabalho, que manda comparar **ML tradicional, modelo especializado, LLM e RAG + LLM**.
+
+### Inclusive seu computador consegue ajudar bastante
+
+Como você já tem uma **RTX 2060 6 GB + 32 GB RAM**, dá para experimentar modelos locais relativamente pequenos sem depender de API paga. Não significa que qualquer LLM vai rodar bem — modelos grandes serão pesados —, mas modelos menores/quantizados são suficientes para experimentar um MVP desse tipo.
+
+Eu estruturaria o projeto em **6 etapas**:
+
+1. **Dataset** — conseguir exemplos de desinformação relacionada à saúde.
+2. **Fontes confiáveis** — montar a base de evidências.
+3. **RAG** — recuperar evidências relacionadas à afirmação.
+4. **LLM local** — analisar alegação + evidências.
+5. **Streamlit** — criar a interface.
+6. **MLflow/testes** — avaliar se o sistema está acertando e documentar os experimentos.
+
+E nem a hospedagem precisa necessariamente custar. A documentação do Streamlit atualmente mantém uma opção de **Community Cloud gratuita** para compartilhar aplicações. (Streamlit Docs)
+
+**Então sim: eu considero perfeitamente viável vocês entregarem um MVP funcional sem gastar dinheiro com software.**
+
+O cuidado principal é não tentar fazer um "detector universal de fake news". **Restrinjam o MVP à saúde, texto e um conjunto controlado de fontes/evidências.** Isso deixa o projeto realizável e, tecnicamente, muito mais defensável.
+
+# Entanção
+
+Sim, **tem como fazer** — e para um MVP acadêmico dá para fazer praticamente tudo com ferramentas gratuitas.
+
+A ideia da extensão seria esta: quando o usuário fizer uma busca no Google, a extensão lê os resultados exibidos na página e injeta, logo abaixo de cada resultado, uma análise como “Baixa confiabilidade”, “Evidências fortes”, “Fonte duvidosa” ou até uma porcentagem estimada. Extensões do Chrome conseguem injetar JavaScript em páginas e modificar o conteúdo exibido, então tecnicamente essa parte é viável. (Chrome for Developers)
+
+Mas eu mudaria uma coisa importante no seu conceito: **não usaria “30% de chance de ser verdade” ou “80% de chance de ser verdade” como se fosse uma probabilidade objetiva**, porque isso é muito difícil de justificar cientificamente. Para o projeto de vocês, seria mais seguro e tecnicamente defensável mostrar algo como:
+
+- **Evidências fortes a favor**
+- **Parcialmente sustentada**
+- **Evidências contraditórias**
+- **Fonte com baixa confiabilidade**
+- **Não foi possível verificar**
+- **Confiança da análise: 82%**
+
+Essa última porcentagem seria a **confiança do modelo na própria classificação**, e não “82% de chance da notícia ser verdadeira”. Isso combina muito melhor com o projeto do documento, que já propõe categorias como “Sustentada”, “Parcialmente sustentada”, “Enganosa”, “Contradita pelas evidências” e “Não foi possível verificar”.
+
+A arquitetura poderia ser totalmente gratuita:
+
+**Google → Extensão Chrome → lê título/snippet/link → envia para um backend local → RAG/IA analisa → devolve classificação → extensão mostra abaixo do resultado**
+
+Você poderia usar **JavaScript + Manifest V3** na extensão, **Python + FastAPI** no backend, **FAISS** para busca vetorial, **Sentence Transformers** para embeddings, **Ollama + modelo open-source** para análise e **SQLite** para guardar dados. Tudo isso pode ser usado sem pagar licença.
+
+O fluxo ficaria mais ou menos assim:
+
+> Pesquisa: “chá X cura câncer”
+> 
+
+A página do Google mostra vários resultados.
+
+A extensão captura cada título, trecho e URL.
+
+Depois consulta sua IA.
+
+E abaixo de um resultado apareceria algo como:
+
+> 🟠 **Evidências contraditórias**
+> 
+> 
+> Confiança da análise: 87%
+> 
+> A alegação não é sustentada pelas fontes científicas consultadas.
+> 
+> **Fontes verificadas:** Fiocruz, Ministério da Saúde, PubMed
+> 
+> “Ver evidências”
+> 
+
+Isso seria, inclusive, **um produto muito mais interessante do que simplesmente criar um site onde a pessoa cola uma notícia**, porque a ferramenta entra exatamente no momento em que o usuário está consumindo informação.
+
+O principal desafio não é fazer a extensão. **A extensão é relativamente simples. O difícil é construir um sistema confiável de avaliação.** Você vai precisar definir como a IA decide a classificação, quais fontes são consideradas confiáveis, como recuperar evidências e o que fazer quando não existir evidência suficiente. Isso também está exatamente dentro das perguntas de pesquisa previstas no projeto.
+
+Para não deixar o projeto grande demais, eu faria o **MVP somente para buscas de saúde e somente texto**. Nada de tentar analisar qualquer assunto da internet, imagem, vídeo, política etc. inicialmente.
+
+Por exemplo:
+
+**Versão 1 do projeto**
+
+**Extensão Chrome de verificação de informações sobre saúde**
+
+Ela analisaria:
+
+**título + descrição + domínio do resultado + evidências recuperadas de uma base confiável.**
+
+E poderia ter três componentes:
+
+**1. Extensão Chrome**
+
+Mostra a classificação diretamente no Google.
+
+**2. Motor de IA**
+
+Analisa as alegações.
+
+**3. Base de evidências**
+
+Ministério da Saúde, Anvisa, Fiocruz, PubMed e outras fontes previamente selecionadas.
+
+E existe outro ponto interessante: vocês podem instalar a extensão localmente durante o desenvolvimento, sem precisar publicá-la na Chrome Web Store. A documentação oficial do Chrome oferece suporte e exemplos para desenvolvimento e carregamento de extensões. (Chrome for Developers)
+
+Então, para a faculdade, vocês poderiam chegar na apresentação, abrir o Chrome, pesquisar:
+
+> **“vacina da gripe causa gripe?”**
+> 
+
+e os resultados aparecerem já com as avaliações da IA embaixo.
+
+Isso teria **muito mais impacto visual na apresentação** do que simplesmente mostrar um notebook executando um modelo.
+
+E o mais importante: **sim, é um projeto que dá para construir.** Eu só evitaria vender a ideia como “IA que sabe a porcentagem de uma notícia ser verdadeira”. Eu apresentaria como:
+
+> **“Uma extensão inteligente para Chrome que analisa resultados de busca relacionados à saúde, cruza as alegações com fontes confiáveis e apresenta ao usuário evidências e um nível de confiança antes que ele acesse ou compartilhe o conteúdo.”**
+> 
+
+Essa formulação é tecnicamente mais forte e está bem alinhada ao objetivo do trabalho.
+
+# ETAPAS DO TRABALHO
+
+Perfeito. Vamos transformar isso em um **roteiro de desenvolvimento**, para você sempre saber em que etapa está, o que já terminou e qual é o próximo passo.
+
+O projeto final será:
+
+> **Uma extensão do Chrome que analisa resultados de pesquisas de saúde no Google e mostra, embaixo de cada resultado, uma classificação de confiabilidade baseada em evidências e fontes confiáveis.**
+> 
+
+Vou dividir em **12 etapas**.
+
+| Etapa | Objetivo | Resultado esperado |
+| --- | --- | --- |
+| 1 | Definir o MVP | Saber exatamente o que o sistema fará e o que ficará de fora |
+| 2 | Criar extensão Chrome básica | Extensão instalada e funcionando |
+| 3 | Ler resultados do Google | Capturar título, descrição e URL |
+| 4 | Inserir análise visual | Mostrar um selo embaixo de cada resultado |
+| 5 | Criar backend | API em Python/FastAPI funcionando |
+| 6 | Conectar extensão + backend | Extensão envia resultados e recebe resposta |
+| 7 | Criar base de evidências | Ter documentos confiáveis de saúde |
+| 8 | Criar busca semântica | Encontrar evidências relacionadas à pesquisa |
+| 9 | Integrar IA | IA analisa alegação + evidências |
+| 10 | Criar classificação | Definir resultado e nível de confiança |
+| 11 | Testar e avaliar | Medir erros, acertos e limitações |
+| 12 | Preparar apresentação | README, arquitetura, vídeo/demo e documentação |
+
+## ETAPA 1 — Definir exatamente o MVP
+
+Antes de programar, vamos especificar o produto.
+
+O **MVP 1.0** deve fazer somente isto:
+
+1. usuário pesquisa alguma coisa no Google;
+2. extensão detecta os resultados;
+3. captura título, descrição e URL;
+4. analisa somente conteúdos relacionados à saúde;
+5. consulta nossa base de evidências;
+6. apresenta uma classificação;
+7. mostra as fontes/evidências utilizadas.
+
+Exemplo:
+
+> 🔴 **Contradita pelas evidências**
+> 
+> 
+> Confiança da análise: 87%
+> 
+> Encontramos evidências que contradizem essa afirmação.
+> 
+> Fontes: Ministério da Saúde, Fiocruz e PubMed.
+> 
+
+E vamos deixar **fora da versão inicial**:
+
+- vídeos;
+- imagens;
+- Instagram;
+- WhatsApp;
+- política;
+- notícias esportivas;
+- qualquer idioma além de português;
+- análise da internet inteira.
+
+Isso evita o maior risco do projeto: tentar fazer coisa demais.
+
+---
+
+# ETAPA 2 — Extensão Chrome básica
+
+Aqui **não existe IA ainda**.
+
+Você vai estudar:
+
+- HTML;
+- CSS;
+- JavaScript básico;
+- `manifest.json`;
+- Chrome Extensions;
+- Content Scripts;
+- DOM.
+
+Primeiro objetivo:
+
+Você pesquisa alguma coisa no Google e aparece:
+
+> 🔎 HealthCheck IA — aguardando análise
+> 
+
+embaixo de cada resultado.
+
+Quando isso funcionar, considero a Etapa 2 concluída.
+
+---
+
+# ETAPA 3 — Capturar os resultados do Google
+
+Agora a extensão precisa entender a página.
+
+Ela deverá capturar algo assim:
+
+```jsx
+{
+    titulo: "Vitamina C cura gripe?",
+    descricao: "Veja o que dizem os estudos...",
+    url: "https://exemplo.com/artigo"
+}
+```
+
+Você vai estudar:
+
+- DOM;
+- `querySelector()`;
+- `querySelectorAll()`;
+- arrays;
+- objetos JavaScript;
+- manipulação de elementos HTML.
+
+Meta:
+
+```
+Resultado 1
+Título: ...
+URL: ...
+Descrição: ...
+
+Resultado 2
+Título: ...
+URL: ...
+Descrição: ...
+```
+
+aparecendo no console.
+
+---
+
+# ETAPA 4 — Criar o componente visual
+
+Agora vamos criar o visual que aparecerá no Google.
+
+Inicialmente será falso/simulado:
+
+```
+🟢 Evidências favoráveis
+
+Confiança: 85%
+
+Ver análise
+```
+
+ou:
+
+```
+🔴 Evidências contraditórias
+
+Confiança: 82%
+
+Ver evidências
+```
+
+Aqui entra:
+
+- CSS;
+- componentes;
+- badges;
+- botões;
+- expansão/recolhimento;
+- acessibilidade básica.
+
+Nesse momento a extensão já vai **parecer um produto real**, mesmo sem IA.
+
+---
+
+# ETAPA 5 — Backend Python
+
+Agora criamos o servidor responsável pela inteligência.
+
+Tecnologia:
+
+**Python + FastAPI**
+
+Você vai estudar:
+
+- API;
+- REST;
+- HTTP;
+- GET;
+- POST;
+- JSON;
+- request;
+- response;
+- FastAPI;
+- Pydantic;
+- CORS.
+
+Teremos algo como:
+
+```
+POST /analisar
+```
+
+Entrada:
+
+```json
+{
+  "titulo": "Vitamina C cura gripe?",
+  "descricao": "..."
+}
+```
+
+Resposta inicialmente simulada:
+
+```json
+{
+  "classificacao": "enganosa",
+  "confianca": 0.82
+}
+```
+
+Essa etapa é importantíssima porque separa:
+
+```
+EXTENSÃO
+```
+
+de:
+
+```
+INTELIGÊNCIA DO SISTEMA
+```
+
+---
+
+# ETAPA 6 — Conectar Chrome com Python
+
+Aqui os dois projetos se encontram.
+
+Fluxo:
+
+```
+Google
+ ↓
+Extensão
+ ↓
+JavaScript
+ ↓
+HTTP POST
+ ↓
+FastAPI
+ ↓
+JSON
+ ↓
+Extensão
+ ↓
+Google
+```
+
+Vamos utilizar JavaScript:
+
+```jsx
+fetch(...)
+```
+
+A extensão manda a notícia para nosso backend.
+
+E recebe:
+
+```json
+{
+    "classificacao": "contradita",
+    "confianca": 0.91
+}
+```
+
+Então muda automaticamente o selo.
+
+Quando isso acontecer, teremos uma arquitetura cliente-servidor funcionando.
+
+---
+
+# ETAPA 7 — Base de conhecimento em saúde
+
+Aqui começa a parte científica.
+
+Precisaremos construir uma base confiável.
+
+Seu próprio projeto menciona referências como:
+
+- Ministério da Saúde;
+- Anvisa;
+- Fiocruz;
+- SUS;
+- BVS;
+- PubMed;
+- universidades;
+- sociedades médicas.
+
+Inicialmente eu não tentaria conectar tudo automaticamente.
+
+Pegamos um conjunto pequeno de documentos confiáveis.
+
+Algo como:
+
+```
+data/
+
+vacinas/
+diabetes/
+hipertensao/
+cancer/
+dengue/
+medicamentos/
+```
+
+E colocamos documentos dentro.
+
+---
+
+# ETAPA 8 — Embeddings + busca semântica
+
+Essa é uma etapa fundamental.
+
+Imagine que sua base possui:
+
+> “Não existem evidências científicas de que vitamina C cure infecções por influenza.”
+> 
+
+E o usuário pesquisa:
+
+> “Tomar vitamina C acaba com a gripe?”
+> 
+
+As frases não são iguais.
+
+Mas semanticamente estão relacionadas.
+
+Para encontrar isso vamos estudar:
+
+- NLP;
+- embeddings;
+- vetores;
+- similaridade de cosseno;
+- Sentence Transformers;
+- chunking;
+- busca vetorial.
+
+A arquitetura será:
+
+```
+Pesquisa
+   ↓
+Embedding
+   ↓
+Busca vetorial
+   ↓
+Documentos semelhantes
+```
+
+---
+
+# ETAPA 9 — Construir o RAG
+
+Depois juntamos:
+
+**Retrieval + IA.**
+
+O fluxo será:
+
+```
+Alegação
+ ↓
+Busca semântica
+ ↓
+Encontrar 3-5 evidências
+ ↓
+LLM
+ ↓
+Análise
+```
+
+A IA receberá algo parecido com:
+
+```
+ALEGAÇÃO:
+
+"Vitamina C cura gripe."
+
+EVIDÊNCIA 1:
+...
+
+EVIDÊNCIA 2:
+...
+
+EVIDÊNCIA 3:
+...
+
+Utilizando SOMENTE essas evidências,
+avalie a alegação.
+```
+
+Isso reduz bastante o risco de a IA inventar informações.
+
+---
+
+# ETAPA 10 — Integrar o LLM
+
+Para tentar manter tudo gratuito, podemos experimentar:
+
+**Ollama + modelo open-source.**
+
+A IA não precisa saber tudo.
+
+Ela receberá as evidências fornecidas pelo RAG.
+
+Estudaremos:
+
+- LLM;
+- contexto;
+- prompt;
+- system prompt;
+- temperatura;
+- hallucination;
+- structured output;
+- JSON Schema.
+
+Queremos obrigar a IA a retornar algo assim:
+
+```json
+{
+    "classificacao": "contradita",
+    "confianca": 0.91,
+    "explicacao": "As evidências encontradas...",
+    "fontes": [
+        "Fiocruz",
+        "Ministério da Saúde"
+    ]
+}
+```
+
+---
+
+# ETAPA 11 — Sistema de classificação
+
+Vamos padronizar as possíveis respostas.
+
+Eu sugiro usar as categorias já previstas pelo projeto:
+
+```
+🟢 SUSTENTADA
+
+🟡 PARCIALMENTE SUSTENTADA
+
+🟠 ENGANOSA
+
+🔴 CONTRADITA PELAS EVIDÊNCIAS
+
+⚪ NÃO FOI POSSÍVEL VERIFICAR
+```
+
+Essas categorias estão presentes no planejamento original.
+
+Isso é melhor que:
+
+> 25% verdadeira
+> 
+
+porque uma porcentagem dessas pode parecer cientificamente precisa sem realmente ser.
+
+Podemos ter:
+
+> **Classificação:** contradita pelas evidências
+> 
+> 
+> **Confiança do sistema:** 86%
+> 
+
+---
+
+# ETAPA 12 — Avaliação científica
+
+Aqui você transforma um programa interessante em um **projeto acadêmico sério**.
+
+Criaremos um dataset de teste.
+
+Por exemplo:
+
+```
+200 alegações
+```
+
+Cada uma já terá um resultado correto conhecido.
+
+Depois:
+
+```
+Sistema analisa
+       ↓
+comparamos
+       ↓
+resultado esperado
+       X
+resultado produzido
+```
+
+Vamos calcular:
+
+- accuracy;
+- precision;
+- recall;
+- F1-score;
+- matriz de confusão.
+
+Também podemos utilizar **MLflow** para registrar os experimentos.
+
+Você vai conseguir dizer na apresentação:
+
+> “Nosso modelo foi avaliado em 200 alegações verificadas e atingiu F1-score de X.”
+> 
+
+Isso é muito mais forte do que apenas:
+
+> “Olha, nossa IA funciona.”
+> 
+
+---
+
+# ETAPA 13 — Pensamento crítico
+
+Essa parte precisa existir no produto.
+
+Seu documento deixa claro que uma das questões centrais é evitar que a IA substitua a capacidade de julgamento da pessoa.
+
+Então não mostraremos apenas:
+
+> ❌ FAKE
+> 
+
+Mostraremos:
+
+> 🔴 **Evidências contraditórias**
+> 
+> 
+> Encontramos três fontes que apresentam evidências diferentes da afirmação.
+> 
+> **Veja por quê**
+> 
+> [...]
+> 
+> **Consulte as fontes**
+> 
+> [...]
+> 
+> Antes de compartilhar, compare as evidências apresentadas.
+> 
+
+A IA vira uma ferramenta de **apoio ao raciocínio**, não uma autoridade absoluta.
+
+---
+
+# ETAPA 14 — Segurança e limitações
+
+Precisaremos estabelecer regras.
+
+Por exemplo:
+
+Se a evidência for insuficiente:
+
+> ⚪ **Não foi possível verificar**
+> 
+
+Nunca deixar a IA inventar uma resposta.
+
+Também precisamos documentar:
+
+- limitações;
+- possíveis vieses;
+- atualização da base;
+- falsos positivos;
+- falsos negativos;
+- uso responsável.
+
+O próprio planejamento prevê uma política de **abstenção da IA quando as evidências forem insuficientes ou contraditórias**.
+
+---
+
+# ETAPA 15 — GitHub e documentação
+
+Depois vamos profissionalizar.
+
+Estrutura aproximada:
+
+```
+healthcheck-ai/
+
+extension/
+backend/
+ai/
+data/
+tests/
+docs/
+README.md
+requirements.txt
+.gitignore
+```
+
+E vamos trabalhar com commits organizados:
+
+```
+feat: create chrome extension structure
+
+feat: capture google search results
+
+feat: create analysis api
+
+feat: integrate extension with api
+
+feat: implement semantic retrieval
+
+feat: integrate local llm
+
+test: add classification evaluation
+```
+
+---
+
+# ETAPA 16 — Apresentação
+
+No final teremos uma demonstração extremamente simples.
+
+Você abre o Chrome.
+
+Pesquisa:
+
+```
+vacina da gripe causa gripe
+```
+
+Google mostra os resultados.
+
+Alguns segundos depois:
+
+```
+🔴 Evidências contraditórias
+Confiança: 91%
+
+3 evidências encontradas
+
+[Ver evidências]
+```
+
+Clica.
+
+Aparecem as fontes.
+
+Depois você explica:
+
+```
+Chrome Extension
+       ↓
+FastAPI
+       ↓
+RAG
+       ↓
+Base científica
+       ↓
+LLM
+       ↓
+Resposta explicável
+```
+
+E fecha apresentando as métricas dos testes.
+
+---
+
+## Nosso mapa oficial
+
+Para você não se perder, vamos usar este acompanhamento:
+
+```
+PROJETO — HEALTHCHECK IA
+
+[ ] 01 — Definir MVP
+[ ] 02 — Criar extensão Chrome
+[ ] 03 — Capturar resultados Google
+[ ] 04 — Criar interface dos selos
+[ ] 05 — Criar FastAPI
+[ ] 06 — Conectar extensão + API
+[ ] 07 — Criar base de saúde
+[ ] 08 — Implementar embeddings
+[ ] 09 — Implementar busca vetorial
+[ ] 10 — Implementar RAG
+[ ] 11 — Integrar LLM local
+[ ] 12 — Criar classificação
+[ ] 13 — Mostrar evidências/fontes
+[ ] 14 — Implementar pensamento crítico
+[ ] 15 — Criar testes
+[ ] 16 — Avaliar métricas
+[ ] 17 — Integrar MLflow
+[ ] 18 — Documentar limitações
+[ ] 19 — Organizar GitHub
+[ ] 20 — Preparar demonstração
+[ ] 21 — Preparar apresentação
+```
+
+E tem uma regra que quero que a gente siga durante todo o desenvolvimento:
+
+> **Não avançamos para a próxima camada até a anterior estar funcionando.**
+> 
+
+Então nosso **primeiro objetivo real é muito pequeno**:
+
+**criar uma extensão Chrome local que consiga alterar a página de resultados do Google e escrever “HealthCheck IA — aguardando análise” embaixo dos resultados.**
+
+A partir daí, construímos tudo em cima dela.
