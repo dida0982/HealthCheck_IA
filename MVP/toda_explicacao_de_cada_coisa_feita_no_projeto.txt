@@ -1774,3 +1774,40 @@ Aí podemos marcar **ETAPA 4 concluída** e partir para a primeira parte fora do
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+Sim, **ficaria exatamente assim**. Esse `content.js` está coerente com a correção que fizemos.
+
+Só tem um detalhe: do jeito que está, o `contadorResultados` reinicia em `0` toda vez que o `MutationObserver` chama `capturarResultados()`. Como os cards já inseridos são ignorados, isso não costuma quebrar, mas pode fazer novos resultados carregados depois começarem novamente pelo verde.
+
+Para a **Etapa 4**, isso é totalmente aceitável. O importante é você ver agora a alternância:
+
+```text
+🟢 Evidências favoráveis — 85%
+🔴 Evidências contraditórias — 82%
+🟢 Evidências favoráveis — 85%
+🔴 Evidências contraditórias — 82%
+```
+
+Então faça:
+
+```text
+1. Salve o content.js
+2. Vá em chrome://extensions
+3. Recarregue o HealthCheck IA
+4. Volte ao Google
+5. Atualize a página com Ctrl + F5
+6. Faça a pesquisa novamente
+```
+
+Se aparecer verde e vermelho alternando, a **ETAPA 4 está concluída**. ✅
+
+E reforçando: esses resultados ainda são **simulados**. O código:
+
+```javascript
+const favoravel = index % 2 === 0;
+```
+
+não está analisando se a notícia é verdadeira ou falsa. Ele só usa a posição do resultado para escolher a aparência do card. A análise real só vai surgir quando conectarmos o backend e, mais adiante, o RAG/LLM.
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
