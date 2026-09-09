@@ -1,36 +1,42 @@
-function adicionarHealthCheck() {
+function capturarResultados() {
   const resultados = document.querySelectorAll("div.MjjYud");
 
-  resultados.forEach((resultado) => {
-    if (resultado.querySelector(".healthcheck-box")) {
+  const dados = [];
+
+  resultados.forEach((resultado, index) => {
+    const tituloElemento = resultado.querySelector("h3");
+    const linkElemento = tituloElemento?.closest("a");
+
+    // Alguns resultados podem não ter descrição
+    const descricaoElemento =
+      resultado.querySelector(".VwiC3b") ||
+      resultado.querySelector("[data-sncf]");
+
+    if (!tituloElemento || !linkElemento) {
       return;
     }
 
-    const titulo = resultado.querySelector("h3");
+    const item = {
+      titulo: tituloElemento.innerText.trim(),
+      url: linkElemento.href,
+      descricao: descricaoElemento
+        ? descricaoElemento.innerText.trim()
+        : "Descrição não encontrada"
+    };
 
-    if (!titulo) {
-      return;
-    }
+    dados.push(item);
 
-    const caixa = document.createElement("div");
-
-    caixa.className = "healthcheck-box";
-    caixa.innerHTML = `
-      <strong>🔎 HealthCheck IA</strong>
-      <span>Aguardando análise</span>
-    `;
-
-    resultado.appendChild(caixa);
+    console.log(`Resultado ${dados.length}`);
+    console.log("Título:", item.titulo);
+    console.log("URL:", item.url);
+    console.log("Descrição:", item.descricao);
+    console.log("-----------------------------");
   });
+
+  console.log("Todos os resultados capturados:");
+  console.log(dados);
+
+  return dados;
 }
 
-adicionarHealthCheck();
-
-const observer = new MutationObserver(() => {
-  adicionarHealthCheck();
-});
-
-observer.observe(document.body, {
-  childList: true,
-  subtree: true
-});
+capturarResultados();
