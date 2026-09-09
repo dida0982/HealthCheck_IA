@@ -1,16 +1,26 @@
 {
   "manifest_version": 3,
+
   "name": "HealthCheck IA",
+
   "version": "1.0",
+
   "description": "Extensão para auxiliar na verificação de informações de saúde.",
+
+  "host_permissions": [
+    "http://127.0.0.1:8000/*"
+  ],
+
   "content_scripts": [
     {
       "matches": [
         "https://www.google.com/*"
       ],
+
       "js": [
         "content.js"
       ],
+
       "css": [
         "styles.css"
       ]
