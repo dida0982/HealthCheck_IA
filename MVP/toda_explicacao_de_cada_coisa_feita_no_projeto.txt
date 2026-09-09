@@ -3267,3 +3267,83 @@ Aqui tem uma diferença importante para as etapas anteriores: **não vale invent
 
 Se quiser, podemos fazer essa etapa juntos começando por **vacinas**, montando os primeiros documentos reais da base e o código Python que vai carregá-los.
 
+--------------------------------------------------------------------------------------------
+
+Então fechamos essa parte com:
+
+```text
+Documentos encontrados: 18
+Com conteúdo: 18
+Vazios: 0
+Estrutura válida: 18
+Com problemas de estrutura: 0
+```
+
+Isso é um marco importante porque agora não temos simplesmente “18 arquivos”. Temos uma **base de conhecimento estruturada e validada pelo nosso próprio código**.
+
+O fluxo já está assim:
+
+```text
+18 fontes de saúde (.md)
+        ↓
+6 categorias
+        ↓
+carregar_documentos.py
+        ↓
+verificação de arquivo vazio
+        ↓
+verificação dos campos obrigatórios
+        ↓
+18 documentos válidos ✅
+```
+
+### Onde estamos
+
+```text
+[X] 01 — Definir MVP
+[X] 02 — Extensão Chrome
+[X] 03 — Capturar resultados Google
+[X] 04 — Cards visuais
+[X] 05 — Backend FastAPI
+[X] 06 — Extensão ↔ Backend
+[X] 07 — Base de conhecimento ✅
+
+[ ] 08 — EMBEDDINGS  ← PRÓXIMO
+[ ] 09 — Busca semântica/vetorial
+[ ] 10 — RAG
+[ ] 11 — LLM local
+[ ] 12 — Classificação
+[ ] 13 — Evidências/fontes
+[ ] 14 — UX de pensamento crítico
+...
+```
+
+E agora começa uma parte **muito legal da IA**: **embeddings**.
+
+Vamos pegar aqueles textos como:
+
+```text
+"A vacinação contra influenza é realizada anualmente..."
+```
+
+e transformar o significado deles em **vetores numéricos**:
+
+```text
+Texto
+ ↓
+Modelo de Embeddings
+ ↓
+[0.018, -0.273, 0.419, 0.052, ...]
+```
+
+Isso permitirá que depois alguém pesquise algo como:
+
+> “tomar vacina da gripe todo ano é desnecessário”
+
+e o sistema consiga encontrar um documento sobre **vacinação anual contra influenza**, mesmo que a frase pesquisada não seja idêntica ao texto do documento.
+
+Esse é o fundamento da nossa futura **busca semântica e do RAG**.
+
+**Próxima etapa: 08 — Embeddings.** Vamos fazer do mesmo jeito: uma coisa de cada vez, entendendo o que estamos fazendo antes de colocar código. 🚀
+
+
