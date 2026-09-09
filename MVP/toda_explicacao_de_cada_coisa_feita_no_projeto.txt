@@ -1811,3 +1811,372 @@ não está analisando se a notícia é verdadeira ou falsa. Ele só usa a posiç
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+Perfeito. Agora entramos na **ETAPA 5 — Backend Python com FastAPI**.
+
+A ideia é criar um servidor separado da extensão. A extensão será a interface no navegador; o backend será onde ficará a lógica do sistema.
+
+Crie uma pasta nova ao lado da extensão:
+
+```text
+healthcheck-ia/
+│
+├── extension/
+│   ├── manifest.json
+│   ├── content.js
+│   └── styles.css
+│
+└── backend/
+    └── main.py
+```
+
+Dentro da pasta `backend`, abra o terminal e instale:
+
+```bash
+pip install fastapi uvicorn
+```
+
+Agora crie o arquivo `main.py`:
+
+```python
+from fastapi import FastAPI
+from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI(
+    title="HealthCheck IA API",
+    version="1.0.0"
+)
+
+
+# =========================
+# CORS
+# =========================
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# =========================
+# MODELOS DE DADOS
+# =========================
+
+class AnaliseRequest(BaseModel):
+    titulo: str
+    descricao: str
+
+
+class AnaliseResponse(BaseModel):
+    classificacao: str
+    confianca: float
+
+
+# =========================
+# ROTAS
+# =========================
+
+@app.get("/")
+def raiz():
+    return {
+        "mensagem": "HealthCheck IA API funcionando"
+    }
+
+
+@app.post(
+    "/analisar",
+    response_model=AnaliseResponse
+)
+def analisar(dados: AnaliseRequest):
+
+    print("Título recebido:", dados.titulo)
+    print("Descrição recebida:", dados.descricao)
+
+    # RESPOSTA SIMULADA
+    return AnaliseResponse(
+        classificacao="enganosa",
+        confianca=0.82
+    )
+```
+
+Depois, dentro da pasta `backend`, rode:
+
+```bash
+uvicorn main:app --reload
+```
+
+Se funcionar, você deverá ver algo parecido com:
+
+```text
+Uvicorn running on http://127.0.0.1:8000
+```
+
+Abra no navegador:
+
+```text
+http://127.0.0.1:8000
+```
+
+Deve aparecer:
+
+```json
+{
+  "mensagem": "HealthCheck IA API funcionando"
+}
+```
+
+Agora vem uma parte muito útil do FastAPI. Abra:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+Você verá automaticamente uma documentação interativa da API.
+
+Procure:
+
+```text
+POST /analisar
+```
+
+Clique em:
+
+```text
+Try it out
+```
+
+E envie:
+
+```json
+{
+  "titulo": "Vitamina C cura gripe?",
+  "descricao": "A vitamina C pode curar gripe rapidamente."
+}
+```
+
+A resposta esperada será:
+
+```json
+{
+  "classificacao": "enganosa",
+  "confianca": 0.82
+}
+```
+
+Se isso acontecer, teremos conseguido:
+
+```text
+CLIENTE
+   ↓
+HTTP POST
+   ↓
+JSON
+   ↓
+FASTAPI
+   ↓
+PYDANTIC
+   ↓
+função analisar()
+   ↓
+JSON
+   ↓
+RESPOSTA
+```
+
+Agora, os conceitos importantes desta etapa.
+
+**API** é a interface pela qual dois sistemas se comunicam. No nosso caso, futuramente:
+
+```text
+Chrome Extension
+       ↓
+      API
+       ↓
+Backend Python
+```
+
+**HTTP** é o protocolo usado nessa comunicação.
+
+**GET** normalmente busca informações:
+
+```http
+GET /
+```
+
+**POST** envia informações para processamento:
+
+```http
+POST /analisar
+```
+
+Por isso usamos POST para análise. Estamos enviando conteúdo para o backend processar.
+
+O corpo da requisição será JSON:
+
+```json
+{
+  "titulo": "...",
+  "descricao": "..."
+}
+```
+
+E o backend responde também em JSON:
+
+```json
+{
+  "classificacao": "enganosa",
+  "confianca": 0.82
+}
+```
+
+O **Pydantic** entra aqui:
+
+```python
+class AnaliseRequest(BaseModel):
+    titulo: str
+    descricao: str
+```
+
+Ele define o contrato de entrada.
+
+Se alguém mandar:
+
+```json
+{
+  "titulo": 123,
+  "descricao": []
+}
+```
+
+o FastAPI/Pydantic pode rejeitar os dados porque não correspondem ao formato esperado.
+
+Isso é importante porque nosso sistema não deve simplesmente aceitar qualquer estrutura.
+
+Já:
+
+```python
+class AnaliseResponse(BaseModel):
+    classificacao: str
+    confianca: float
+```
+
+define o formato esperado da resposta.
+
+E o **CORS**:
+
+```python
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
+
+será importante quando a extensão Chrome começar a fazer requisições para:
+
+```text
+http://127.0.0.1:8000
+```
+
+Nesta etapa estamos liberando tudo porque é um ambiente local de desenvolvimento. Mais tarde podemos restringir isso.
+
+E uma observação essencial:
+
+```python
+return AnaliseResponse(
+    classificacao="enganosa",
+    confianca=0.82
+)
+```
+
+**não existe nenhuma inteligência aí ainda.**
+
+Todo texto enviado receberá:
+
+```text
+enganosa
+82%
+```
+
+Mesmo se você mandar:
+
+```json
+{
+  "titulo": "A Terra é redonda",
+  "descricao": "..."
+}
+```
+
+ele continuará respondendo:
+
+```json
+{
+  "classificacao": "enganosa",
+  "confianca": 0.82
+}
+```
+
+Porque estamos apenas construindo a infraestrutura.
+
+Nossa arquitetura agora começa a ficar assim:
+
+```text
+┌─────────────────────┐
+│       GOOGLE        │
+└──────────┬──────────┘
+           ↓
+┌─────────────────────┐
+│ CHROME EXTENSION    │
+│ JavaScript          │
+└─────────────────────┘
+
+
+┌─────────────────────┐
+│ BACKEND             │
+│ Python + FastAPI    │
+│                     │
+│ POST /analisar      │
+└─────────────────────┘
+```
+
+Ainda estão separados.
+
+A **ETAPA 6** vai conectar os dois:
+
+```text
+Google
+  ↓
+Extensão
+  ↓
+fetch()
+  ↓
+POST /analisar
+  ↓
+FastAPI
+  ↓
+JSON
+  ↓
+Extensão
+  ↓
+Card do HealthCheck
+```
+
+Para concluir a **ETAPA 5**, precisamos confirmar três coisas:
+
+```text
+[ ] http://127.0.0.1:8000 abre
+
+[ ] http://127.0.0.1:8000/docs abre
+
+[ ] POST /analisar retorna:
+    classificacao = enganosa
+    confianca = 0.82
+```
+
+Se essas três coisas funcionarem, marcamos **ETAPA 5 concluída**.
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
