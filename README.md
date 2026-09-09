@@ -1,7 +1,7 @@
 ````markdown
 # 🩺 HealthCheck IA
 
-## Inteligência Artificial no combate à desinformação em saúde
+## Inteligência Artificial no combate à desinformação em saúde.
 
 O **HealthCheck IA** é um projeto que tem como objetivo desenvolver uma solução baseada em Inteligência Artificial para auxiliar na identificação e verificação de desinformação relacionada à saúde.
 
