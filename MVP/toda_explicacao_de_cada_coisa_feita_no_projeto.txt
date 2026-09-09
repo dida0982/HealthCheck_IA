@@ -2786,3 +2786,75 @@ Se o card mudar de **“Analisando...”** para **“Evidências contraditórias
 
 ------------------------------------------------------------------------------------------------------------------------------------
 
+UHUUU! 🚀 **ETAPA 6 oficialmente concluída!** E essa foi uma etapa importante porque agora vocês têm uma arquitetura **cliente-servidor funcionando de verdade**.
+
+```text
+HEALTHCHECK IA — PROGRESSO
+
+[X] ETAPA 1 — Definir o MVP
+[X] ETAPA 2 — Extensão Chrome básica
+[X] ETAPA 3 — Capturar resultados do Google
+[X] ETAPA 4 — Componente visual
+[X] ETAPA 5 — Backend Python + FastAPI
+[X] ETAPA 6 — Conectar Chrome ↔ Python ✅
+
+[ ] ETAPA 7 — Base de evidências de saúde
+[ ] ETAPA 8 — Embeddings
+[ ] ETAPA 9 — Busca semântica
+[ ] ETAPA 10 — RAG
+[ ] ETAPA 11 — LLM local
+[ ] ETAPA 12 — Classificação
+[ ] ETAPA 13 — Evidências e fontes
+[ ] ETAPA 14 — Pensamento crítico / UX
+[ ] ETAPA 15 — Testes
+[ ] ETAPA 16 — Métricas
+[ ] ETAPA 17 — MLflow
+...
+```
+
+O sistema já executa este fluxo real:
+
+```text
+GOOGLE
+   ↓
+Extensão Chrome
+   ↓
+Captura título + descrição + URL
+   ↓
+JavaScript
+   ↓
+fetch()
+   ↓
+HTTP POST
+   ↓
+FastAPI / Python
+   ↓
+POST /analisar
+   ↓
+JSON
+   ↓
+Extensão recebe a resposta
+   ↓
+Atualiza o card no Google
+```
+
+Até agora, a única parte "falsa" é **a inteligência**. O backend ainda responde manualmente:
+
+```json
+{
+  "classificacao": "enganosa",
+  "confianca": 0.82
+}
+```
+
+Mas a infraestrutura necessária para substituir isso por uma análise real já está funcionando.
+
+A **ETAPA 7 — Base de evidências de saúde** começa justamente essa mudança. Em vez de o Python simplesmente inventar `"enganosa"`, vamos começar a construir o conhecimento confiável que posteriormente será recuperado pelo RAG.
+
+Aí entram fontes como **Ministério da Saúde, Anvisa, Fiocruz, BVS, PubMed, universidades e sociedades médicas**, com uma preocupação importante: guardar não apenas o texto, mas também **fonte, título, URL, data e outros metadados**, para que futuramente o HealthCheck consiga mostrar ao usuário **qual evidência sustentou a análise**.
+
+**6 etapas concluídas. Agora começa a construção da parte realmente inteligente do HealthCheck IA. 🔥**
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+
