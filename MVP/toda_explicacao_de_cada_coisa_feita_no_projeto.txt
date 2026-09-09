@@ -2858,3 +2858,202 @@ Aí entram fontes como **Ministério da Saúde, Anvisa, Fiocruz, BVS, PubMed, un
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+Perfeito. A **ETAPA 7** deve começar pequena e controlada. Antes de automatizar coleta de sites ou PubMed, o melhor é montar uma **base local confiável e rastreável**, com poucos documentos, mas bem organizados.
+
+A estrutura pode ficar assim:
+
+```text
+healthcheck-extension/
+│
+├── backend/
+│   └── main.py
+│
+├── extension/
+│   ├── manifest.json
+│   ├── content.js
+│   └── styles.css
+│
+└── data/
+    ├── vacinas/
+    ├── diabetes/
+    ├── hipertensao/
+    ├── cancer/
+    ├── dengue/
+    └── medicamentos/
+```
+
+Dentro de cada pasta, inicialmente eu sugiro usar arquivos `.txt` ou `.md`, porque são simples de ler com Python e depois transformar em embeddings.
+
+Por exemplo:
+
+```text
+data/
+└── vacinas/
+    ├── ministerio_saude_vacina_gripe.md
+    ├── fiocruz_vacinas.md
+    └── anvisa_vacinas.md
+```
+
+Um documento pode ter este formato:
+
+```markdown
+# Vacina contra influenza
+
+Fonte: Ministério da Saúde
+URL: https://...
+Data de acesso: 09/09/2026
+Tema: Vacinas
+
+## Conteúdo
+
+A vacina contra influenza é utilizada para reduzir o risco de formas graves da doença e suas complicações.
+
+A vacina não causa gripe, pois as vacinas utilizadas na campanha não contêm vírus influenza capazes de provocar a doença.
+
+## Palavras-chave
+
+influenza, gripe, vacina, vacinação, prevenção
+```
+
+Esse formato é importante porque não queremos guardar apenas o texto. Precisamos preservar também os **metadados**:
+
+```text
+conteúdo
+fonte
+URL
+tema
+data
+título
+```
+
+Mais tarde, quando o HealthCheck encontrar uma evidência, ele poderá devolver algo como:
+
+```json
+{
+  "evidencia": "A vacina contra influenza não causa gripe...",
+  "fonte": "Ministério da Saúde",
+  "url": "https://...",
+  "tema": "vacinas"
+}
+```
+
+E isso vai permitir que o usuário clique em **Ver evidências** e veja de onde a informação veio.
+
+### O primeiro conjunto da base
+
+Eu não tentaria agora colocar centenas de documentos. Para o MVP, começaria com algo como:
+
+```text
+VACINAS
+3 a 5 documentos
+
+DIABETES
+3 a 5 documentos
+
+HIPERTENSÃO
+3 a 5 documentos
+
+DENGUE
+3 a 5 documentos
+
+MEDICAMENTOS
+3 a 5 documentos
+```
+
+Isso já nos daria algo perto de **15 a 25 documentos confiáveis** para testar o sistema.
+
+Cancer pode entrar depois, porque é um assunto extremamente amplo.
+
+Outra coisa importante: **não precisamos armazenar artigos científicos inteiros**. Para o MVP, podemos guardar trechos relevantes, resumos ou documentos públicos selecionados, sempre mantendo a referência da fonte.
+
+### Antes dos embeddings
+
+Nesta etapa ainda não vamos fazer busca semântica. Primeiro precisamos provar que o Python consegue ler nossa base.
+
+Depois de criar alguns arquivos, podemos fazer algo simples como:
+
+```python
+from pathlib import Path
+
+pasta_data = Path("../data")
+
+documentos = []
+
+for arquivo in pasta_data.rglob("*.md"):
+    conteudo = arquivo.read_text(
+        encoding="utf-8"
+    )
+
+    documentos.append({
+        "arquivo": arquivo.name,
+        "conteudo": conteudo
+    })
+
+print(f"Documentos carregados: {len(documentos)}")
+
+for documento in documentos:
+    print(documento["arquivo"])
+```
+
+Se tivermos:
+
+```text
+data/
+├── vacinas/
+│   ├── vacina_gripe.md
+│   └── vacina_covid.md
+│
+└── diabetes/
+    └── diabetes_tipo2.md
+```
+
+o Python poderia mostrar:
+
+```text
+Documentos carregados: 3
+
+vacina_gripe.md
+vacina_covid.md
+diabetes_tipo2.md
+```
+
+Nesse ponto teremos:
+
+```text
+FONTES CONFIÁVEIS
+        ↓
+documentos selecionados
+        ↓
+data/
+        ↓
+Python lê os arquivos
+        ↓
+lista de documentos
+```
+
+Na **Etapa 8**, essa lista será transformada em **embeddings**, ou seja, representações vetoriais que permitirão buscar informações por significado e não apenas por palavras exatas.
+
+Para concluir a **ETAPA 7**, eu colocaria estas metas:
+
+```text
+[ ] Criar pasta data/
+
+[ ] Definir temas iniciais
+
+[ ] Selecionar fontes confiáveis
+
+[ ] Criar pelo menos 10 documentos
+
+[ ] Cada documento possuir:
+    - título
+    - fonte
+    - URL
+    - tema
+    - conteúdo
+
+[ ] Python conseguir carregar todos os documentos
+```
+
+Aqui tem uma diferença importante para as etapas anteriores: **não vale inventar o conteúdo científico dos arquivos**. Os textos precisam vir das fontes confiáveis que vocês selecionarem.
+
+Se quiser, podemos fazer essa etapa juntos começando por **vacinas**, montando os primeiros documentos reais da base e o código Python que vai carregá-los.
