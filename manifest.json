@@ -3,7 +3,6 @@
   "name": "HealthCheck IA",
   "version": "1.0",
   "description": "Extensão para auxiliar na verificação de informações de saúde.",
-  "permissions": [],
   "content_scripts": [
     {
       "matches": [
