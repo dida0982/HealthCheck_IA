@@ -1,7 +1,9 @@
 function capturarResultados() {
   const resultados = document.querySelectorAll("div.MjjYud");
 
-  resultados.forEach((resultado, index) => {
+  let contadorResultados = 0;
+
+  resultados.forEach((resultado) => {
     const tituloElemento = resultado.querySelector("h3");
     const linkElemento = tituloElemento?.closest("a");
 
@@ -13,7 +15,6 @@ function capturarResultados() {
       return;
     }
 
-    // Evita inserir o componente duas vezes
     if (resultado.querySelector(".healthcheck-card")) {
       return;
     }
@@ -26,7 +27,13 @@ function capturarResultados() {
         : "Descrição não encontrada"
     };
 
-    criarComponenteHealthCheck(resultado, item, index);
+    criarComponenteHealthCheck(
+      resultado,
+      item,
+      contadorResultados
+    );
+
+    contadorResultados++;
   });
 }
 

@@ -1365,3 +1365,412 @@ Agora podemos partir para a **ETAPA 4 — transformar aquele simples “🔎 Hea
 -----------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+Perfeito. Na **ETAPA 4** vamos manter tudo simulado, mas deixar o HealthCheck IA com cara de produto de verdade.
+
+A ideia é: em vez do texto simples “aguardando análise”, cada resultado do Google vai receber um **card visual**, com status, confiança e um botão expansível.
+
+Substitua seu `content.js` por este:
+
+```javascript
+function capturarResultados() {
+  const resultados = document.querySelectorAll("div.MjjYud");
+
+  resultados.forEach((resultado, index) => {
+    const tituloElemento = resultado.querySelector("h3");
+    const linkElemento = tituloElemento?.closest("a");
+
+    const descricaoElemento =
+      resultado.querySelector(".VwiC3b") ||
+      resultado.querySelector("[data-sncf]");
+
+    if (!tituloElemento || !linkElemento) {
+      return;
+    }
+
+    // Evita inserir o componente duas vezes
+    if (resultado.querySelector(".healthcheck-card")) {
+      return;
+    }
+
+    const item = {
+      titulo: tituloElemento.innerText.trim(),
+      url: linkElemento.href,
+      descricao: descricaoElemento
+        ? descricaoElemento.innerText.trim()
+        : "Descrição não encontrada"
+    };
+
+    criarComponenteHealthCheck(resultado, item, index);
+  });
+}
+
+
+function criarComponenteHealthCheck(resultado, item, index) {
+  const card = document.createElement("div");
+
+  card.className = "healthcheck-card";
+
+  /*
+    Por enquanto os resultados são SIMULADOS.
+
+    Alternamos entre verde e vermelho apenas para
+    visualizar os dois tipos de componente.
+  */
+
+  const favoravel = index % 2 === 0;
+
+  const status = favoravel
+    ? "Evidências favoráveis"
+    : "Evidências contraditórias";
+
+  const classeStatus = favoravel
+    ? "healthcheck-favoravel"
+    : "healthcheck-contraditorio";
+
+  const icone = favoravel ? "🟢" : "🔴";
+
+  const confianca = favoravel ? 85 : 82;
+
+  card.innerHTML = `
+    <div class="healthcheck-header">
+
+      <div class="healthcheck-status ${classeStatus}">
+        <span>${icone}</span>
+        <strong>${status}</strong>
+      </div>
+
+      <div class="healthcheck-confidence">
+        Confiança: ${confianca}%
+      </div>
+
+    </div>
+
+    <button
+      class="healthcheck-button"
+      aria-expanded="false"
+      type="button"
+    >
+      Ver análise
+    </button>
+
+    <div
+      class="healthcheck-details"
+      hidden
+    >
+
+      <p>
+        Esta análise é apenas uma simulação visual.
+        A Inteligência Artificial ainda não está conectada.
+      </p>
+
+      <p>
+        <strong>Título analisado:</strong>
+        ${item.titulo}
+      </p>
+
+      <p>
+        <strong>Fonte:</strong>
+        ${new URL(item.url).hostname}
+      </p>
+
+    </div>
+  `;
+
+  resultado.appendChild(card);
+
+  const botao = card.querySelector(".healthcheck-button");
+  const detalhes = card.querySelector(".healthcheck-details");
+
+  botao.addEventListener("click", () => {
+    const estaAberto =
+      botao.getAttribute("aria-expanded") === "true";
+
+    botao.setAttribute(
+      "aria-expanded",
+      String(!estaAberto)
+    );
+
+    detalhes.hidden = estaAberto;
+
+    botao.innerText = estaAberto
+      ? "Ver análise"
+      : "Ocultar análise";
+  });
+}
+
+
+function iniciarHealthCheck() {
+  capturarResultados();
+}
+
+
+iniciarHealthCheck();
+
+
+const observer = new MutationObserver(() => {
+  capturarResultados();
+});
+
+
+observer.observe(document.body, {
+  childList: true,
+  subtree: true
+});
+```
+
+Agora substitua seu `styles.css` por este:
+
+```css
+.healthcheck-card {
+  margin-top: 12px;
+  margin-bottom: 12px;
+
+  padding: 14px 16px;
+
+  max-width: 600px;
+
+  background: #ffffff;
+
+  border: 1px solid #dfe6ee;
+  border-radius: 12px;
+
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.06);
+
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
+
+  color: #202124;
+}
+
+
+/* =========================
+   CABEÇALHO
+========================= */
+
+.healthcheck-header {
+  display: flex;
+
+  justify-content: space-between;
+  align-items: center;
+
+  gap: 12px;
+
+  margin-bottom: 12px;
+}
+
+
+/* =========================
+   STATUS
+========================= */
+
+.healthcheck-status {
+  display: flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  font-size: 14px;
+}
+
+
+.healthcheck-favoravel {
+  color: #137333;
+}
+
+
+.healthcheck-contraditorio {
+  color: #b3261e;
+}
+
+
+/* =========================
+   CONFIANÇA
+========================= */
+
+.healthcheck-confidence {
+  font-size: 12px;
+
+  color: #5f6368;
+
+  background: #f1f3f4;
+
+  padding: 5px 9px;
+
+  border-radius: 20px;
+}
+
+
+/* =========================
+   BOTÃO
+========================= */
+
+.healthcheck-button {
+  background: transparent;
+
+  border: none;
+
+  padding: 0;
+
+  color: #1a73e8;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+
+.healthcheck-button:hover {
+  text-decoration: underline;
+}
+
+
+.healthcheck-button:focus {
+  outline: 2px solid #1a73e8;
+
+  outline-offset: 3px;
+
+  border-radius: 3px;
+}
+
+
+/* =========================
+   DETALHES
+========================= */
+
+.healthcheck-details {
+  margin-top: 14px;
+
+  padding-top: 12px;
+
+  border-top: 1px solid #e8eaed;
+
+  font-size: 13px;
+
+  line-height: 1.5;
+
+  color: #3c4043;
+}
+
+
+.healthcheck-details p {
+  margin: 7px 0;
+}
+```
+
+Seu `manifest.json` pode continuar praticamente igual ao da etapa anterior:
+
+```json
+{
+  "manifest_version": 3,
+  "name": "HealthCheck IA",
+  "version": "1.0",
+  "description": "Extensão para auxiliar na verificação de informações de saúde.",
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.google.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "styles.css"
+      ]
+    }
+  ]
+}
+```
+
+Depois faça novamente:
+
+```text
+1. Salvar content.js
+2. Salvar styles.css
+3. Abrir chrome://extensions
+4. Recarregar HealthCheck IA
+5. Atualizar a página do Google
+6. Fazer uma pesquisa
+```
+
+Você deverá começar a ver algo como:
+
+```text
+🟢 Evidências favoráveis             Confiança: 85%
+
+Ver análise
+```
+
+No resultado seguinte:
+
+```text
+🔴 Evidências contraditórias         Confiança: 82%
+
+Ver análise
+```
+
+E ao clicar em **Ver análise**, o card expande:
+
+```text
+Esta análise é apenas uma simulação visual.
+A Inteligência Artificial ainda não está conectada.
+
+Título analisado:
+Vitamina C previne gripe e resfriados?
+
+Fonte:
+drauziovarella.uol.com.br
+
+Ocultar análise
+```
+
+Um detalhe muito importante: os valores de **85% e 82% são totalmente falsos nesta etapa**. Eles estão ali apenas para construir e testar a interface. Não estamos calculando nada ainda.
+
+O `index % 2 === 0` também não faz qualquer análise:
+
+```javascript
+const favoravel = index % 2 === 0;
+```
+
+Ele simplesmente faz:
+
+```text
+Resultado 1 → verde
+Resultado 2 → vermelho
+Resultado 3 → verde
+Resultado 4 → vermelho
+...
+```
+
+É só para conseguirmos enxergar os dois estados da interface.
+
+Nesta etapa você está aprendendo cinco conceitos importantes ao mesmo tempo: **componentes**, porque cada resultado recebe um card independente; **eventos**, porque o botão reage ao clique; **estado**, porque o componente sabe se está aberto ou fechado; **CSS**, porque estamos estilizando elementos inseridos pela extensão; e **acessibilidade**, usando `button`, `aria-expanded`, foco visual e `hidden`.
+
+Quando estiver funcionando, nossa arquitetura já terá evoluído para:
+
+```text
+Google
+   ↓
+HealthCheck encontra o resultado
+   ↓
+captura título + URL + descrição
+   ↓
+cria componente visual
+   ↓
+┌──────────────────────────────┐
+│ 🟢 Evidências favoráveis     │
+│ Confiança: 85%               │
+│                              │
+│ Ver análise                  │
+└──────────────────────────────┘
+```
+
+Aí podemos marcar **ETAPA 4 concluída** e partir para a primeira parte fora do navegador: **ETAPA 5 — criar nossa API em Python com FastAPI.**
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------
+
