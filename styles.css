@@ -1,0 +1,26 @@
+.healthcheck-box {
+    margin-top: 8px;
+    padding: 10px 14px;
+
+    border: 1px solid #bcd7f5;
+    border-radius: 8px;
+
+    background-color: #f4f9ff;
+
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    color: #1f4e79;
+}
+
+.healthcheck-box strong {
+    font-weight: bold;
+}
+
+.healthcheck-box span {
+    color: #666;
+}
