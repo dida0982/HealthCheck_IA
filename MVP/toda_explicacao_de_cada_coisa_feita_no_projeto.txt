@@ -5392,3 +5392,115 @@ Rode esse código e me envie os **3 resultados**. O mais interessante agora ser�
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+Perfeito. O **8.9 funcionou corretamente** e agora a busca semântica já está trazendo múltiplas evidências relevantes, em ordem de similaridade.
+
+Repare como os três resultados fazem sentido para a pergunta. O 1º retornou diretamente que a vacina é uma das principais medidas contra formas graves da gripe, o 2º reforçou redução de agravamento, internações e óbitos, e o 3º trouxe uma evidência semelhante da Fiocruz. Isso é exatamente o comportamento que queríamos.
+
+Seu fluxo agora está assim:
+
+```text
+Pergunta do usuário
+        ↓
+Embedding da pergunta
+        ↓
+Comparação com 93 embeddings
+        ↓
+Similaridade de cosseno
+        ↓
+Ordenação
+        ↓
+TOP 3 evidências
+```
+
+Então podemos marcar:
+
+```text
+[X] 8.7 Embeddings dos 93 chunks
+[X] 8.8 Similaridade de cosseno
+[X] 8.9 Primeira busca semântica completa ✅
+```
+
+Tem um ponto interessante no seu resultado: os dois primeiros chunks vieram do mesmo arquivo, `ministerio_saude_gripe.md`. Isso **não é um erro**. Como os dois trechos são semanticamente muito próximos da pergunta, eles ficaram no topo. Mais à frente podemos decidir se queremos diversidade de fontes, por exemplo limitar a no máximo 1 ou 2 chunks por documento.
+
+O próximo passo lógico agora é transformar essa busca em uma **função reutilizável**, algo como:
+
+```python
+buscar_evidencias("vitamina C cura gripe?", top_k=3)
+```
+
+que devolva automaticamente os melhores chunks. Isso vai ser importante porque depois o FastAPI vai chamar essa função em vez de deixar a pergunta fixa dentro do arquivo.
+
+Ou seja, o próximo passo é começar a sair de um script de teste e entrar numa estrutura que realmente possa alimentar o HealthCheck IA. 🚀
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Sim, é isso. **O próximo passo natural é o 8.10 — integrar a busca semântica ao backend.**
+
+Até agora, o `busca_semantica.py` funciona sozinho no terminal. Ele recebe uma pergunta fixa, gera o embedding, compara com os 93 chunks e retorna o TOP 3. Agora precisamos fazer o `main.py` conseguir chamar essa lógica quando a extensão enviar um título e uma descrição.
+
+O fluxo vai passar de:
+
+```text
+pergunta fixa no busca_semantica.py
+        ↓
+TOP 3 evidências
+```
+
+para:
+
+```text
+Extensão do Chrome
+        ↓
+POST /analisar
+        ↓
+FastAPI
+        ↓
+buscar_evidencias()
+        ↓
+TOP 3 chunks
+        ↓
+resposta do backend
+```
+
+Mas eu faria uma pequena organização antes de ligar tudo diretamente. O `busca_semantica.py` precisa deixar de ser apenas um script de teste e virar algo reutilizável, por exemplo:
+
+```python
+def buscar_evidencias(pergunta, top_k=3):
+    ...
+    return resultados
+```
+
+Assim, no `main.py`, depois poderemos fazer algo como:
+
+```python
+from busca_semantica import buscar_evidencias
+```
+
+e:
+
+```python
+evidencias = buscar_evidencias(
+    dados.titulo + " " + dados.descricao
+)
+```
+
+Então sim, nossa sequência agora fica:
+
+```text
+[X] 8.7 Embeddings dos chunks
+[X] 8.8 Similaridade de cosseno
+[X] 8.9 Busca semântica TOP 3
+
+[ ] 8.10 Integrar busca semântica ao backend ← AGORA
+```
+
+No **8.10**, eu sugiro fazermos em duas partes: primeiro transformar o `busca_semantica.py` em uma função reutilizável; depois modificar o `main.py` para usar essa função no endpoint `/analisar`.
+
+Podemos começar agora pela **8.10.1 — transformar o `busca_semantica.py` em `buscar_evidencias(pergunta, top_k=3)`**, sem mexer ainda no FastAPI.
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
