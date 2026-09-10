@@ -7709,3 +7709,279 @@ Quando isso funcionar, o próximo passo será o **9.9 — colocar tudo isso dent
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+Seu `main.py` está bem organizado. Para concluir o **9.9 — integrar RAG + LLM ao FastAPI**, vamos mudar quatro partes: imports, modelos Pydantic de resposta, endpoint `/analisar` e chamada ao Ollama.
+
+A forma mais simples é você substituir seu `main.py` inteiro por este:
+
+```python
+import json
+import requests
+
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+
+from busca_semantica import buscar_evidencias
+from rag import montar_prompt_rag
+
+
+app = FastAPI(
+    title="HealthCheck IA API",
+    version="1.0.0"
+)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+class AnaliseRequest(BaseModel):
+    titulo: str
+    descricao: str
+
+
+class Evidencia(BaseModel):
+    arquivo: str
+    chunk_id: int
+    conteudo: str
+    similaridade: float
+
+
+class AnaliseResponse(BaseModel):
+    classificacao: str
+    explicacao: str
+    evidencias_utilizadas: list[int]
+    evidencias: list[Evidencia]
+
+
+@app.get("/")
+def raiz():
+    return {
+        "mensagem": "HealthCheck IA API funcionando"
+    }
+
+
+@app.post(
+    "/analisar",
+    response_model=AnaliseResponse
+)
+def analisar(dados: AnaliseRequest):
+
+    texto_para_analisar = (
+        dados.titulo
+        + " "
+        + dados.descricao
+    )
+
+    # 1. Busca as evidências
+    evidencias = buscar_evidencias(
+        texto_para_analisar,
+        top_k=3
+    )
+
+    # 2. Monta o prompt RAG
+    prompt = montar_prompt_rag(
+        texto_para_analisar,
+        top_k=3
+    )
+
+    # 3. Envia o prompt para o Ollama
+    url_ollama = "http://localhost:11434/api/generate"
+
+    dados_ollama = {
+        "model": "llama3.2:3b",
+        "prompt": prompt,
+        "stream": False
+    }
+
+    try:
+
+        resposta_ollama = requests.post(
+            url_ollama,
+            json=dados_ollama,
+            timeout=120
+        )
+
+        resposta_ollama.raise_for_status()
+
+    except requests.RequestException as erro:
+
+        raise HTTPException(
+            status_code=503,
+            detail=f"Erro ao conectar com o Ollama: {erro}"
+        )
+
+    # 4. Obtém a resposta do modelo
+    resultado_ollama = resposta_ollama.json()
+
+    resposta_llm = resultado_ollama["response"]
+
+    # 5. Converte o JSON retornado pelo LLM
+    try:
+
+        analise = json.loads(resposta_llm)
+
+    except json.JSONDecodeError:
+
+        raise HTTPException(
+            status_code=500,
+            detail="O LLM retornou uma resposta que não é um JSON válido."
+        )
+
+    # 6. Retorna tudo para quem chamou a API
+    return AnaliseResponse(
+        classificacao=analise["classificacao"],
+        explicacao=analise["explicacao"],
+        evidencias_utilizadas=analise["evidencias_utilizadas"],
+        evidencias=evidencias
+    )
+```
+
+A principal mudança está no seu `AnaliseResponse`. Antes ele tinha apenas:
+
+```python
+class AnaliseResponse(BaseModel):
+    evidencias: list[Evidencia]
+```
+
+Agora passa a ter:
+
+```python
+class AnaliseResponse(BaseModel):
+    classificacao: str
+    explicacao: str
+    evidencias_utilizadas: list[int]
+    evidencias: list[Evidencia]
+```
+
+Então a API deixa de responder apenas:
+
+```json
+{
+  "evidencias": [...]
+}
+```
+
+e deverá responder algo muito mais completo:
+
+```json
+{
+  "classificacao": "SUSTENTADA PELAS EVIDÊNCIAS",
+  "explicacao": "As evidências indicam que a vacinação reduz casos graves...",
+  "evidencias_utilizadas": [1, 2, 3],
+  "evidencias": [
+    {
+      "arquivo": "ministerio_saude_gripe.md",
+      "chunk_id": 2,
+      "conteudo": "...",
+      "similaridade": 0.8087
+    }
+  ]
+}
+```
+
+Tem também duas proteções novas importantes. A primeira:
+
+```python
+try:
+    resposta_ollama = requests.post(...)
+except requests.RequestException:
+```
+
+evita que sua API simplesmente quebre se o Ollama estiver desligado.
+
+A segunda:
+
+```python
+try:
+    analise = json.loads(resposta_llm)
+except json.JSONDecodeError:
+```
+
+protege o backend caso o Llama resolva responder alguma coisa que não seja JSON válido.
+
+Mas quero chamar atenção para uma coisa importante no código atual: ao fazer:
+
+```python
+evidencias = buscar_evidencias(...)
+```
+
+e depois:
+
+```python
+prompt = montar_prompt_rag(...)
+```
+
+o `montar_prompt_rag()` chama a busca semântica **de novo**. Ou seja, estamos buscando as evidências duas vezes.
+
+Funciona, mas é redundante:
+
+```text
+buscar_evidencias()  ← busca 1
+        ↓
+
+montar_prompt_rag()
+        ↓
+montar_contexto_rag()
+        ↓
+buscar_evidencias()  ← busca 2
+```
+
+Por enquanto eu deixaria assim apenas para validar o fluxo completo. Depois do teste vamos refatorar para buscar **uma única vez** e passar as mesmas evidências para o prompt. Isso garante inclusive que as evidências retornadas pela API sejam exatamente as mesmas que o LLM recebeu.
+
+Agora salve o `main.py`.
+
+Depois inicie o servidor, dentro de `backend`:
+
+```powershell
+uvicorn main:app --reload
+```
+
+Espere aparecer:
+
+```text
+Application startup complete.
+```
+
+Depois abra:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+No Swagger, abra:
+
+```text
+POST /analisar
+```
+
+Clique em **Try it out** e mande:
+
+```json
+{
+  "titulo": "Vacina contra gripe ajuda a evitar casos graves?",
+  "descricao": "A vacinação pode reduzir internações e mortes por influenza."
+}
+```
+
+Depois clique em **Execute**.
+
+O que queremos agora é `200 OK` e uma resposta com estes quatro campos:
+
+```text
+classificacao
+explicacao
+evidencias_utilizadas
+evidencias
+```
+
+Se isso acontecer, o **9.9 está concluído** e estaremos a um passo do fluxo completo da extensão.
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
