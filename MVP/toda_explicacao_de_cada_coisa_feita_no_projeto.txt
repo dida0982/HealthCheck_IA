@@ -4801,3 +4801,336 @@ Se quiser, já podemos fazer agora o **8.8 — similaridade de cosseno**, mexend
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+Sim. Agora vamos para o **8.8 — similaridade de cosseno**, usando o mesmo `busca_semantica.py`.
+
+A ideia agora é simples: você já tem os **93 embeddings dos chunks**. Vamos criar uma pergunta, gerar o embedding dela e comparar esse vetor com os 93 vetores da base.
+
+No topo do arquivo, acrescente esta importação:
+
+```python
+from sklearn.metrics.pairwise import cosine_similarity
+```
+
+Depois, **logo após gerar os embeddings dos 93 textos**, acrescente:
+
+```python
+pergunta = "A vacina contra gripe ajuda a evitar casos graves?"
+
+embedding_pergunta = modelo.encode([pergunta])
+
+similaridades = cosine_similarity(
+    embedding_pergunta,
+    embeddings
+)
+```
+
+Aqui acontece o seguinte:
+
+```text
+pergunta
+↓
+embedding de 384 dimensões
+↓
+comparação com os 93 embeddings
+↓
+93 valores de similaridade
+```
+
+Agora vamos descobrir qual chunk teve a maior similaridade. Acrescente:
+
+```python
+indice_mais_similar = similaridades[0].argmax()
+
+maior_similaridade = similaridades[0][indice_mais_similar]
+```
+
+E depois:
+
+```python
+print("\n=== BUSCA POR SIMILARIDADE ===")
+
+print("\nPergunta:")
+print(pergunta)
+
+print("\nMaior similaridade:")
+print(maior_similaridade)
+
+print("\nChunk mais parecido:")
+print(chunks[indice_mais_similar]["conteudo"])
+
+print("\nArquivo de origem:")
+print(chunks[indice_mais_similar]["arquivo"])
+
+print("\nID do chunk:")
+print(chunks[indice_mais_similar]["chunk_id"])
+```
+
+Então seu arquivo passa a ter esta parte nova:
+
+```python
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
+from carregar_documentos import chunks
+
+
+modelo = SentenceTransformer(
+    "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+)
+
+
+textos = []
+
+for chunk in chunks:
+    textos.append(chunk["conteudo"])
+
+
+embeddings = modelo.encode(
+    textos,
+    show_progress_bar=True
+)
+
+
+pergunta = "A vacina contra gripe ajuda a evitar casos graves?"
+
+embedding_pergunta = modelo.encode([pergunta])
+
+
+similaridades = cosine_similarity(
+    embedding_pergunta,
+    embeddings
+)
+
+
+indice_mais_similar = similaridades[0].argmax()
+
+maior_similaridade = similaridades[0][indice_mais_similar]
+
+
+print("\n=== BUSCA POR SIMILARIDADE ===")
+
+print("\nPergunta:")
+print(pergunta)
+
+print("\nMaior similaridade:")
+print(maior_similaridade)
+
+print("\nChunk mais parecido:")
+print(chunks[indice_mais_similar]["conteudo"])
+
+print("\nArquivo de origem:")
+print(chunks[indice_mais_similar]["arquivo"])
+
+print("\nID do chunk:")
+print(chunks[indice_mais_similar]["chunk_id"])
+```
+
+Agora rode novamente:
+
+```powershell
+python busca_semantica.py
+```
+
+O valor da similaridade deverá ser algo entre aproximadamente:
+
+```text
+-1.0 até 1.0
+```
+
+Sendo que, para nosso caso:
+
+```text
+próximo de 1 → semanticamente muito parecido
+próximo de 0 → pouca relação
+negativo → direções semânticas pouco compatíveis
+```
+
+Por exemplo, pode aparecer algo como:
+
+```text
+Pergunta:
+A vacina contra gripe ajuda a evitar casos graves?
+
+Maior similaridade:
+0.72
+```
+
+Mas **0,72 não significa “72% de verdade”**. Isso é muito importante.
+
+Significa apenas que o vetor da pergunta e o vetor daquele chunk têm uma proximidade semântica de aproximadamente `0.72` pelo cosseno.
+
+Matematicamente estamos calculando:
+
+```text
+cos(θ) = (A · B) / (||A|| × ||B||)
+```
+
+onde `A` é o embedding da pergunta e `B` é o embedding de cada chunk.
+
+Um detalhe importante do código:
+
+```python
+embedding_pergunta = modelo.encode([pergunta])
+```
+
+Usamos:
+
+```python
+[pergunta]
+```
+
+em vez de apenas:
+
+```python
+pergunta
+```
+
+porque queremos que o resultado tenha formato:
+
+```text
+(1, 384)
+```
+
+Assim ele pode ser comparado diretamente com:
+
+```text
+(93, 384)
+```
+
+O resultado da comparação será:
+
+```text
+(1, 93)
+```
+
+Ou seja:
+
+```text
+pergunta
+   ↓
+[similaridade com chunk 0,
+ similaridade com chunk 1,
+ similaridade com chunk 2,
+ ...
+ similaridade com chunk 92]
+```
+
+E o:
+
+```python
+argmax()
+```
+
+simplesmente pergunta:
+
+```text
+qual posição possui o maior valor?
+```
+
+Essa posição corresponde ao chunk considerado semanticamente mais próximo.
+
+Rode agora. O que eu quero ver principalmente é:
+
+```text
+Maior similaridade:
+...
+
+Chunk mais parecido:
+...
+
+Arquivo de origem:
+...
+```
+
+Se ele encontrar algo relacionado a **vacina/gripe**, teremos acabado de fazer a primeira recuperação semântica real da base do HealthCheck IA. 🚀
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Perfeito — **o 8.8 funcionou muito bem**. ✅
+
+O ponto principal foi este:
+
+```text
+Maior similaridade:
+0.8116439
+```
+
+E o sistema encontrou exatamente um chunk relevante sobre vacinação contra gripe:
+
+```text
+A vacina é uma das principais medidas de prevenção contra formas graves da gripe.
+```
+
+Isso mostra que a busca semântica está funcionando de verdade. Você perguntou:
+
+```text
+A vacina contra gripe ajuda a evitar casos graves?
+```
+
+e, mesmo sem a frase ser idêntica ao texto da base, o modelo encontrou o conteúdo semanticamente relacionado.
+
+Então podemos marcar:
+
+```text
+[X] 8.7 Gerar embeddings dos 93 chunks
+[X] 8.8 Similaridade de cosseno ✅
+
+[ ] 8.9 Primeira busca semântica completa ← PRÓXIMO
+```
+
+Agora entra uma melhoria importante: hoje nós pegamos **apenas o chunk mais parecido** usando:
+
+```python
+argmax()
+```
+
+Mas em um sistema RAG de verdade, normalmente não queremos só 1 resultado. Queremos algo como os **3 ou 5 chunks mais relevantes**.
+
+Por exemplo:
+
+```text
+Pergunta:
+A vacina contra gripe ajuda a evitar casos graves?
+
+TOP 3
+
+1º — similaridade 0.81
+ministerio_saude_gripe.md
+
+2º — similaridade 0.74
+fiocruz_vacinas.md
+
+3º — similaridade 0.68
+anvisa_vacinas.md
+```
+
+Isso é melhor porque a IA poderá depois analisar **várias evidências**, não apenas uma.
+
+E repare numa coisa importante: `0.8116439` **não é 81% de chance de a afirmação ser verdadeira**. É somente o grau de proximidade entre os dois vetores segundo a similaridade de cosseno.
+
+Seu pipeline agora já está realmente assim:
+
+```text
+Pergunta do usuário
+       ↓
+Embedding da pergunta
+       ↓
+[384 dimensões]
+       ↓
+Comparação com
+93 embeddings da base
+       ↓
+Similaridade de cosseno
+       ↓
+Chunk mais relacionado
+       ↓
+ministerio_saude_gripe.md
+```
+
+Isso já é o **núcleo da recuperação de informação** que posteriormente vai alimentar o RAG.
+
+No **8.9**, vamos alterar esse mesmo `busca_semantica.py` para retornar o **TOP 3 de evidências**, ordenadas da maior para a menor similaridade. Aí nossa busca semântica fica muito mais próxima do que usaremos no HealthCheck IA.
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
