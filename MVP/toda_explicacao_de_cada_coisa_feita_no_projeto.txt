@@ -5740,3 +5740,293 @@ Esse próximo passo vai ser importante porque será a primeira vez que a **exten
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+Perfeito. Agora vamos fazer o **8.10.2 — conectar `buscar_evidencias()` ao FastAPI**.
+
+A ideia é que o endpoint `/analisar` deixe de responder algo fixo e passe a usar o texto recebido da extensão para buscar evidências reais na sua base.
+
+No `main.py`, adicione esta importação:
+
+```python
+from busca_semantica import buscar_evidencias
+```
+
+Depois, vamos mudar os modelos de resposta para incluir as evidências. Seu `main.py` pode ficar assim:
+
+```python
+from fastapi import FastAPI
+from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+
+from busca_semantica import buscar_evidencias
+
+
+app = FastAPI(
+    title="HealthCheck IA API",
+    version="1.0.0"
+)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+class AnaliseRequest(BaseModel):
+    titulo: str
+    descricao: str
+
+
+class Evidencia(BaseModel):
+    arquivo: str
+    chunk_id: int
+    conteudo: str
+    similaridade: float
+
+
+class AnaliseResponse(BaseModel):
+    evidencias: list[Evidencia]
+
+
+@app.get("/")
+def raiz():
+    return {
+        "mensagem": "HealthCheck IA API funcionando"
+    }
+
+
+@app.post(
+    "/analisar",
+    response_model=AnaliseResponse
+)
+def analisar(dados: AnaliseRequest):
+
+    texto_para_analisar = (
+        dados.titulo
+        + " "
+        + dados.descricao
+    )
+
+    evidencias = buscar_evidencias(
+        texto_para_analisar,
+        top_k=3
+    )
+
+    return AnaliseResponse(
+        evidencias=evidencias
+    )
+```
+
+O coração da integração está aqui:
+
+```python
+texto_para_analisar = (
+    dados.titulo
+    + " "
+    + dados.descricao
+)
+```
+
+Sua extensão já manda algo parecido com:
+
+```json
+{
+  "titulo": "Vacina contra gripe reduz casos graves",
+  "descricao": "Veja como a vacinação pode reduzir internações e complicações."
+}
+```
+
+Agora o backend junta isso:
+
+```text
+Vacina contra gripe reduz casos graves Veja como a vacinação pode reduzir internações e complicações.
+```
+
+Depois essa parte:
+
+```python
+evidencias = buscar_evidencias(
+    texto_para_analisar,
+    top_k=3
+)
+```
+
+faz toda a cadeia que construímos:
+
+```text
+título + descrição
+       ↓
+embedding
+       ↓
+comparação com 93 chunks
+       ↓
+similaridade de cosseno
+       ↓
+TOP 3
+```
+
+E o FastAPI vai devolver algo parecido com:
+
+```json
+{
+  "evidencias": [
+    {
+      "arquivo": "ministerio_saude_gripe.md",
+      "chunk_id": 2,
+      "conteudo": "A vacinação contra influenza...",
+      "similaridade": 0.81
+    },
+    {
+      "arquivo": "ministerio_saude_gripe.md",
+      "chunk_id": 1,
+      "conteudo": "A vacinação tem como objetivo...",
+      "similaridade": 0.78
+    },
+    {
+      "arquivo": "fiocruz_vacinas.md",
+      "chunk_id": 2,
+      "conteudo": "A vacinação é uma das principais...",
+      "similaridade": 0.78
+    }
+  ]
+}
+```
+
+## Agora vamos testar sem mexer na extensão ainda
+
+Salve o `main.py`.
+
+Depois pare o servidor, caso esteja aberto, usando:
+
+```powershell
+CTRL + C
+```
+
+E inicie novamente:
+
+```powershell
+uvicorn main:app --reload
+```
+
+Abra:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+Entre em:
+
+```text
+POST /analisar
+```
+
+Clique em **Try it out** e teste:
+
+```json
+{
+  "titulo": "Vacina contra gripe ajuda a evitar casos graves?",
+  "descricao": "A vacinação pode reduzir internações e mortes por influenza."
+}
+```
+
+Depois clique em:
+
+```text
+Execute
+```
+
+O que queremos ver agora é:
+
+```json
+{
+  "evidencias": [
+    ...
+  ]
+}
+```
+
+com três resultados reais da nossa base.
+
+### Uma coisa importante pode acontecer
+
+Quando você iniciar:
+
+```powershell
+uvicorn main:app --reload
+```
+
+é provável que apareçam novamente:
+
+```text
+Documentos encontrados: 18
+Total de chunks gerados: 93
+Loading weights...
+Batches...
+```
+
+Isso acontece porque:
+
+```text
+main.py
+↓
+importa busca_semantica.py
+↓
+busca_semantica.py importa carregar_documentos.py
+↓
+carrega 18 documentos
+↓
+gera 93 chunks
+↓
+carrega o modelo
+↓
+gera 93 embeddings
+```
+
+Isso é esperado **neste momento**.
+
+Inclusive, há uma vantagem: o modelo e os embeddings ficam carregados quando a aplicação inicia. Quando chegar uma requisição, não precisamos gerar os 93 embeddings novamente a cada chamada.
+
+Nosso sistema passa a ter esta arquitetura:
+
+```text
+Chrome Extension
+      ↓
+título + descrição
+      ↓
+POST /analisar
+      ↓
+FastAPI
+      ↓
+buscar_evidencias()
+      ↓
+Sentence Transformer
+      ↓
+Embedding da alegação
+      ↓
+93 embeddings da base
+      ↓
+Cosine Similarity
+      ↓
+TOP 3 evidências
+      ↓
+JSON
+```
+
+Mas ainda falta uma peça importante: **isso não classifica a notícia**.
+
+Neste momento o backend sabe dizer:
+
+> “Estes são os três trechos da nossa base semanticamente mais relacionados com aquilo que encontrei no Google.”
+
+Ele ainda **não sabe dizer** se a alegação é sustentada, enganosa ou contradita pelas evidências.
+
+Essa inteligência entra depois, quando passarmos as evidências recuperadas para o componente de análise/RAG/LLM.
+
+Primeiro faça esse teste pelo Swagger. Se aparecerem as três evidências no `Response body`, o **8.10.2 estará funcionando** e teremos conectado pela primeira vez **FastAPI + embeddings + busca semântica + base de saúde**. 🚀
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
