@@ -1,3 +1,4 @@
+from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
 from carregar_documentos import chunks
 
@@ -18,6 +19,20 @@ embeddings = modelo.encode(
     show_progress_bar=True
 )
 
+pergunta = "A vacina contra gripe ajuda a evitar casos graves?"
+
+embedding_pergunta = modelo.encode([pergunta])
+
+
+similaridades = cosine_similarity(
+    embedding_pergunta,
+    embeddings
+)
+
+
+indice_mais_similar = similaridades[0].argmax()
+
+maior_similaridade = similaridades[0][indice_mais_similar]
 
 print("\n=== RESULTADO ===")
 
