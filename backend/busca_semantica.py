@@ -1,5 +1,5 @@
-from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
 from carregar_documentos import chunks
 
 
@@ -19,6 +19,7 @@ embeddings = modelo.encode(
     show_progress_bar=True
 )
 
+
 pergunta = "A vacina contra gripe ajuda a evitar casos graves?"
 
 embedding_pergunta = modelo.encode([pergunta])
@@ -34,21 +35,20 @@ indice_mais_similar = similaridades[0].argmax()
 
 maior_similaridade = similaridades[0][indice_mais_similar]
 
-print("\n=== RESULTADO ===")
 
-print(f"Quantidade de chunks: {len(chunks)}")
-print(f"Quantidade de textos: {len(textos)}")
+print("\n=== BUSCA POR SIMILARIDADE ===")
 
-print(f"Formato dos embeddings: {embeddings.shape}")
+print("\nPergunta:")
+print(pergunta)
 
-print("\nPrimeiro chunk:")
-print(chunks[0]["conteudo"][:300])
+print("\nMaior similaridade:")
+print(maior_similaridade)
+
+print("\nChunk mais parecido:")
+print(chunks[indice_mais_similar]["conteudo"])
 
 print("\nArquivo de origem:")
-print(chunks[0]["arquivo"])
+print(chunks[indice_mais_similar]["arquivo"])
 
 print("\nID do chunk:")
-print(chunks[0]["chunk_id"])
-
-print("\nPrimeiros 10 números do embedding:")
-print(embeddings[0][:10])
+print(chunks[indice_mais_similar]["chunk_id"])
