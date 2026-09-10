@@ -28,17 +28,8 @@ embedding_pergunta = modelo.encode([pergunta])
 similaridades = cosine_similarity(
     embedding_pergunta,
     embeddings
-)
-
-
-pergunta = "A vacina contra gripe ajuda a evitar casos graves?"
-
-embedding_pergunta = modelo.encode([pergunta])
-
-similaridades = cosine_similarity(
-    embedding_pergunta,
-    embeddings
 )[0]
+
 
 top_k = 3
 
@@ -53,6 +44,7 @@ print("\nPergunta:")
 print(pergunta)
 
 print(f"\nTOP {top_k} resultados mais relevantes:\n")
+
 
 for posicao, indice in enumerate(top_indices, start=1):
 
