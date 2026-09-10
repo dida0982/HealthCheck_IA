@@ -122,6 +122,210 @@ http://127.0.0.1:8000/docs
 
 ---
 
+Claro. Você pode acrescentar esta seção no `COMANDOS_TERMINAL.md`:
+
+````markdown
+# Carregar a extensão no Google Chrome
+
+Depois de iniciar o backend, é necessário carregar a extensão do projeto manualmente no Chrome.
+
+## 1. Abrir a página de extensões
+
+No Google Chrome, digite na barra de endereço:
+
+```text
+chrome://extensions/
+````
+
+Pressione Enter.
+
+---
+
+## 2. Ativar o modo de desenvolvedor
+
+No canto superior direito da página, ative:
+
+```text
+Modo do desenvolvedor
+```
+
+Quando ele estiver ativado, aparecerão alguns botões no topo da página, incluindo:
+
+```text
+Carregar sem compactação
+Compactar extensão
+Atualizar
+```
+
+Para executar o HealthCheck IA durante o desenvolvimento, utilize:
+
+```text
+Carregar sem compactação
+```
+
+Não utilize:
+
+```text
+Compactar extensão
+```
+
+A opção "Compactar extensão" serve para criar um pacote da extensão para distribuição. Ela não é necessária para executar o projeto localmente.
+
+---
+
+## 3. Selecionar a pasta correta
+
+Clique em:
+
+```text
+Carregar sem compactação
+```
+
+Depois navegue até a pasta onde o projeto foi clonado.
+
+Exemplo:
+
+```text
+C:\Users\SEU_USUARIO\OneDrive\Área de Trabalho\HealthCheck_IA
+```
+
+IMPORTANTE:
+
+Não selecione a pasta principal:
+
+```text
+HealthCheck_IA
+```
+
+Isso causará um erro semelhante a:
+
+```text
+Falha ao carregar extensão
+
+O arquivo de manifesto está faltando ou não pode ser lido.
+Não foi possível carregar o manifesto.
+```
+
+Isso acontece porque o Chrome procura o arquivo:
+
+```text
+manifest.json
+```
+
+diretamente dentro da pasta selecionada.
+
+No HealthCheck IA, o arquivo `manifest.json` está dentro da pasta:
+
+```text
+HealthCheck_IA\extension
+```
+
+Portanto, entre na pasta:
+
+```text
+extension
+```
+
+e selecione essa pasta.
+
+O caminho correto deverá ser semelhante a:
+
+```text
+C:\Users\SEU_USUARIO\OneDrive\Área de Trabalho\HealthCheck_IA\extension
+```
+
+---
+
+## 4. Estrutura esperada da extensão
+
+Dentro da pasta selecionada devem existir arquivos semelhantes a:
+
+```text
+extension/
+│
+├── manifest.json
+├── content.js
+└── styles.css
+```
+
+O arquivo mais importante para o carregamento pelo Chrome é:
+
+```text
+manifest.json
+```
+
+Se o Chrome não encontrar esse arquivo diretamente dentro da pasta selecionada, a extensão não será carregada.
+
+---
+
+## 5. Confirmar o carregamento
+
+Depois de selecionar:
+
+```text
+HealthCheck_IA\extension
+```
+
+a extensão deverá aparecer na página:
+
+```text
+chrome://extensions/
+```
+
+com o nome:
+
+```text
+HealthCheck IA
+```
+
+Deixe a extensão ativada.
+
+---
+
+# Resumo rápido
+
+ERRADO:
+
+```text
+Carregar sem compactação
+        ↓
+HealthCheck_IA
+```
+
+CORRETO:
+
+```text
+Carregar sem compactação
+        ↓
+HealthCheck_IA
+        ↓
+extension
+        ↓
+Selecionar pasta
+```
+
+Caminho final:
+
+```text
+...\HealthCheck_IA\extension
+```
+
+O Chrome encontrará:
+
+```text
+extension\manifest.json
+```
+
+e conseguirá carregar a extensão corretamente.
+
+```
+
+Essa explicação fica boa logo **depois da parte em que você inicia o FastAPI e abre `http://127.0.0.1:8000/docs`**, porque o fluxo natural do colega será: **backend funcionando → carregar extensão no Chrome → testar o sistema**.
+```
+
+
+---
+
 # Atualizar o projeto antes de trabalhar
 
 Na raiz do projeto:
