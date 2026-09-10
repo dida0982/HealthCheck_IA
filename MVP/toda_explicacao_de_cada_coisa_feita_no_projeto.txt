@@ -6982,3 +6982,98 @@ Então sim: **o próximo passo agora é 9.6 — definir a resposta JSON que o LL
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+Perfeito. **9.3 e 9.4 estão funcionando corretamente.** ✅
+
+O `rag.py` já está montando um prompt completo com alegação, TOP 3 evidências, regras de segurança e formato esperado de resposta. Isso significa que o RAG já está pronto até a etapa imediatamente anterior ao LLM.
+
+Agora podemos marcar:
+
+```text
+[X] 9.1 Entender Retrieval + Generation
+[X] 9.2 Criar montar_contexto_rag()
+[X] 9.3 Juntar alegação + evidências
+[X] 9.4 Criar regras do prompt
+[X] 9.5 Testar prompt completo no terminal ✅
+
+[ ] 9.6 Preparar saída estruturada
+[ ] 9.7 Conectar LLM local
+```
+
+Tem um detalhe que eu corrigiria antes do LLM: no prompt ainda aparecem pedaços como:
+
+```text
+## Alegações relacionadas
+```
+
+e:
+
+```text
+## Evidências importantes
+```
+
+Isso não quebra o sistema, mas é ruído. Podemos limpar depois.
+
+Agora o próximo passo ideal é o **9.6 — preparar a saída estruturada do modelo**.
+
+Em vez de pedir uma resposta livre assim:
+
+```text
+Classificação:
+...
+
+Explicação:
+...
+```
+
+vamos pedir para o LLM devolver algo previsível, por exemplo:
+
+```json
+{
+  "classificacao": "SUSTENTADA PELAS EVIDÊNCIAS",
+  "explicacao": "As evidências indicam que a vacinação reduz o risco de formas graves da influenza.",
+  "evidencias_utilizadas": [1, 2, 3]
+}
+```
+
+Isso é muito importante porque depois o Python poderá pegar diretamente:
+
+```python
+resultado["classificacao"]
+resultado["explicacao"]
+resultado["evidencias_utilizadas"]
+```
+
+e o FastAPI poderá mandar isso para a extensão do Chrome.
+
+O fluxo fica:
+
+```text
+Google
+  ↓
+Extensão
+  ↓
+FastAPI
+  ↓
+Busca semântica
+  ↓
+TOP 3
+  ↓
+Prompt RAG
+  ↓
+LLM
+  ↓
+JSON estruturado
+  ↓
+FastAPI
+  ↓
+Card da extensão
+```
+
+Depois disso entramos no **9.7**, que é a parte divertida: instalar e conectar um **LLM local** e finalmente mandar esse prompt para uma IA responder.
+
+Então sim: **o próximo passo agora é 9.6 — definir a resposta JSON que o LLM será obrigado a produzir.**
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
