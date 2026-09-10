@@ -6178,3 +6178,115 @@ O próximo grande marco é a **ETAPA 9/10 da nossa arquitetura: estruturar a rec
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+Exatamente. Agora entramos na **ETAPA 9 — Construir o RAG**. E você já construiu a metade mais difícil de entender conceitualmente: o **Retrieval**.
+
+RAG significa **Retrieval-Augmented Generation**. No HealthCheck, teremos duas partes:
+
+```text
+RAG
+│
+├── Retrieval
+│      ↓
+│   Busca semântica
+│   TOP 3 evidências
+│
+└── Generation
+       ↓
+    LLM recebe:
+    alegação + evidências
+       ↓
+    análise fundamentada
+```
+
+Hoje o sistema já consegue fazer:
+
+```text
+"Vitamina C cura gripe"
+        ↓
+embedding
+        ↓
+comparação com os 93 chunks
+        ↓
+TOP 3 evidências
+```
+
+O que falta é pegar esse resultado e montar automaticamente um **contexto estruturado para o LLM**.
+
+Por exemplo:
+
+```text
+ALEGAÇÃO:
+Vitamina C cura gripe.
+
+EVIDÊNCIAS RECUPERADAS:
+
+EVIDÊNCIA 1:
+Fonte: ...
+Conteúdo: ...
+
+EVIDÊNCIA 2:
+Fonte: ...
+Conteúdo: ...
+
+EVIDÊNCIA 3:
+Fonte: ...
+Conteúdo: ...
+
+INSTRUÇÃO:
+Analise a alegação utilizando somente as evidências fornecidas.
+Não utilize conhecimento externo.
+Não invente informações ausentes nas evidências.
+Caso as evidências sejam insuficientes, informe que não foi possível verificar.
+```
+
+Depois o LLM deverá produzir algo estruturado, por exemplo:
+
+```json
+{
+  "classificacao": "contradita_pelas_evidencias",
+  "explicacao": "As evidências apresentadas não sustentam que vitamina C cure a gripe.",
+  "confianca": 0.86
+}
+```
+
+Mas temos que tomar cuidado novamente com `confianca`: isso **não será “86% de chance de ser verdade”**. Será confiança da análise/classificação, e teremos que definir depois como esse valor será calculado para não colocar um número arbitrário na interface.
+
+Também há uma característica fundamental do RAG: ele **não elimina alucinação**. Ele reduz o risco porque damos ao modelo evidências relevantes e instruímos que responda com base nelas. Depois ainda vamos implementar validações e a possibilidade de:
+
+```text
+⚪ Não foi possível verificar
+```
+
+quando a base não fornecer evidências adequadas.
+
+### Como eu dividiria a ETAPA 9
+
+Para continuarmos no mesmo ritmo, sem pular etapas:
+
+```text
+ETAPA 9 — RAG
+
+[ ] 9.1 Entender Retrieval + Generation
+[ ] 9.2 Criar função montar_contexto_rag()
+[ ] 9.3 Juntar alegação + TOP 3 evidências
+[ ] 9.4 Criar prompt do HealthCheck IA
+[ ] 9.5 Testar o prompt gerado no terminal
+[ ] 9.6 Preparar saída estruturada
+[ ] 9.7 Conectar ao LLM local
+[ ] 9.8 Receber análise do LLM
+[ ] 9.9 Integrar RAG ao FastAPI
+[ ] 9.10 Testar fluxo completo
+```
+
+E eu **não instalaria o LLM agora**. Primeiro vamos construir o RAG até o ponto em que conseguimos imprimir no terminal exatamente o prompt/contexto que futuramente será entregue ao modelo. Isso facilita muito entender o que cada componente está fazendo.
+
+Então nosso próximo passo é bem específico:
+
+**9.1 já está entendido.** ✅
+
+Vamos para **9.2 — criar `montar_contexto_rag()`**, que vai pegar a alegação e os resultados de `buscar_evidencias()` e construir automaticamente o contexto que será entregue ao LLM.
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
