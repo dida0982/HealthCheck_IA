@@ -7554,3 +7554,158 @@ Aí vamos validar se o **9.7.7** funcionou antes de mexermos no JSON.
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+Perfeito. **O 9.7.7 funcionou.** ✅
+
+Seu fluxo completo até o LLM já está operacional:
+
+```text
+Alegação
+  ↓
+Busca semântica
+  ↓
+TOP 3 evidências
+  ↓
+Prompt RAG
+  ↓
+Ollama
+  ↓
+Llama 3.2 3B
+  ↓
+JSON válido
+```
+
+E o mais importante: o modelo respeitou a estrutura que definimos e devolveu uma classificação coerente com as evidências:
+
+```json
+{
+    "classificacao": "SUSTENTADA PELAS EVIDÊNCIAS",
+    "explicacao": "As evidências indicam que a vacinação contra gripe ajuda a reduzir casos graves, hospitalizações e mortes, de acordo com as estratégias e públicos definidos pelo Ministério da Saúde.",
+    "evidencias_utilizadas": [1, 2, 3]
+}
+```
+
+Então podemos marcar:
+
+```text
+[X] 9.7.7 Prompt RAG → Ollama ✅
+[X] 9.8 Receber resposta do LLM em JSON ✅
+
+[ ] 9.8.1 Converter a resposta JSON em objeto Python
+[ ] 9.8.2 Validar classificação e campos obrigatórios
+[ ] 9.9 Integrar RAG + LLM ao FastAPI
+[ ] 9.10 Testar fluxo completo
+```
+
+Agora vem um passo pequeno, mas muito importante: hoje `resultado["response"]` ainda é uma **string** que contém JSON. O próximo passo é transformar isso em um dicionário Python real.
+
+No `teste_ollama.py`, adicione no topo:
+
+```python
+import json
+```
+
+E substitua:
+
+```python
+print(resultado["response"])
+```
+
+por:
+
+```python
+resposta_llm = resultado["response"]
+
+analise = json.loads(resposta_llm)
+
+print("Classificação:")
+print(analise["classificacao"])
+
+print("\nExplicação:")
+print(analise["explicacao"])
+
+print("\nEvidências utilizadas:")
+print(analise["evidencias_utilizadas"])
+```
+
+Então o final do seu arquivo ficará aproximadamente assim:
+
+```python
+import json
+import requests
+
+from rag import montar_prompt_rag
+
+
+alegacao = "A vacina contra gripe ajuda a evitar casos graves?"
+
+prompt = montar_prompt_rag(
+    alegacao,
+    top_k=3
+)
+
+url = "http://localhost:11434/api/generate"
+
+dados = {
+    "model": "llama3.2:3b",
+    "prompt": prompt,
+    "stream": False
+}
+
+resposta = requests.post(
+    url,
+    json=dados
+)
+
+resultado = resposta.json()
+
+resposta_llm = resultado["response"]
+
+analise = json.loads(resposta_llm)
+
+print("\n=== ANÁLISE DO HEALTHCHECK IA ===\n")
+
+print("Classificação:")
+print(analise["classificacao"])
+
+print("\nExplicação:")
+print(analise["explicacao"])
+
+print("\nEvidências utilizadas:")
+print(analise["evidencias_utilizadas"])
+```
+
+Agora rode:
+
+```powershell
+python teste_ollama.py
+```
+
+Se tudo estiver certo, deve aparecer algo como:
+
+```text
+=== ANÁLISE DO HEALTHCHECK IA ===
+
+Classificação:
+SUSTENTADA PELAS EVIDÊNCIAS
+
+Explicação:
+As evidências indicam que...
+
+Evidências utilizadas:
+[1, 2, 3]
+```
+
+Esse passo é importante porque a partir daí o FastAPI não vai mais lidar com “um texto que parece JSON”. Ele vai lidar com dados reais:
+
+```python
+analise["classificacao"]
+analise["explicacao"]
+analise["evidencias_utilizadas"]
+```
+
+Quando isso funcionar, o próximo passo será o **9.9 — colocar tudo isso dentro do `main.py` do FastAPI**.
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
