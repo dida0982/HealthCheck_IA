@@ -5134,3 +5134,261 @@ No **8.9**, vamos alterar esse mesmo `busca_semantica.py` para retornar o **TOP 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+Vamos. Agora o **8.9 — Primeira busca semântica completa** vai pegar a sua pergunta e retornar os **3 chunks mais relevantes**, em ordem de similaridade.
+
+No `busca_semantica.py`, você pode **substituir a parte do `argmax()` para baixo** por isto:
+
+```python
+pergunta = "A vacina contra gripe ajuda a evitar casos graves?"
+
+embedding_pergunta = modelo.encode([pergunta])
+
+similaridades = cosine_similarity(
+    embedding_pergunta,
+    embeddings
+)[0]
+
+top_k = 3
+
+indices_ordenados = similaridades.argsort()[::-1]
+
+top_indices = indices_ordenados[:top_k]
+
+
+print("\n=== BUSCA SEMÂNTICA ===")
+
+print("\nPergunta:")
+print(pergunta)
+
+print(f"\nTOP {top_k} resultados mais relevantes:\n")
+
+for posicao, indice in enumerate(top_indices, start=1):
+
+    chunk = chunks[indice]
+    similaridade = similaridades[indice]
+
+    print("=" * 60)
+
+    print(f"POSIÇÃO: {posicao}")
+    print(f"SIMILARIDADE: {similaridade:.4f}")
+    print(f"ARQUIVO: {chunk['arquivo']}")
+    print(f"CHUNK ID: {chunk['chunk_id']}")
+
+    print("\nCONTEÚDO:")
+    print(chunk["conteudo"])
+
+    print()
+```
+
+A parte nova mais importante é esta:
+
+```python
+indices_ordenados = similaridades.argsort()[::-1]
+```
+
+O `argsort()` pega as posições e ordena pelas similaridades. Só que ele ordena inicialmente do menor para o maior.
+
+Por isso usamos:
+
+```python
+[::-1]
+```
+
+para inverter:
+
+```text
+maior
+↓
+menor
+```
+
+Depois:
+
+```python
+top_indices = indices_ordenados[:top_k]
+```
+
+significa:
+
+```text
+pegue somente os 3 primeiros
+```
+
+porque definimos:
+
+```python
+top_k = 3
+```
+
+Seu fluxo agora fica:
+
+```text
+Pergunta
+   ↓
+Embedding da pergunta
+   ↓
+384 dimensões
+   ↓
+Comparação com os 93 chunks
+   ↓
+93 similaridades
+   ↓
+Ordenação
+   ↓
+TOP 3
+```
+
+Seu `busca_semantica.py` completo pode ficar assim:
+
+```python
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
+from carregar_documentos import chunks
+
+
+modelo = SentenceTransformer(
+    "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+)
+
+
+textos = []
+
+for chunk in chunks:
+    textos.append(chunk["conteudo"])
+
+
+embeddings = modelo.encode(
+    textos,
+    show_progress_bar=True
+)
+
+
+pergunta = "A vacina contra gripe ajuda a evitar casos graves?"
+
+embedding_pergunta = modelo.encode([pergunta])
+
+
+similaridades = cosine_similarity(
+    embedding_pergunta,
+    embeddings
+)[0]
+
+
+top_k = 3
+
+indices_ordenados = similaridades.argsort()[::-1]
+
+top_indices = indices_ordenados[:top_k]
+
+
+print("\n=== BUSCA SEMÂNTICA ===")
+
+print("\nPergunta:")
+print(pergunta)
+
+print(f"\nTOP {top_k} resultados mais relevantes:\n")
+
+
+for posicao, indice in enumerate(top_indices, start=1):
+
+    chunk = chunks[indice]
+    similaridade = similaridades[indice]
+
+    print("=" * 60)
+
+    print(f"POSIÇÃO: {posicao}")
+    print(f"SIMILARIDADE: {similaridade:.4f}")
+    print(f"ARQUIVO: {chunk['arquivo']}")
+    print(f"CHUNK ID: {chunk['chunk_id']}")
+
+    print("\nCONTEÚDO:")
+    print(chunk["conteudo"])
+
+    print()
+```
+
+Agora rode:
+
+```powershell
+python busca_semantica.py
+```
+
+Queremos algo parecido com:
+
+```text
+=== BUSCA SEMÂNTICA ===
+
+Pergunta:
+A vacina contra gripe ajuda a evitar casos graves?
+
+TOP 3 resultados mais relevantes:
+
+============================================================
+POSIÇÃO: 1
+SIMILARIDADE: 0.8116
+ARQUIVO: ministerio_saude_gripe.md
+CHUNK ID: 2
+
+CONTEÚDO:
+...
+
+============================================================
+POSIÇÃO: 2
+SIMILARIDADE: 0.7...
+ARQUIVO: ...
+CHUNK ID: ...
+
+============================================================
+POSIÇÃO: 3
+SIMILARIDADE: 0.6...
+ARQUIVO: ...
+CHUNK ID: ...
+```
+
+E aqui tem uma evolução conceitual importante: antes você fazia apenas:
+
+```python
+argmax()
+```
+
+ou seja:
+
+```text
+93 resultados
+↓
+escolha 1
+```
+
+Agora estamos fazendo:
+
+```text
+93 resultados
+↓
+ordene por relevância
+↓
+TOP 3
+```
+
+Isso já começa a formar o mecanismo de **retrieval** do futuro RAG:
+
+```text
+usuário
+   ↓
+pergunta
+   ↓
+busca semântica
+   ↓
+TOP 3 evidências
+   ↓
+[futuramente]
+LLM
+   ↓
+análise + classificação + explicação
+```
+
+Rode esse código e me envie os **3 resultados**. O mais interessante agora será verificar se o modelo trouxe evidências coerentes em 1º, 2º e 3º lugar.
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
