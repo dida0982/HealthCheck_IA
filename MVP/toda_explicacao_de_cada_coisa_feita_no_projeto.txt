@@ -8773,3 +8773,247 @@ Esse é um ótimo momento para testar o sistema antes de adicionar mais complexi
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+Perfeito. A sua **ETAPA 10 — Integrar o LLM** está, na prática, quase toda pronta, porque o Ollama + Llama já está integrado ao RAG e ao FastAPI.
+
+O que falta agora é **amadurecer essa integração**: controlar melhor o comportamento do LLM e transformar a saída em algo mais confiável e previsível.
+
+Eu reorganizaria a ETAPA 10 assim:
+
+```text
+[X] 10.1 Entender o que é um LLM
+[X] 10.2 Conectar Ollama + Llama 3.2 3B
+[X] 10.3 Enviar contexto recuperado pelo RAG
+[X] 10.4 Criar prompt com regras
+[X] 10.5 Pedir resposta em JSON
+
+[ ] 10.6 Separar system prompt e user prompt
+[ ] 10.7 Configurar temperatura
+[ ] 10.8 Forçar structured output / JSON Schema
+[ ] 10.9 Validar campos e categorias no Python
+[ ] 10.10 Definir política de confiança
+[ ] 10.11 Tratar hallucination e abstention
+[ ] 10.12 Retornar fontes reais
+```
+
+Tem um ponto importante no JSON que você propôs:
+
+```json
+{
+  "classificacao": "contradita",
+  "confianca": 0.91,
+  "explicacao": "...",
+  "fontes": [
+    "Fiocruz",
+    "Ministério da Saúde"
+  ]
+}
+```
+
+Eu **não colocaria `confianca: 0.91` agora simplesmente pedindo para o LLM inventar esse número**.
+
+Um LLM pode responder `0.91`, `0.78` ou `0.99`, mas isso não significa uma probabilidade estatisticamente calibrada de a notícia ser verdadeira.
+
+No HealthCheck, o correto seria tratar isso como:
+
+```json
+"confianca_analise": 0.91
+```
+
+e somente depois que definirmos **como esse valor é calculado**.
+
+Por exemplo, futuramente ele poderia considerar retrieval, concordância entre evidências, cobertura da alegação e consistência entre fontes. Mas precisamos definir essa regra antes.
+
+Outra melhoria importante é separar duas coisas que hoje estão juntas no mesmo prompt.
+
+Hoje temos algo parecido com:
+
+```text
+Você é o componente de análise do HealthCheck IA.
+Use somente as evidências...
+ALEGAÇÃO...
+EVIDÊNCIAS...
+```
+
+O ideal passa a ser:
+
+```text
+SYSTEM PROMPT
+    ↓
+define quem é o modelo e quais regras ele nunca deve violar
+
+USER PROMPT
+    ↓
+traz a alegação e as evidências daquele caso específico
+```
+
+Exemplo de **system prompt**:
+
+```text
+Você é o componente de análise do HealthCheck IA.
+
+Sua função é avaliar alegações relacionadas à saúde.
+
+Regras:
+
+- Utilize somente as evidências fornecidas.
+- Não utilize conhecimento externo.
+- Não invente informações.
+- Não invente fontes.
+- Não interprete similaridade semântica como verdade.
+- Se não houver evidências suficientes, responda NÃO FOI POSSÍVEL VERIFICAR.
+- Retorne somente a estrutura solicitada.
+```
+
+E o **user prompt** passa a conter só:
+
+```text
+ALEGAÇÃO:
+
+A vacina contra gripe ajuda a evitar casos graves?
+
+EVIDÊNCIAS:
+
+EVIDÊNCIA 1
+...
+
+EVIDÊNCIA 2
+...
+
+EVIDÊNCIA 3
+...
+```
+
+Isso deixa a arquitetura mais profissional:
+
+```text
+System Prompt
+      +
+User Prompt
+      +
+Evidências do RAG
+      ↓
+Llama
+      ↓
+Structured Output
+```
+
+Também entra a **temperatura**.
+
+Em um chatbot criativo, uma temperatura maior pode ser interessante.
+
+Mas no HealthCheck queremos:
+
+```text
+mesma evidência
+      ↓
+respostas semelhantes
+```
+
+e não:
+
+```text
+mesma evidência
+      ↓
+uma classificação diferente a cada execução
+```
+
+Então vamos trabalhar com **temperatura baixa**, provavelmente:
+
+```python
+"temperature": 0.1
+```
+
+ou até `0`.
+
+Depois chegamos em **JSON Schema**, que é um passo bem importante.
+
+Em vez de apenas escrever no prompt:
+
+```text
+Responda em JSON.
+```
+
+queremos definir estruturalmente:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "classificacao": {
+      "type": "string",
+      "enum": [
+        "SUSTENTADA PELAS EVIDÊNCIAS",
+        "PARCIALMENTE SUSTENTADA",
+        "ENGANOSA",
+        "CONTRADITA PELAS EVIDÊNCIAS",
+        "NÃO FOI POSSÍVEL VERIFICAR"
+      ]
+    },
+    "explicacao": {
+      "type": "string"
+    },
+    "evidencias_utilizadas": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    }
+  },
+  "required": [
+    "classificacao",
+    "explicacao",
+    "evidencias_utilizadas"
+  ]
+}
+```
+
+Aí o modelo fica muito mais restrito ao formato que nossa API espera.
+
+E sobre:
+
+```json
+"fontes": [
+  "Fiocruz",
+  "Ministério da Saúde"
+]
+```
+
+essa ideia é excelente, mas eu não pediria ao LLM para criar os nomes sozinho. O melhor é o nosso próprio backend recuperar isso dos documentos usados.
+
+Por exemplo:
+
+```text
+evidencia 1
+arquivo: ministerio_saude_gripe.md
+fonte: Ministério da Saúde
+url: gov.br/...
+
+evidencia 3
+arquivo: fiocruz_vacinas.md
+fonte: Fiocruz
+url: fiocruz.br/...
+```
+
+Então o Python monta:
+
+```json
+"fontes": [
+  {
+    "nome": "Ministério da Saúde",
+    "url": "..."
+  },
+  {
+    "nome": "Fiocruz",
+    "url": "..."
+  }
+]
+```
+
+Isso é muito mais seguro porque evita **alucinação de fonte**.
+
+Então nosso próximo passo deve ser o **10.6 — separar `system prompt` e `user prompt` e configurar temperatura baixa no Ollama**. Depois fazemos JSON Schema e validação.
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
