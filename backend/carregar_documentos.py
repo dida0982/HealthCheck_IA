@@ -33,6 +33,18 @@ def dividir_em_chunks(texto, tamanho_maximo=500):
     return chunks
 
 for arquivo in pasta_data.rglob("*.md"):
+    
+    chunks = [] 
+    
+    for documento in documentos: 
+        partes = dividir_em_chunks(documento["conteudo"]) 
+        
+        for indice, parte in enumerate(partes): 
+            chunks.append({ 
+                "arquivo": documento["arquivo"], 
+                "chunk_id": indice, 
+                "conteudo": parte })
+    
     conteudo = arquivo.read_text(encoding="utf-8")
 
     if conteudo.strip():
@@ -86,3 +98,13 @@ if documentos_invalidos:
 
         for campo in documento["faltando"]:
             print(f"  Faltando: {campo}")
+            
+print(f"\nTotal de chunks gerados: {len(chunks)}")
+
+print("\nExemplo dos primeiros chunks:")
+
+for chunk in chunks[:5]:
+    print("\n----------------------------")
+    print(f"Arquivo: {chunk['arquivo']}")
+    print(f"Chunk: {chunk['chunk_id']}")
+    print(chunk["conteudo"][:300])
