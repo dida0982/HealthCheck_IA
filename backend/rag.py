@@ -1,12 +1,7 @@
 from busca_semantica import buscar_evidencias
 
 
-def montar_contexto_rag(alegacao, top_k=3):
-
-    evidencias = buscar_evidencias(
-        alegacao,
-        top_k=top_k
-    )
+def montar_contexto_rag(alegacao, evidencias):
 
     contexto = f"""
 ALEGAÇÃO:
@@ -38,11 +33,11 @@ Conteúdo:
     return contexto
 
 
-def montar_prompt_rag(alegacao, top_k=3):
+def montar_prompt_rag(alegacao, evidencias):
 
     contexto = montar_contexto_rag(
         alegacao,
-        top_k=top_k
+        evidencias
     )
 
     prompt = f"""
@@ -112,9 +107,14 @@ if __name__ == "__main__":
 
     alegacao = "A vacina contra gripe ajuda a evitar casos graves?"
 
-    prompt = montar_prompt_rag(
+    evidencias = buscar_evidencias(
         alegacao,
         top_k=3
+    )
+
+    prompt = montar_prompt_rag(
+        alegacao,
+        evidencias
     )
 
     print("\n=== PROMPT RAG ===")
