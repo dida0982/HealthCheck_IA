@@ -3346,4 +3346,312 @@ Esse é o fundamento da nossa futura **busca semântica e do RAG**.
 
 **Próxima etapa: 08 — Embeddings.** Vamos fazer do mesmo jeito: uma coisa de cada vez, entendendo o que estamos fazendo antes de colocar código. 🚀
 
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Exatamente. 🚀 **Agora começamos oficialmente a ETAPA 8 — Embeddings + Busca Semântica.**
+
+E eu sugiro não instalar nada ainda. Primeiro precisamos entender o mecanismo, porque daqui para frente essas ideias aparecem em praticamente todo o nosso RAG.
+
+## 8.1 — O problema que estamos resolvendo
+
+Hoje temos 18 documentos, mas o Python basicamente sabe que eles são **strings**.
+
+Imagine que nossa base contenha:
+
+```text
+Não existem evidências científicas de que vitamina C cure infecções por influenza.
+```
+
+E alguém pesquise:
+
+```text
+Tomar vitamina C acaba com a gripe?
+```
+
+Uma busca tradicional por palavras pode ter dificuldade porque:
+
+```text
+Documento: "cure infecções por influenza"
+Pesquisa:  "acaba com a gripe"
+```
+
+Mas semanticamente elas tratam de conceitos muito próximos.
+
+É aí que entram os **embeddings**.
+
+## 8.2 — O que é um embedding?
+
+Um modelo de embeddings recebe um texto e produz um **vetor numérico de dimensão fixa** que representa características semânticas desse texto.
+
+Conceitualmente:
+
+```text
+"Vacina ajuda a prevenir formas graves da gripe"
+                     ↓
+             Modelo de embedding
+                     ↓
+[0.12, -0.41, 0.08, 0.73, -0.19, ...]
+```
+
+Esse vetor pode possuir centenas de dimensões.
+
+Não devemos interpretar isso como:
+
+```text
+0.12 = vacina
+-0.41 = gripe
+0.08 = prevenção
+```
+
+Não funciona assim.
+
+As dimensões são representações aprendidas pelo modelo durante seu treinamento. O importante para nós é a **geometria do espaço vetorial**: textos semanticamente relacionados tendem a produzir representações próximas.
+
+Por exemplo:
+
+```text
+A = "Vacinação reduz casos graves de gripe."
+
+B = "A vacina ajuda a evitar complicações da influenza."
+
+C = "O tratamento do câncer depende do tipo e estágio da doença."
+```
+
+Esperamos que:
+
+```text
+A ↔ B     muito próximos
+
+A ↔ C     menos próximos
+```
+
+## 8.3 — Como sabemos que dois vetores são próximos?
+
+Entrará outro conceito da sua lista:
+
+**similaridade de cosseno**.
+
+Se temos dois vetores:
+
+```text
+A = embedding do documento
+B = embedding da pesquisa
+```
+
+podemos calcular:
+
+```text
+cos(A, B)
+```
+
+De forma simplificada, a fórmula é:
+
+$$
+\text{similaridade}(A,B)=
+\frac{A\cdot B}
+{\|A\|\|B\|}
+$$
+
+Ela compara essencialmente a orientação dos vetores no espaço.
+
+Quanto maior a similaridade, maior tende a ser a relação semântica entre os textos, dependendo do modelo e da forma como os embeddings foram normalizados.
+
+Então poderíamos ter algo conceitualmente parecido com:
+
+```text
+Pesquisa:
+"Tomar vitamina C acaba com a gripe?"
+
+Documento A → similaridade 0.82
+Documento B → similaridade 0.69
+Documento C → similaridade 0.21
+```
+
+Ordenamos:
+
+```text
+1º Documento A
+2º Documento B
+3º Documento C
+```
+
+E selecionamos os resultados mais relevantes.
+
+## 8.4 — Onde entra o Sentence Transformers?
+
+Precisamos de um modelo capaz de transformar nossos textos em embeddings.
+
+Para nosso MVP, podemos usar a biblioteca [Sentence Transformers](https://www.sbert.net/?utm_source=chatgpt.com), que é open source.
+
+Em Python, futuramente teremos algo conceitualmente assim:
+
+```python
+modelo.encode("Vacinação reduz casos graves de influenza.")
+```
+
+e receberemos:
+
+```text
+texto
+ ↓
+Sentence Transformer
+ ↓
+vetor
+```
+
+Não vamos precisar **treinar um modelo de embeddings do zero**.
+
+Usaremos um modelo já pré-treinado.
+
+## 8.5 — E o chunking?
+
+Esse conceito é extremamente importante para nosso HealthCheck.
+
+Imagine um documento enorme:
+
+```text
+ministerio_saude_dengue.md
+```
+
+com várias partes:
+
+```text
+Definição
+Transmissão
+Sintomas
+Sinais de alarme
+Prevenção
+Tratamento
+Vacinação
+```
+
+Não é necessariamente interessante transformar tudo isso em **um único embedding**.
+
+Podemos dividir o documento em partes menores:
+
+```text
+DOCUMENTO
+   ↓
+CHUNK 1
+"Dengue é uma arbovirose..."
+
+CHUNK 2
+"A transmissão ocorre principalmente..."
+
+CHUNK 3
+"Os principais sintomas..."
+
+CHUNK 4
+"Os sinais de alarme incluem..."
+
+CHUNK 5
+"A prevenção envolve..."
+```
+
+Cada chunk recebe seu próprio embedding:
+
+```text
+Chunk 1 → vetor
+Chunk 2 → vetor
+Chunk 3 → vetor
+Chunk 4 → vetor
+Chunk 5 → vetor
+```
+
+Isso melhora a granularidade da recuperação.
+
+Se alguém pesquisar:
+
+```text
+"Dor abdominal pode ser sinal de dengue grave?"
+```
+
+não precisamos recuperar necessariamente o documento inteiro.
+
+A busca poderá encontrar diretamente o **chunk sobre sinais de alarme**.
+
+## 8.6 — Nosso pipeline começa a aparecer
+
+Estamos construindo isto:
+
+```text
+                 BASE DE CONHECIMENTO
+                         │
+                         ▼
+                 18 documentos .md
+                         │
+                         ▼
+                      CHUNKS
+                         │
+                         ▼
+              MODELO DE EMBEDDINGS
+                         │
+                         ▼
+                     VETORES
+                         │
+                         ▼
+                  ÍNDICE VETORIAL
+                         ▲
+                         │
+                 embedding da busca
+                         ▲
+                         │
+                  PESQUISA DO USUÁRIO
+```
+
+Depois:
+
+```text
+Pesquisa
+   ↓
+Embedding da pesquisa
+   ↓
+Comparação com embeddings da base
+   ↓
+Similaridade
+   ↓
+Top-K chunks mais semelhantes
+   ↓
+Evidências relevantes
+```
+
+E **só mais tarde**:
+
+```text
+Evidências recuperadas
+        +
+Alegação/notícia
+        ↓
+       LLM
+        ↓
+Análise fundamentada
+```
+
+Isso será o nosso **RAG**.
+
+### Onde estamos exatamente
+
+```text
+ETAPA 8 — EMBEDDINGS + BUSCA SEMÂNTICA
+
+[ ] 8.1 Entender embeddings        ← entendemos agora
+[ ] 8.2 Preparar os documentos
+[ ] 8.3 Fazer chunking
+[ ] 8.4 Instalar Sentence Transformers
+[ ] 8.5 Escolher modelo
+[ ] 8.6 Gerar primeiro embedding
+[ ] 8.7 Gerar embeddings da base
+[ ] 8.8 Calcular similaridade de cosseno
+[ ] 8.9 Fazer primeira busca semântica
+[ ] 8.10 Integrar ao backend
+```
+
+**Próximo passo: 8.2/8.3 — preparar os nossos 18 documentos para chunking.**
+
+E aqui eu quero fazer uma coisa importante: **não vamos começar com FAISS nem banco vetorial ainda**. Primeiro vamos conseguir pegar uma pergunta e encontrar semanticamente o trecho correto usando Python puro + Sentence Transformers. Quando isso estiver funcionando e você entender o mecanismo, colocamos a camada de busca vetorial. Isso deixa muito mais claro o que cada tecnologia está fazendo.
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 
