@@ -68,10 +68,10 @@ def analisar(dados: AnaliseRequest):
         top_k=3
     )
 
-    # 2. Monta o prompt RAG
+    # 2. Monta o prompt RAG com as mesmas evidências
     prompt = montar_prompt_rag(
         texto_para_analisar,
-        top_k=3
+        evidencias
     )
 
     # 3. Envia o prompt para o Ollama
