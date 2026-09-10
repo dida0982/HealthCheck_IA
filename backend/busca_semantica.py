@@ -1,19 +1,23 @@
 from sentence_transformers import SentenceTransformer
 from carregar_documentos import chunks
 
+
 modelo = SentenceTransformer(
     "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 )
+
 
 textos = []
 
 for chunk in chunks:
     textos.append(chunk["conteudo"])
-    
+
+
 embeddings = modelo.encode(
     textos,
     show_progress_bar=True
 )
+
 
 print("\n=== RESULTADO ===")
 
