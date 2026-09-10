@@ -6,6 +6,8 @@ documentos = []
 arquivos_vazios = []
 documentos_invalidos = []
 
+
+# 1. FUNÇÃO DE CHUNKING
 def dividir_em_chunks(texto, tamanho_maximo=500):
     paragrafos = texto.split("\n\n")
 
@@ -32,19 +34,9 @@ def dividir_em_chunks(texto, tamanho_maximo=500):
 
     return chunks
 
+
+# 2. CARREGA E VALIDA OS DOCUMENTOS
 for arquivo in pasta_data.rglob("*.md"):
-    
-    chunks = [] 
-    
-    for documento in documentos: 
-        partes = dividir_em_chunks(documento["conteudo"]) 
-        
-        for indice, parte in enumerate(partes): 
-            chunks.append({ 
-                "arquivo": documento["arquivo"], 
-                "chunk_id": indice, 
-                "conteudo": parte })
-    
     conteudo = arquivo.read_text(encoding="utf-8")
 
     if conteudo.strip():
@@ -78,6 +70,23 @@ for arquivo in pasta_data.rglob("*.md"):
     else:
         arquivos_vazios.append(arquivo.name)
 
+
+# 3. AQUI ENTRA O NOVO CÓDIGO 👇
+
+chunks = []
+
+for documento in documentos:
+    partes = dividir_em_chunks(documento["conteudo"])
+
+    for indice, parte in enumerate(partes):
+        chunks.append({
+            "arquivo": documento["arquivo"],
+            "chunk_id": indice,
+            "conteudo": parte
+        })
+
+
+# 4. DEPOIS VÊM OS PRINTS
 print(f"Documentos encontrados: {len(documentos) + len(arquivos_vazios)}")
 print(f"Com conteúdo: {len(documentos)}")
 print(f"Vazios: {len(arquivos_vazios)}")
@@ -98,7 +107,10 @@ if documentos_invalidos:
 
         for campo in documento["faltando"]:
             print(f"  Faltando: {campo}")
-            
+
+
+# 5. MOSTRA O RESULTADO DO CHUNKING
+
 print(f"\nTotal de chunks gerados: {len(chunks)}")
 
 print("\nExemplo dos primeiros chunks:")
