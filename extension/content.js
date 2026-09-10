@@ -13,9 +13,13 @@ async function analisarResultado(item) {
       })
     });
 
-    if (!resposta.ok) {
-      throw new Error(`Erro HTTP: ${resposta.status}`);
-    }
+if (!resposta.ok) {
+  const erroBackend = await resposta.text();
+
+  throw new Error(
+    `Erro HTTP ${resposta.status}: ${erroBackend}`
+  );
+}
 
     const dados = await resposta.json();
 
