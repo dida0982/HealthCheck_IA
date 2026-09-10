@@ -35,6 +35,16 @@ def dividir_em_chunks(texto, tamanho_maximo=500):
     return chunks
 
 
+# 1.1 FUNÇÃO DE LIMPEZA DOS CHUNKS
+def limpar_chunk(texto):
+    linhas = texto.splitlines()
+
+    while linhas and linhas[-1].strip().startswith("#"):
+        linhas.pop()
+
+    return "\n".join(linhas).strip()
+
+
 # 2. CARREGA E VALIDA OS DOCUMENTOS
 for arquivo in pasta_data.rglob("*.md"):
     conteudo = arquivo.read_text(encoding="utf-8")
@@ -71,7 +81,7 @@ for arquivo in pasta_data.rglob("*.md"):
         arquivos_vazios.append(arquivo.name)
 
 
-# 3. AQUI ENTRA O NOVO CÓDIGO 👇
+# 3. CRIA E LIMPA OS CHUNKS
 
 chunks = []
 
@@ -79,10 +89,16 @@ for documento in documentos:
     partes = dividir_em_chunks(documento["conteudo"])
 
     for indice, parte in enumerate(partes):
+
+        parte_limpa = limpar_chunk(parte)
+
+        if not parte_limpa:
+            continue
+
         chunks.append({
             "arquivo": documento["arquivo"],
             "chunk_id": indice,
-            "conteudo": parte
+            "conteudo": parte_limpa
         })
 
 
