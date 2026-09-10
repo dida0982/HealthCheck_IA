@@ -4077,3 +4077,292 @@ No **8.6**, vamos criar um arquivo separado chamado `teste_embedding.py`. Não v
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+Bora. Agora sim vamos programar o **8.6 — primeiro embedding**.
+
+Dentro da pasta `backend`, crie um arquivo novo chamado:
+
+```text
+teste_embedding.py
+```
+
+A estrutura fica assim:
+
+```text
+backend/
+├── main.py
+├── carregar_documentos.py
+└── teste_embedding.py
+```
+
+Agora coloque dentro dele:
+
+```python
+from sentence_transformers import SentenceTransformer
+
+modelo = SentenceTransformer(
+    "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+)
+
+frase = "A vacina contra gripe ajuda a reduzir casos graves."
+
+embedding = modelo.encode(frase)
+
+print("Frase:")
+print(frase)
+
+print("\nEmbedding:")
+print(embedding)
+
+print("\nQuantidade de dimensões:")
+print(len(embedding))
+```
+
+O que cada parte faz:
+
+```python
+from sentence_transformers import SentenceTransformer
+```
+
+Importa a classe que vai carregar nosso modelo de embeddings.
+
+Depois:
+
+```python
+modelo = SentenceTransformer(
+    "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+)
+```
+
+Aqui estamos dizendo:
+
+```text
+use este modelo específico
+```
+
+Na primeira execução ele provavelmente vai baixar os arquivos do modelo.
+
+Depois:
+
+```python
+frase = "A vacina contra gripe ajuda a reduzir casos graves."
+```
+
+Essa é nossa frase de teste.
+
+Aqui:
+
+```python
+embedding = modelo.encode(frase)
+```
+
+acontece a parte principal:
+
+```text
+texto
+  ↓
+modelo
+  ↓
+vetor numérico
+```
+
+E finalmente:
+
+```python
+print(len(embedding))
+```
+
+serve para conferir quantas dimensões o vetor possui.
+
+Agora salve o arquivo e, no terminal dentro de `backend`, rode:
+
+```powershell
+python teste_embedding.py
+```
+
+Na primeira vez pode aparecer download do modelo. Depois deve aparecer algo parecido com:
+
+```text
+Frase:
+A vacina contra gripe ajuda a reduzir casos graves.
+
+Embedding:
+[ 0.021 ... -0.034 ... ]
+
+Quantidade de dimensões:
+384
+```
+
+Os números do vetor podem ser diferentes. O que queremos confirmar principalmente é:
+
+```text
+Quantidade de dimensões:
+384
+```
+
+Se isso aparecer, o **primeiro embedding do HealthCheck IA foi gerado com sucesso**. 🚀
+
+Me mande a saída do terminal depois que rodar.
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+UHUUU! 🚀 **Funcionou perfeitamente.**
+
+Você acabou de gerar o **primeiro embedding real do HealthCheck IA**.
+
+A frase:
+
+```text
+A vacina contra gripe ajuda a reduzir casos graves.
+```
+
+foi transformada em um vetor com:
+
+```text
+384 dimensões
+```
+
+e isso confirma que o modelo escolhido está funcionando corretamente.
+
+Aquele aviso do Hugging Face sobre `HF_TOKEN` **não é erro**. Ele só informa que você está baixando sem autenticação; para esse teste e para o nosso MVP, podemos seguir normalmente.
+
+Agora podemos marcar:
+
+```text
+[X] 8.5 Escolher modelo
+[X] 8.6 Gerar primeiro embedding ✅
+
+[ ] 8.7 Gerar embeddings dos 93 chunks  ← PRÓXIMO
+[ ] 8.8 Similaridade de cosseno
+[ ] 8.9 Primeira busca semântica
+```
+
+O próximo passo é transformar isso:
+
+```text
+93 chunks de texto
+```
+
+em:
+
+```text
+93 vetores
+```
+
+ou, tecnicamente, uma matriz aproximadamente assim:
+
+```text
+93 × 384
+```
+
+Ou seja:
+
+```text
+chunk 0 → 384 números
+chunk 1 → 384 números
+chunk 2 → 384 números
+...
+chunk 92 → 384 números
+```
+
+Mas não quero jogar esse código direto no seu `carregar_documentos.py` ainda. O ideal agora é criar uma separação melhor:
+
+```text
+carregar_documentos.py
+→ carrega e cria chunks
+
+teste_embedding.py
+→ teste que já funcionou
+
+busca_semantica.py
+→ próximo arquivo, que vai gerar embeddings e depois pesquisar
+```
+
+Então o **8.6 está concluído com sucesso**. No próximo passo vamos criar juntos o `busca_semantica.py` e fazer ele pegar os 93 chunks automaticamente.
+
+
+----------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------
+
+UHUUU! 🚀 **Funcionou perfeitamente.**
+
+Você acabou de gerar o **primeiro embedding real do HealthCheck IA**.
+
+A frase:
+
+```text
+A vacina contra gripe ajuda a reduzir casos graves.
+```
+
+foi transformada em um vetor com:
+
+```text
+384 dimensões
+```
+
+e isso confirma que o modelo escolhido está funcionando corretamente.
+
+Aquele aviso do Hugging Face sobre `HF_TOKEN` **não é erro**. Ele só informa que você está baixando sem autenticação; para esse teste e para o nosso MVP, podemos seguir normalmente.
+
+Agora podemos marcar:
+
+```text
+[X] 8.5 Escolher modelo
+[X] 8.6 Gerar primeiro embedding ✅
+
+[ ] 8.7 Gerar embeddings dos 93 chunks  ← PRÓXIMO
+[ ] 8.8 Similaridade de cosseno
+[ ] 8.9 Primeira busca semântica
+```
+
+O próximo passo é transformar isso:
+
+```text
+93 chunks de texto
+```
+
+em:
+
+```text
+93 vetores
+```
+
+ou, tecnicamente, uma matriz aproximadamente assim:
+
+```text
+93 × 384
+```
+
+Ou seja:
+
+```text
+chunk 0 → 384 números
+chunk 1 → 384 números
+chunk 2 → 384 números
+...
+chunk 92 → 384 números
+```
+
+Mas não quero jogar esse código direto no seu `carregar_documentos.py` ainda. O ideal agora é criar uma separação melhor:
+
+```text
+carregar_documentos.py
+→ carrega e cria chunks
+
+teste_embedding.py
+→ teste que já funcionou
+
+busca_semantica.py
+→ próximo arquivo, que vai gerar embeddings e depois pesquisar
+```
+
+Então o **8.6 está concluído com sucesso**. No próximo passo vamos criar juntos o `busca_semantica.py` e fazer ele pegar os 93 chunks automaticamente.
+
+
+----------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------
+
+
