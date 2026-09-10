@@ -9017,3 +9017,123 @@ Então nosso próximo passo deve ser o **10.6 — separar `system prompt` e `use
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+Vamos fazer juntos e sem pular etapa.
+
+Conferi de novo o `backend/rag.py`. Hoje ele ainda tem uma função `montar_prompt_rag()` que mistura regras fixas, classificação, alegação e evidências no mesmo texto.
+
+Então vamos começar só pelo **10.6.1: criar o `system prompt`**.
+
+Abra:
+
+```text
+backend/rag.py
+```
+
+E, logo depois desta linha:
+
+```python
+from busca_semantica import buscar_evidencias
+```
+
+adicione esta função:
+
+```python
+def montar_system_prompt():
+
+    return """
+Você é o componente de análise do HealthCheck IA.
+
+Sua função é avaliar alegações relacionadas à saúde.
+
+REGRAS OBRIGATÓRIAS:
+
+1. Utilize somente as evidências fornecidas pelo sistema.
+2. Não utilize conhecimento externo.
+3. Não invente fatos, dados, estudos ou fontes.
+4. Não presuma informações que não estejam presentes nas evidências.
+5. Diferencie ausência de evidência de evidência de ausência.
+6. Se as evidências forem insuficientes, conflitantes ou não permitirem
+   uma conclusão segura, classifique como "NÃO FOI POSSÍVEL VERIFICAR".
+7. A similaridade semântica não representa verdade e não deve ser usada,
+   sozinha, para decidir a classificação.
+8. Não invente números de confiança ou probabilidades.
+9. Retorne somente a estrutura solicitada pelo sistema.
+"""
+```
+
+Por enquanto, **não apague `montar_prompt_rag()` e não altere o `main.py`**.
+
+A estrutura inicial do arquivo vai ficar assim:
+
+```python
+from busca_semantica import buscar_evidencias
+
+
+def montar_system_prompt():
+
+    return """
+Você é o componente de análise do HealthCheck IA.
+
+Sua função é avaliar alegações relacionadas à saúde.
+
+REGRAS OBRIGATÓRIAS:
+
+1. Utilize somente as evidências fornecidas pelo sistema.
+2. Não utilize conhecimento externo.
+3. Não invente fatos, dados, estudos ou fontes.
+4. Não presuma informações que não estejam presentes nas evidências.
+5. Diferencie ausência de evidência de evidência de ausência.
+6. Se as evidências forem insuficientes, conflitantes ou não permitirem
+   uma conclusão segura, classifique como "NÃO FOI POSSÍVEL VERIFICAR".
+7. A similaridade semântica não representa verdade e não deve ser usada,
+   sozinha, para decidir a classificação.
+8. Não invente números de confiança ou probabilidades.
+9. Retorne somente a estrutura solicitada pelo sistema.
+"""
+
+
+def montar_contexto_rag(alegacao, evidencias):
+```
+
+A ideia dessa função é simples:
+
+```text
+montar_system_prompt()
+        ↓
+regras permanentes do HealthCheck
+```
+
+Ela **não recebe a pergunta do usuário** e **não recebe as evidências**.
+
+Ela apenas diz ao Llama:
+
+> “Estas são as regras que você deve seguir em qualquer análise.”
+
+Enquanto depois teremos outra função:
+
+```text
+montar_user_prompt()
+        ↓
+alegação específica
++
+evidências recuperadas naquele momento
+```
+
+Então teremos a separação:
+
+```text
+SYSTEM
+Regras permanentes
+       +
+USER
+Alegação + evidências
+       ↓
+LLM
+```
+
+Faça **só essa alteração**, salve o `rag.py` e me diga quando estiver pronto. Aí fazemos juntos o **10.6.2 — criar `montar_user_prompt()`**.
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+
