@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
+from busca_semantica import buscar_evidencias
+
 app = FastAPI(
     title="HealthCheck IA API",
     version="1.0.0"
