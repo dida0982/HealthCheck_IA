@@ -1,0 +1,3 @@
+pip install fastapi unicorn
+
+uvicorn main:app --reload
