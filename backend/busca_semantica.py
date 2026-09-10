@@ -31,24 +31,42 @@ similaridades = cosine_similarity(
 )
 
 
-indice_mais_similar = similaridades[0].argmax()
+pergunta = "A vacina contra gripe ajuda a evitar casos graves?"
 
-maior_similaridade = similaridades[0][indice_mais_similar]
+embedding_pergunta = modelo.encode([pergunta])
+
+similaridades = cosine_similarity(
+    embedding_pergunta,
+    embeddings
+)[0]
+
+top_k = 3
+
+indices_ordenados = similaridades.argsort()[::-1]
+
+top_indices = indices_ordenados[:top_k]
 
 
-print("\n=== BUSCA POR SIMILARIDADE ===")
+print("\n=== BUSCA SEMÂNTICA ===")
 
 print("\nPergunta:")
 print(pergunta)
 
-print("\nMaior similaridade:")
-print(maior_similaridade)
+print(f"\nTOP {top_k} resultados mais relevantes:\n")
 
-print("\nChunk mais parecido:")
-print(chunks[indice_mais_similar]["conteudo"])
+for posicao, indice in enumerate(top_indices, start=1):
 
-print("\nArquivo de origem:")
-print(chunks[indice_mais_similar]["arquivo"])
+    chunk = chunks[indice]
+    similaridade = similaridades[indice]
 
-print("\nID do chunk:")
-print(chunks[indice_mais_similar]["chunk_id"])
+    print("=" * 60)
+
+    print(f"POSIÇÃO: {posicao}")
+    print(f"SIMILARIDADE: {similaridade:.4f}")
+    print(f"ARQUIVO: {chunk['arquivo']}")
+    print(f"CHUNK ID: {chunk['chunk_id']}")
+
+    print("\nCONTEÚDO:")
+    print(chunk["conteudo"])
+
+    print()
