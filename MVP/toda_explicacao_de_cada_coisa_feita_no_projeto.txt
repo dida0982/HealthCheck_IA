@@ -6290,3 +6290,321 @@ Vamos para **9.2 — criar `montar_contexto_rag()`**, que vai pegar a alegação
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+Vamos. Agora o **9.2 — `montar_contexto_rag()`** vai transformar a alegação + as evidências recuperadas em um texto organizado para o LLM.
+
+Eu sugiro criar um novo arquivo dentro de `backend`:
+
+```text
+rag.py
+```
+
+Sua estrutura fica assim:
+
+```text
+backend/
+├── main.py
+├── carregar_documentos.py
+├── teste_embedding.py
+├── busca_semantica.py
+└── rag.py
+```
+
+Dentro do `rag.py`, coloque:
+
+```python
+from busca_semantica import buscar_evidencias
+
+
+def montar_contexto_rag(alegacao, top_k=3):
+
+    evidencias = buscar_evidencias(
+        alegacao,
+        top_k=top_k
+    )
+
+    contexto = f"""
+ALEGAÇÃO:
+
+{alegacao}
+
+EVIDÊNCIAS RECUPERADAS:
+"""
+
+    for posicao, evidencia in enumerate(evidencias, start=1):
+
+        contexto += f"""
+
+EVIDÊNCIA {posicao}
+
+Arquivo:
+{evidencia["arquivo"]}
+
+Chunk:
+{evidencia["chunk_id"]}
+
+Similaridade:
+{evidencia["similaridade"]:.4f}
+
+Conteúdo:
+{evidencia["conteudo"]}
+"""
+
+    return contexto
+
+
+if __name__ == "__main__":
+
+    alegacao = "A vacina contra gripe ajuda a evitar casos graves?"
+
+    contexto = montar_contexto_rag(
+        alegacao,
+        top_k=3
+    )
+
+    print("\n=== CONTEXTO RAG ===")
+    print(contexto)
+```
+
+O ponto principal é esta função:
+
+```python
+def montar_contexto_rag(alegacao, top_k=3):
+```
+
+Ela recebe:
+
+```text
+alegacao
++
+quantidade de evidências
+```
+
+Depois chama a função que você já construiu:
+
+```python
+evidencias = buscar_evidencias(
+    alegacao,
+    top_k=top_k
+)
+```
+
+Então o fluxo já fica:
+
+```text
+"A vacina contra gripe ajuda a evitar casos graves?"
+                     ↓
+            montar_contexto_rag()
+                     ↓
+            buscar_evidencias()
+                     ↓
+               embeddings
+                     ↓
+         similaridade de cosseno
+                     ↓
+              TOP 3 chunks
+                     ↓
+            montar_contexto_rag()
+                     ↓
+            texto estruturado
+```
+
+Essa parte:
+
+```python
+for posicao, evidencia in enumerate(evidencias, start=1):
+```
+
+percorre os resultados:
+
+```text
+Evidência 1
+Evidência 2
+Evidência 3
+```
+
+E vai construindo o contexto.
+
+Ao executar:
+
+```powershell
+python rag.py
+```
+
+queremos obter aproximadamente:
+
+```text
+=== CONTEXTO RAG ===
+
+ALEGAÇÃO:
+
+A vacina contra gripe ajuda a evitar casos graves?
+
+EVIDÊNCIAS RECUPERADAS:
+
+EVIDÊNCIA 1
+
+Arquivo:
+ministerio_saude_gripe.md
+
+Chunk:
+2
+
+Similaridade:
+0.8116
+
+Conteúdo:
+A vacinação contra influenza é realizada anualmente...
+```
+
+seguido pelas evidências 2 e 3.
+
+Um detalhe importante: **ainda não estamos usando LLM**.
+
+Neste momento estamos apenas construindo o pacote de informações que futuramente será enviado a ele:
+
+```text
+RAG
+
+Retrieval ✅
+    ↓
+TOP 3 evidências ✅
+    ↓
+Montagem do contexto ← ESTAMOS AQUI
+    ↓
+Prompt
+    ↓
+LLM
+    ↓
+Análise
+```
+
+Também não precisamos colocar a instrução completa ao LLM ainda. No **9.3/9.4** vamos transformar esse contexto em um prompt controlado, incluindo regras como:
+
+```text
+Utilize somente as evidências fornecidas.
+
+Não use conhecimento externo.
+
+Não invente informações.
+
+Se as evidências forem insuficientes,
+retorne "Não foi possível verificar".
+```
+
+Primeiro faça somente esse `rag.py` e rode:
+
+```powershell
+python rag.py
+```
+
+Se aparecerem a alegação e as **3 evidências organizadas**, o `montar_contexto_rag()` está funcionando e o **9.2 estará concluído**.
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Perfeito — o **9.2 funcionou corretamente**. ✅
+
+Seu `rag.py` já está fazendo exatamente o que queríamos: recebe a alegação, chama `buscar_evidencias()`, recupera o TOP 3 e monta tudo em um contexto estruturado.
+
+Agora podemos marcar:
+
+```text
+[X] 9.1 Entender Retrieval + Generation
+[X] 9.2 Criar montar_contexto_rag() ✅
+
+[ ] 9.3 Juntar alegação + evidências em um prompt completo
+[ ] 9.4 Definir instruções/regras do HealthCheck IA
+[ ] 9.5 Testar o prompt no terminal
+[ ] 9.6 Preparar saída estruturada
+[ ] 9.7 Conectar ao LLM local
+```
+
+Um detalhe importante do seu resultado: ainda aparecem trechos como:
+
+```text
+## Alegações relacionadas
+```
+
+e:
+
+```text
+## Evidências importantes
+```
+
+no final de alguns chunks. Isso acontece porque o chunking está preservando partes do Markdown original. Não impede o funcionamento agora. Depois podemos limpar isso se quisermos deixar o contexto mais enxuto.
+
+Agora o próximo passo é **9.3/9.4 juntos**: transformar esse contexto em um prompt de verdade para o LLM.
+
+Hoje você tem algo como:
+
+```text
+ALEGAÇÃO:
+A vacina contra gripe ajuda a evitar casos graves?
+
+EVIDÊNCIAS:
+...
+```
+
+Vamos passar a ter algo assim:
+
+```text
+Você é o componente de análise do HealthCheck IA.
+
+Sua tarefa é avaliar uma alegação de saúde utilizando SOMENTE
+as evidências fornecidas abaixo.
+
+REGRAS:
+
+- Não utilize conhecimento externo.
+- Não invente informações.
+- Não presuma fatos que não estejam nas evidências.
+- Diferencie ausência de evidência de evidência de ausência.
+- Se as evidências forem insuficientes, informe que não foi possível verificar.
+
+Classifique a alegação em apenas uma destas categorias:
+
+SUSTENTADA
+PARCIALMENTE SUSTENTADA
+ENGANOSA
+CONTRADITA PELAS EVIDÊNCIAS
+NÃO FOI POSSÍVEL VERIFICAR
+
+ALEGAÇÃO:
+...
+
+EVIDÊNCIAS:
+...
+```
+
+Esse será o primeiro **prompt controlado do HealthCheck IA**.
+
+O fluxo já está chegando aqui:
+
+```text
+Alegação
+   ↓
+buscar_evidencias()
+   ↓
+TOP 3
+   ↓
+montar_contexto_rag()
+   ↓
+PROMPT COMPLETO   ← PRÓXIMO
+   ↓
+LLM
+```
+
+Então o próximo passo é criar uma função nova no próprio `rag.py`:
+
+```python
+def montar_prompt_rag(alegacao, top_k=3):
+```
+
+Ela vai usar `montar_contexto_rag()` e acrescentar todas as regras que o modelo deverá obedecer.
+
+Podemos fazer agora o **9.3/9.4 — criar `montar_prompt_rag()`**.
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
