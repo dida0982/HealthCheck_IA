@@ -7411,3 +7411,146 @@ Me mande exatamente o que aparecer. A partir desse resultado eu te passo o próx
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+Funcionou. ✅
+
+O `requests` já estava instalado, e o Python conseguiu chamar a API local do Ollama e receber resposta do `llama3.2:3b`.
+
+Só repare que ele respondeu:
+
+```text
+FUNCIONANDO.
+```
+
+com ponto final, mesmo você pedindo somente a palavra. Isso já mostra uma característica importante dos LLMs: instruções de formato ajudam muito, mas o modelo ainda pode sair um pouco do formato. Por isso o nosso passo de JSON estruturado foi importante.
+
+Então agora estamos aqui:
+
+```text
+[X] 9.7.1 Ollama instalado
+[X] 9.7.2 Modelos verificados
+[X] 9.7.3 Modelo escolhido
+[X] 9.7.4 Modelo baixado
+[X] 9.7.5 Teste no terminal
+[X] 9.7.6 Python → Ollama ✅
+
+[ ] 9.7.7 Prompt RAG → Ollama ← AGORA
+[ ] 9.8 Receber e interpretar JSON do LLM
+[ ] 9.9 Integrar com FastAPI
+[ ] 9.10 Testar fluxo completo
+```
+
+Agora vamos fazer o `teste_ollama.py` usar o **prompt real do HealthCheck IA**.
+
+Substitua todo o conteúdo do `teste_ollama.py` por:
+
+```python
+import requests
+
+from rag import montar_prompt_rag
+
+
+alegacao = "A vacina contra gripe ajuda a evitar casos graves?"
+
+prompt = montar_prompt_rag(
+    alegacao,
+    top_k=3
+)
+
+url = "http://localhost:11434/api/generate"
+
+dados = {
+    "model": "llama3.2:3b",
+    "prompt": prompt,
+    "stream": False
+}
+
+resposta = requests.post(
+    url,
+    json=dados
+)
+
+resultado = resposta.json()
+
+print("\n=== RESPOSTA DO HEALTHCHECK IA ===\n")
+print(resultado["response"])
+```
+
+O ponto mais importante é esta linha:
+
+```python
+from rag import montar_prompt_rag
+```
+
+Ela está trazendo para o arquivo de teste a função que acabamos de construir.
+
+Depois acontece:
+
+```python
+prompt = montar_prompt_rag(
+    alegacao,
+    top_k=3
+)
+```
+
+Então o sistema executa de verdade:
+
+```text
+"A vacina contra gripe ajuda a evitar casos graves?"
+                    ↓
+          montar_prompt_rag()
+                    ↓
+          buscar_evidencias()
+                    ↓
+              embeddings
+                    ↓
+          similaridade cosseno
+                    ↓
+             TOP 3 chunks
+                    ↓
+             prompt completo
+                    ↓
+              Ollama
+                    ↓
+            Llama 3.2 3B
+```
+
+Agora salve e execute:
+
+```powershell
+python teste_ollama.py
+```
+
+A primeira execução pode levar alguns segundos.
+
+No final queremos algo aproximadamente assim:
+
+```json
+{
+    "classificacao": "SUSTENTADA PELAS EVIDÊNCIAS",
+    "explicacao": "As evidências indicam que a vacinação contra influenza reduz o risco de formas graves, complicações, hospitalizações e mortes.",
+    "evidencias_utilizadas": [1, 2, 3]
+}
+```
+
+Não se preocupe ainda se vier com pequenas diferenças, acentos ou até algum texto extra. **Neste teste queremos descobrir exatamente como o Llama vai responder ao nosso prompt RAG.**
+
+Se ele devolver uma classificação baseada nas evidências, teremos pela primeira vez o fluxo completo:
+
+```text
+Busca semântica + RAG + LLM
+```
+
+rodando localmente no HealthCheck IA.
+
+Execute `python teste_ollama.py` e me mande a saída completa da parte:
+
+```text
+=== RESPOSTA DO HEALTHCHECK IA ===
+```
+
+Aí vamos validar se o **9.7.7** funcionou antes de mexermos no JSON.
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+

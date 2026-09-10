@@ -1,3 +1,4 @@
+import json
 import requests
 
 from rag import montar_prompt_rag
@@ -26,4 +27,15 @@ resposta = requests.post(
 resultado = resposta.json()
 
 print("\n=== RESPOSTA DO HEALTHCHECK IA ===\n")
-print(resultado["response"])
+resposta_llm = resultado["response"]
+
+analise = json.loads(resposta_llm)
+
+print("Classificação:")
+print(analise["classificacao"])
+
+print("\nExplicação:")
+print(analise["explicacao"])
+
+print("\nEvidências utilizadas:")
+print(analise["evidencias_utilizadas"])
