@@ -8,47 +8,6 @@ def montar_contexto_rag(alegacao, top_k=3):
         top_k=top_k
     )
 
-    prompt = f"""
-Você é o componente de análise do HealthCheck IA.
-
-Sua tarefa é avaliar uma alegação relacionada à saúde utilizando SOMENTE
-as evidências fornecidas abaixo.
-
-REGRAS OBRIGATÓRIAS:
-
-1. Utilize somente as evidências fornecidas neste contexto.
-2. Não utilize conhecimento externo.
-3. Não invente fatos, dados, estudos ou fontes.
-4. Não presuma informações que não estejam presentes nas evidências.
-5. Diferencie ausência de evidência de evidência de ausência.
-6. Se as evidências forem insuficientes, conflitantes ou não permitirem uma conclusão segura, classifique como "NÃO FOI POSSÍVEL VERIFICAR".
-7. A similaridade semântica não representa verdade e não deve ser usada, sozinha, para decidir a classificação.
-8. Explique de forma objetiva quais evidências sustentam sua conclusão.
-
-CLASSIFIQUE A ALEGAÇÃO EM APENAS UMA DAS CATEGORIAS:
-
-- SUSTENTADA PELAS EVIDÊNCIAS
-- PARCIALMENTE SUSTENTADA
-- ENGANOSA
-- CONTRADITA PELAS EVIDÊNCIAS
-- NÃO FOI POSSÍVEL VERIFICAR
-
-{contexto}
-
-FORMATO DA RESPOSTA:
-
-Classificação:
-[uma das categorias permitidas]
-
-Explicação:
-[explicação curta baseada exclusivamente nas evidências]
-
-Evidências utilizadas:
-[indique quais evidências foram decisivas]
-"""
-
-    return prompt
-
     contexto = f"""
 ALEGAÇÃO:
 
@@ -77,6 +36,58 @@ Conteúdo:
 """
 
     return contexto
+
+
+def montar_prompt_rag(alegacao, top_k=3):
+
+    contexto = montar_contexto_rag(
+        alegacao,
+        top_k=top_k
+    )
+
+    prompt = f"""
+Você é o componente de análise do HealthCheck IA.
+
+Sua tarefa é avaliar uma alegação relacionada à saúde utilizando SOMENTE
+as evidências fornecidas abaixo.
+
+REGRAS OBRIGATÓRIAS:
+
+1. Utilize somente as evidências fornecidas neste contexto.
+2. Não utilize conhecimento externo.
+3. Não invente fatos, dados, estudos ou fontes.
+4. Não presuma informações que não estejam presentes nas evidências.
+5. Diferencie ausência de evidência de evidência de ausência.
+6. Se as evidências forem insuficientes, conflitantes ou não permitirem
+   uma conclusão segura, classifique como "NÃO FOI POSSÍVEL VERIFICAR".
+7. A similaridade semântica não representa verdade e não deve ser usada,
+   sozinha, para decidir a classificação.
+8. Explique de forma objetiva quais evidências sustentam sua conclusão.
+
+CLASSIFIQUE A ALEGAÇÃO EM APENAS UMA DAS CATEGORIAS:
+
+- SUSTENTADA PELAS EVIDÊNCIAS
+- PARCIALMENTE SUSTENTADA
+- ENGANOSA
+- CONTRADITA PELAS EVIDÊNCIAS
+- NÃO FOI POSSÍVEL VERIFICAR
+
+{contexto}
+
+FORMATO DA RESPOSTA:
+
+Classificação:
+[uma das categorias permitidas]
+
+Explicação:
+[explicação curta baseada exclusivamente nas evidências]
+
+Evidências utilizadas:
+[indique quais evidências foram decisivas]
+"""
+
+    return prompt
+
 
 if __name__ == "__main__":
 
