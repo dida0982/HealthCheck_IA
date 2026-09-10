@@ -5504,3 +5504,239 @@ Podemos começar agora pela **8.10.1 — transformar o `busca_semantica.py` em `
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+Sim. Vamos fazer exatamente isso: **8.10.1 — transformar o `busca_semantica.py` em uma função reutilizável**.
+
+A ideia é que ele deixe de executar uma pergunta fixa automaticamente e passe a ter uma função que recebe qualquer pergunta.
+
+Substitua o conteúdo atual do `busca_semantica.py` por este:
+
+```python
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
+from carregar_documentos import chunks
+
+
+modelo = SentenceTransformer(
+    "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+)
+
+
+textos = []
+
+for chunk in chunks:
+    textos.append(chunk["conteudo"])
+
+
+embeddings = modelo.encode(
+    textos,
+    show_progress_bar=True
+)
+
+
+def buscar_evidencias(pergunta, top_k=3):
+
+    embedding_pergunta = modelo.encode([pergunta])
+
+    similaridades = cosine_similarity(
+        embedding_pergunta,
+        embeddings
+    )[0]
+
+    indices_ordenados = similaridades.argsort()[::-1]
+
+    top_indices = indices_ordenados[:top_k]
+
+    resultados = []
+
+    for indice in top_indices:
+
+        chunk = chunks[indice]
+
+        resultados.append({
+            "arquivo": chunk["arquivo"],
+            "chunk_id": chunk["chunk_id"],
+            "conteudo": chunk["conteudo"],
+            "similaridade": float(similaridades[indice])
+        })
+
+    return resultados
+
+
+if __name__ == "__main__":
+
+    pergunta = "A vacina contra gripe ajuda a evitar casos graves?"
+
+    resultados = buscar_evidencias(
+        pergunta,
+        top_k=3
+    )
+
+    print("\n=== BUSCA SEMÂNTICA ===")
+
+    print("\nPergunta:")
+    print(pergunta)
+
+    print("\nTOP 3 resultados mais relevantes:\n")
+
+    for posicao, resultado in enumerate(resultados, start=1):
+
+        print("=" * 60)
+
+        print(f"POSIÇÃO: {posicao}")
+        print(f"SIMILARIDADE: {resultado['similaridade']:.4f}")
+        print(f"ARQUIVO: {resultado['arquivo']}")
+        print(f"CHUNK ID: {resultado['chunk_id']}")
+
+        print("\nCONTEÚDO:")
+        print(resultado["conteudo"])
+
+        print()
+```
+
+A parte mais importante agora é esta:
+
+```python
+def buscar_evidencias(pergunta, top_k=3):
+```
+
+Agora você criou uma função que pode receber qualquer texto.
+
+Por exemplo:
+
+```python
+buscar_evidencias(
+    "Vitamina C cura gripe?"
+)
+```
+
+ou:
+
+```python
+buscar_evidencias(
+    "Vacinas causam doenças?"
+)
+```
+
+ou depois, no FastAPI:
+
+```python
+buscar_evidencias(
+    dados.titulo + " " + dados.descricao
+)
+```
+
+O `top_k=3` significa que, se você não informar nada, ela retorna os 3 resultados mais relevantes.
+
+Mas você também poderia fazer:
+
+```python
+buscar_evidencias(
+    "Vacina contra gripe funciona?",
+    top_k=5
+)
+```
+
+e receber os 5 melhores.
+
+Uma mudança importante também aconteceu aqui:
+
+```python
+resultados = []
+```
+
+Antes nosso programa simplesmente imprimia tudo.
+
+Agora ele cria uma estrutura de dados assim:
+
+```python
+[
+    {
+        "arquivo": "ministerio_saude_gripe.md",
+        "chunk_id": 2,
+        "conteudo": "...",
+        "similaridade": 0.8116
+    },
+    {
+        "arquivo": "...",
+        "chunk_id": 1,
+        "conteudo": "...",
+        "similaridade": 0.7868
+    },
+    ...
+]
+```
+
+Isso é muito melhor porque o FastAPI poderá receber esses dados e transformá-los em JSON.
+
+Também quero que você entenda esta parte:
+
+```python
+if __name__ == "__main__":
+```
+
+Ela serve para separar dois comportamentos.
+
+Quando você executar:
+
+```powershell
+python busca_semantica.py
+```
+
+o código de teste será executado normalmente.
+
+Mas quando o futuro `main.py` fizer:
+
+```python
+from busca_semantica import buscar_evidencias
+```
+
+essa parte de teste:
+
+```python
+pergunta = "A vacina contra gripe..."
+```
+
+**não será executada**.
+
+Isso é exatamente o que precisamos para reutilizar o arquivo dentro do backend.
+
+Agora rode novamente:
+
+```powershell
+python busca_semantica.py
+```
+
+O resultado deverá continuar praticamente igual ao anterior, com o TOP 3.
+
+Se continuar retornando algo como:
+
+```text
+1 - ministerio_saude_gripe.md
+2 - ministerio_saude_gripe.md
+3 - fiocruz_vacinas.md
+```
+
+então teremos confirmado que a refatoração funcionou.
+
+Nesse ponto:
+
+```text
+[X] 8.10.1 Criar buscar_evidencias()
+[ ] 8.10.2 Conectar buscar_evidencias() ao FastAPI
+```
+
+E no **8.10.2** finalmente vamos mexer no `main.py`, fazendo o `/analisar` usar a busca semântica real em vez de responder sempre:
+
+```json
+{
+  "classificacao": "enganosa",
+  "confianca": 0.82
+}
+```
+
+Esse próximo passo vai ser importante porque será a primeira vez que a **extensão → FastAPI → embeddings → base de saúde** vão começar a funcionar como um único sistema.
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
