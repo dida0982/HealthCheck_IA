@@ -88,7 +88,7 @@ def analisar(dados: AnaliseRequest):
         resposta_ollama = requests.post(
             url_ollama,
             json=dados_ollama,
-            timeout=120
+            timeout=300
         )
 
         resposta_ollama.raise_for_status()
