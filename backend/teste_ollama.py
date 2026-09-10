@@ -26,10 +26,11 @@ resposta = requests.post(
 
 resultado = resposta.json()
 
-print("\n=== RESPOSTA DO HEALTHCHECK IA ===\n")
 resposta_llm = resultado["response"]
 
 analise = json.loads(resposta_llm)
+
+print("\n=== ANÁLISE DO HEALTHCHECK IA ===\n")
 
 print("Classificação:")
 print(analise["classificacao"])
