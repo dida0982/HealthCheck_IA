@@ -1,4 +1,0 @@
-pip install fastapi unicorn
-
-Iniciar servidor:
-uvicorn main:app --reload
