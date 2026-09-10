@@ -6030,3 +6030,151 @@ Primeiro faça esse teste pelo Swagger. Se aparecerem as três evidências no `R
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+UHUUU! 🚀 **O 8.10.2 funcionou. A integração com o backend está concluída.**
+
+Pelas imagens e pelo terminal, temos todas as confirmações importantes: a API iniciou normalmente, `GET /` retornou `200 OK`, o Swagger abriu, `POST /analisar` retornou `200 OK` e, principalmente, o `Response body` trouxe **3 evidências reais recuperadas pela busca semântica**.
+
+Seu resultado ficou aproximadamente assim:
+
+```text
+POST /analisar
+      ↓
+Título + descrição
+      ↓
+buscar_evidencias()
+      ↓
+Embedding
+      ↓
+Busca nos 93 chunks
+      ↓
+TOP 3
+
+1º ministerio_saude_gripe.md
+   chunk 2
+   similaridade ≈ 0.894
+
+2º ministerio_saude_gripe.md
+   chunk 1
+   similaridade ≈ 0.881
+
+3º fiocruz_vacinas.md
+   chunk 2
+   similaridade ≈ 0.874
+```
+
+E tem uma coisa ainda melhor: antes, quando testamos apenas a pergunta curta, o melhor resultado tinha similaridade `0.8116`. Agora o backend juntou título + descrição e o melhor resultado chegou a aproximadamente `0.894`.
+
+Isso faz sentido porque o texto enviado:
+
+```text
+Vacina contra gripe ajuda a evitar casos graves?
++
+A vacinação pode reduzir internações e mortes por influenza.
+```
+
+contém mais contexto semântico para o modelo encontrar trechos relacionados.
+
+### Onde chegamos
+
+```text
+[X] 8.6 Primeiro embedding
+[X] 8.7 Embeddings dos 93 chunks
+[X] 8.8 Similaridade de cosseno
+[X] 8.9 Busca semântica TOP 3
+
+[X] 8.10.1 criar buscar_evidencias()
+[X] 8.10.2 integrar ao FastAPI ✅
+```
+
+Agora existe uma diferença enorme em relação ao backend que tínhamos no começo.
+
+**Antes:**
+
+```text
+Extensão
+   ↓
+FastAPI
+   ↓
+resposta inventada/fixa
+
+"enganosa"
+0.82
+```
+
+**Agora:**
+
+```text
+Extensão
+   ↓
+FastAPI
+   ↓
+título + descrição
+   ↓
+Sentence Transformer
+   ↓
+embedding
+   ↓
+busca nos 93 chunks
+   ↓
+similaridade de cosseno
+   ↓
+TOP 3 evidências reais
+   ↓
+JSON
+```
+
+Isso significa que **a parte de recuperação de evidências do HealthCheck IA já existe e está funcionando.**
+
+Mas ainda não temos o sistema completo de verificação. O que construímos responde:
+
+> “Quais evidências da minha base estão semanticamente relacionadas a esta alegação?”
+
+Ele ainda não responde:
+
+> “Essas evidências sustentam ou contradizem a alegação?”
+
+Essa distinção é fundamental.
+
+Por exemplo, se alguém pesquisar:
+
+```text
+Vacina contra gripe causa gripe?
+```
+
+a busca semântica pode encontrar excelentes documentos sobre **vacina + gripe**. Mas alta similaridade não significa que esses documentos concordam com a afirmação.
+
+É aí que começa a próxima grande etapa:
+
+```text
+Alegação
+   ↓
+Busca semântica ← JÁ TEMOS
+   ↓
+TOP 3 evidências
+   ↓
+RAG / LLM
+   ↓
+Comparar alegação × evidências
+   ↓
+Classificação
+
+🟢 Sustentada pelas evidências
+🟡 Parcialmente sustentada
+🟠 Enganosa
+🔴 Contradita pelas evidências
+⚪ Não foi possível verificar
+
+   ↓
+Explicação
+   ↓
+Fontes
+```
+
+Portanto, eu marcaria oficialmente a **ETAPA 8 — Embeddings + Busca Semântica como concluída**. ✅
+
+O próximo grande marco é a **ETAPA 9/10 da nossa arquitetura: estruturar a recuperação para o RAG e depois conectar um LLM local às evidências**. É aí que o HealthCheck começa a deixar de ser apenas um mecanismo de busca semântica e passa a realmente **analisar a alegação com base nas evidências recuperadas**.
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
