@@ -31,60 +31,154 @@ async function analisarResultado(item) {
 }
 
 
+function escaparHTML(texto) {
+  const elemento = document.createElement("div");
+
+  elemento.textContent = texto ?? "";
+
+  return elemento.innerHTML;
+}
+
+
+function obterConfiguracaoClassificacao(classificacao) {
+
+  switch (classificacao) {
+
+    case "SUSTENTADA PELAS EVIDÊNCIAS":
+      return {
+        status: "Sustentada pelas evidências",
+        icone: "🟢",
+        classe: "healthcheck-sustentada"
+      };
+
+
+    case "PARCIALMENTE SUSTENTADA":
+      return {
+        status: "Parcialmente sustentada",
+        icone: "🟡",
+        classe: "healthcheck-parcial"
+      };
+
+
+    case "ENGANOSA":
+      return {
+        status: "Potencialmente enganosa",
+        icone: "🟠",
+        classe: "healthcheck-enganosa"
+      };
+
+
+    case "CONTRADITA PELAS EVIDÊNCIAS":
+      return {
+        status: "Contradita pelas evidências",
+        icone: "🔴",
+        classe: "healthcheck-contraditoria"
+      };
+
+
+    case "NÃO FOI POSSÍVEL VERIFICAR":
+      return {
+        status: "Não foi possível verificar",
+        icone: "⚪",
+        classe: "healthcheck-nao-verificada"
+      };
+
+
+    default:
+      return {
+        status: "Resultado recebido",
+        icone: "🔎",
+        classe: ""
+      };
+  }
+}
+
+
 async function capturarResultados() {
-  const resultados = document.querySelectorAll("div.MjjYud");
+
+  const resultados =
+    document.querySelectorAll("div.MjjYud");
+
 
   for (const resultado of resultados) {
 
-    const tituloElemento = resultado.querySelector("h3");
-    const linkElemento = tituloElemento?.closest("a");
+    const tituloElemento =
+      resultado.querySelector("h3");
+
+    const linkElemento =
+      tituloElemento?.closest("a");
+
 
     const descricaoElemento =
       resultado.querySelector(".VwiC3b") ||
       resultado.querySelector("[data-sncf]");
 
+
     if (!tituloElemento || !linkElemento) {
       continue;
     }
+
 
     if (resultado.querySelector(".healthcheck-card")) {
       continue;
     }
 
+
     const item = {
-      titulo: tituloElemento.innerText.trim(),
 
-      url: linkElemento.href,
+      titulo:
+        tituloElemento.innerText.trim(),
 
-      descricao: descricaoElemento
-        ? descricaoElemento.innerText.trim()
-        : "Descrição não encontrada"
+      url:
+        linkElemento.href,
+
+      descricao:
+        descricaoElemento
+          ? descricaoElemento.innerText.trim()
+          : "Descrição não encontrada"
+
     };
 
-    criarComponenteHealthCheck(resultado, item);
+
+    criarComponenteHealthCheck(
+      resultado,
+      item
+    );
   }
 }
 
 
-async function criarComponenteHealthCheck(resultado, item) {
+async function criarComponenteHealthCheck(
+  resultado,
+  item
+) {
 
-  const card = document.createElement("div");
+  const card =
+    document.createElement("div");
 
-  card.className = "healthcheck-card";
+
+  card.className =
+    "healthcheck-card";
+
 
   /*
-    Primeiro mostramos o estado de carregamento.
+    Estado inicial enquanto
+    o backend realiza a análise.
   */
 
   card.innerHTML = `
     <div class="healthcheck-header">
 
       <div class="healthcheck-status">
-        <span>🔎</span>
+
+        <span>
+          🔎
+        </span>
 
         <strong>
           HealthCheck IA
         </strong>
+
       </div>
 
       <div class="healthcheck-confidence">
@@ -94,22 +188,25 @@ async function criarComponenteHealthCheck(resultado, item) {
     </div>
 
     <div class="healthcheck-loading">
-      Consultando o backend...
+      Buscando evidências e consultando a IA...
     </div>
   `;
+
 
   resultado.appendChild(card);
 
 
   /*
-    Agora enviamos o conteúdo para o FastAPI.
+    Envia título e descrição
+    para o FastAPI.
   */
 
-  const analise = await analisarResultado(item);
+  const analise =
+    await analisarResultado(item);
 
 
   /*
-    Caso não seja possível conectar ao backend.
+    Caso o backend não responda.
   */
 
   if (!analise) {
@@ -118,11 +215,15 @@ async function criarComponenteHealthCheck(resultado, item) {
       <div class="healthcheck-header">
 
         <div class="healthcheck-status healthcheck-erro">
-          <span>⚠️</span>
+
+          <span>
+            ⚠️
+          </span>
 
           <strong>
             Não foi possível analisar
           </strong>
+
         </div>
 
       </div>
@@ -137,66 +238,98 @@ async function criarComponenteHealthCheck(resultado, item) {
 
 
   /*
-    Por enquanto nosso backend sempre retorna:
-
-    {
-      classificacao: "enganosa",
-      confianca: 0.82
-    }
-
-    Portanto ainda é uma resposta simulada.
+    Resultado REAL vindo
+    do RAG + Llama.
   */
 
+  const classificacao =
+    analise.classificacao;
 
-  const classificacao = analise.classificacao;
+  const explicacao =
+    analise.explicacao;
 
-  const confianca = Math.round(
-    analise.confianca * 100
+  const evidencias =
+    analise.evidencias || [];
+
+  const evidenciasUtilizadas =
+    analise.evidencias_utilizadas || [];
+
+
+  const configuracao =
+    obterConfiguracaoClassificacao(
+      classificacao
+    );
+
+
+  /*
+    Monta a lista das evidências
+    recuperadas pelo RAG.
+  */
+
+  let htmlEvidencias = "";
+
+
+  evidencias.forEach(
+    (evidencia, indice) => {
+
+      const numero =
+        indice + 1;
+
+      const foiUtilizada =
+        evidenciasUtilizadas.includes(numero);
+
+
+      htmlEvidencias += `
+        <div class="healthcheck-evidence">
+
+          <p>
+
+            <strong>
+              Evidência ${numero}
+              ${foiUtilizada ? "✓" : ""}
+            </strong>
+
+          </p>
+
+          <p>
+            ${escaparHTML(evidencia.conteudo)}
+          </p>
+
+          <small>
+
+            Fonte:
+            ${escaparHTML(evidencia.arquivo)}
+
+          </small>
+
+        </div>
+      `;
+    }
   );
 
 
-  let status;
-  let icone;
-  let classeStatus;
-
-
-  if (classificacao === "enganosa") {
-
-    status = "Evidências contraditórias";
-
-    icone = "🔴";
-
-    classeStatus = "healthcheck-contraditorio";
-
-  } else {
-
-    status = "Resultado recebido";
-
-    icone = "🟡";
-
-    classeStatus = "";
-  }
-
+  /*
+    Atualiza o card com
+    a análise real.
+  */
 
   card.innerHTML = `
     <div class="healthcheck-header">
 
-      <div class="healthcheck-status ${classeStatus}">
+      <div
+        class="
+          healthcheck-status
+          ${configuracao.classe}
+        "
+      >
 
         <span>
-          ${icone}
+          ${configuracao.icone}
         </span>
 
         <strong>
-          ${status}
+          ${configuracao.status}
         </strong>
-
-      </div>
-
-      <div class="healthcheck-confidence">
-
-        Confiança:
-        ${confianca}%
 
       </div>
 
@@ -219,13 +352,14 @@ async function criarComponenteHealthCheck(resultado, item) {
       hidden
     >
 
+
       <p>
 
         <strong>
-          Classificação recebida do backend:
+          Classificação:
         </strong>
 
-        ${classificacao}
+        ${escaparHTML(classificacao)}
 
       </p>
 
@@ -233,10 +367,10 @@ async function criarComponenteHealthCheck(resultado, item) {
       <p>
 
         <strong>
-          Título analisado:
+          Explicação:
         </strong>
 
-        ${item.titulo}
+        ${escaparHTML(explicacao)}
 
       </p>
 
@@ -244,18 +378,45 @@ async function criarComponenteHealthCheck(resultado, item) {
       <p>
 
         <strong>
-          Fonte:
+          Resultado analisado:
         </strong>
 
-        ${new URL(item.url).hostname}
+        ${escaparHTML(item.titulo)}
 
       </p>
+
+
+      <p>
+
+        <strong>
+          Site:
+        </strong>
+
+        ${escaparHTML(
+          new URL(item.url).hostname
+        )}
+
+      </p>
+
+
+      <hr>
+
+
+      <h4>
+        Evidências encontradas
+      </h4>
+
+
+      ${htmlEvidencias}
 
 
       <p class="healthcheck-warning">
 
-        Esta classificação ainda é simulada.
-        A Inteligência Artificial ainda não foi implementada.
+        O HealthCheck IA apresenta
+        evidências para auxiliar na
+        avaliação da informação.
+        A análise não substitui
+        orientação profissional.
 
       </p>
 
@@ -264,32 +425,44 @@ async function criarComponenteHealthCheck(resultado, item) {
 
 
   const botao =
-    card.querySelector(".healthcheck-button");
-
-  const detalhes =
-    card.querySelector(".healthcheck-details");
-
-
-  botao.addEventListener("click", () => {
-
-    const estaAberto =
-      botao.getAttribute("aria-expanded") === "true";
-
-
-    botao.setAttribute(
-      "aria-expanded",
-      String(!estaAberto)
+    card.querySelector(
+      ".healthcheck-button"
     );
 
 
-    detalhes.hidden = estaAberto;
+  const detalhes =
+    card.querySelector(
+      ".healthcheck-details"
+    );
 
 
-    botao.innerText = estaAberto
-      ? "Ver análise"
-      : "Ocultar análise";
+  botao.addEventListener(
+    "click",
+    () => {
 
-  });
+      const estaAberto =
+        botao.getAttribute(
+          "aria-expanded"
+        ) === "true";
+
+
+      botao.setAttribute(
+        "aria-expanded",
+        String(!estaAberto)
+      );
+
+
+      detalhes.hidden =
+        estaAberto;
+
+
+      botao.innerText =
+        estaAberto
+          ? "Ver análise"
+          : "Ocultar análise";
+
+    }
+  );
 }
 
 
@@ -297,11 +470,14 @@ async function criarComponenteHealthCheck(resultado, item) {
 capturarResultados();
 
 
-const observer = new MutationObserver(() => {
 
-  capturarResultados();
+const observer =
+  new MutationObserver(() => {
 
-});
+    capturarResultados();
+
+  });
+
 
 
 observer.observe(
