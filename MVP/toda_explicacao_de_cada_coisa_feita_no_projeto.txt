@@ -7077,3 +7077,337 @@ Então sim: **o próximo passo agora é 9.6 — definir a resposta JSON que o LL
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+Sim. Vamos fazer o **9.6** sem mexer ainda no LLM.
+
+A ideia agora é simples: em vez de pedir uma resposta em texto livre, vamos exigir uma resposta em **JSON**. Isso vai facilitar muito a integração com o FastAPI e depois com a extensão do Chrome.
+
+No seu `rag.py`, dentro da função `montar_prompt_rag()`, procure este trecho no final:
+
+```python
+FORMATO DA RESPOSTA:
+
+Classificação:
+[uma das categorias permitidas]
+
+Explicação:
+[explicação curta baseada exclusivamente nas evidências]
+
+Evidências utilizadas:
+[indique quais evidências foram decisivas]
+```
+
+Substitua por:
+
+```python
+FORMATO OBRIGATÓRIO DA RESPOSTA:
+
+Responda SOMENTE com um JSON válido.
+
+Não escreva nenhum texto antes ou depois do JSON.
+
+Use exatamente esta estrutura:
+
+{{
+    "classificacao": "SUSTENTADA PELAS EVIDÊNCIAS",
+    "explicacao": "Explique de forma curta e objetiva a conclusão.",
+    "evidencias_utilizadas": [1, 2, 3]
+}}
+
+O campo "classificacao" deve conter exatamente uma destas opções:
+
+- SUSTENTADA PELAS EVIDÊNCIAS
+- PARCIALMENTE SUSTENTADA
+- ENGANOSA
+- CONTRADITA PELAS EVIDÊNCIAS
+- NÃO FOI POSSÍVEL VERIFICAR
+
+O campo "explicacao" deve conter uma explicação curta baseada somente nas evidências recuperadas.
+
+O campo "evidencias_utilizadas" deve conter somente os números das evidências realmente utilizadas na conclusão.
+
+Se nenhuma evidência for suficiente, utilize uma lista vazia:
+
+"evidencias_utilizadas": []
+```
+
+Repare em uma coisa importante: como esse texto está dentro de um `f""" ... """`, usamos:
+
+```python
+{{
+```
+
+e:
+
+```python
+}}
+```
+
+em vez de:
+
+```python
+{
+}
+```
+
+Isso acontece porque, em uma `f-string`, uma chave simples é interpretada pelo Python como parte de uma expressão.
+
+Então:
+
+```python
+f"""
+{alegacao}
+"""
+```
+
+significa “coloque o valor da variável `alegacao` aqui”.
+
+Já:
+
+```python
+f"""
+{{
+    "classificacao": "..."
+}}
+"""
+```
+
+faz o Python imprimir chaves normais no texto final.
+
+Seu `montar_prompt_rag()` deve ficar assim:
+
+```python
+def montar_prompt_rag(alegacao, top_k=3):
+
+    contexto = montar_contexto_rag(
+        alegacao,
+        top_k=top_k
+    )
+
+    prompt = f"""
+Você é o componente de análise do HealthCheck IA.
+
+Sua tarefa é avaliar uma alegação relacionada à saúde utilizando SOMENTE
+as evidências fornecidas abaixo.
+
+REGRAS OBRIGATÓRIAS:
+
+1. Utilize somente as evidências fornecidas neste contexto.
+2. Não utilize conhecimento externo.
+3. Não invente fatos, dados, estudos ou fontes.
+4. Não presuma informações que não estejam presentes nas evidências.
+5. Diferencie ausência de evidência de evidência de ausência.
+6. Se as evidências forem insuficientes, conflitantes ou não permitirem
+   uma conclusão segura, classifique como "NÃO FOI POSSÍVEL VERIFICAR".
+7. A similaridade semântica não representa verdade e não deve ser usada,
+   sozinha, para decidir a classificação.
+8. Explique de forma objetiva quais evidências sustentam sua conclusão.
+
+CLASSIFIQUE A ALEGAÇÃO EM APENAS UMA DAS CATEGORIAS:
+
+- SUSTENTADA PELAS EVIDÊNCIAS
+- PARCIALMENTE SUSTENTADA
+- ENGANOSA
+- CONTRADITA PELAS EVIDÊNCIAS
+- NÃO FOI POSSÍVEL VERIFICAR
+
+{contexto}
+
+FORMATO OBRIGATÓRIO DA RESPOSTA:
+
+Responda SOMENTE com um JSON válido.
+
+Não escreva nenhum texto antes ou depois do JSON.
+
+Use exatamente esta estrutura:
+
+{{
+    "classificacao": "SUSTENTADA PELAS EVIDÊNCIAS",
+    "explicacao": "Explique de forma curta e objetiva a conclusão.",
+    "evidencias_utilizadas": [1, 2, 3]
+}}
+
+O campo "classificacao" deve conter exatamente uma destas opções:
+
+- SUSTENTADA PELAS EVIDÊNCIAS
+- PARCIALMENTE SUSTENTADA
+- ENGANOSA
+- CONTRADITA PELAS EVIDÊNCIAS
+- NÃO FOI POSSÍVEL VERIFICAR
+
+O campo "explicacao" deve conter uma explicação curta baseada somente nas evidências recuperadas.
+
+O campo "evidencias_utilizadas" deve conter somente os números das evidências realmente utilizadas na conclusão.
+
+Se nenhuma evidência for suficiente, utilize uma lista vazia:
+
+"evidencias_utilizadas": []
+"""
+
+    return prompt
+```
+
+Agora salve o arquivo e rode novamente:
+
+```powershell
+python rag.py
+```
+
+No final do terminal, você deve ver algo assim:
+
+```text
+FORMATO OBRIGATÓRIO DA RESPOSTA:
+
+Responda SOMENTE com um JSON válido.
+
+Não escreva nenhum texto antes ou depois do JSON.
+
+Use exatamente esta estrutura:
+
+{
+    "classificacao": "SUSTENTADA PELAS EVIDÊNCIAS",
+    "explicacao": "Explique de forma curta e objetiva a conclusão.",
+    "evidencias_utilizadas": [1, 2, 3]
+}
+```
+
+Se aparecer assim, o **9.6 está funcionando**.
+
+E existe uma diferença importante aqui: neste momento nós **ainda não estamos criando o JSON**. Estamos apenas criando a instrução que dirá ao futuro LLM:
+
+> “Sua resposta tem que obedecer a este formato.”
+
+Depois, quando conectarmos o modelo, ele deverá retornar algo parecido com:
+
+```json
+{
+  "classificacao": "SUSTENTADA PELAS EVIDÊNCIAS",
+  "explicacao": "As evidências 1, 2 e 3 indicam que a vacinação contra influenza reduz o risco de formas graves, hospitalizações e mortes.",
+  "evidencias_utilizadas": [1, 2, 3]
+}
+```
+
+E aí o Python poderá converter essa string JSON em um objeto real usando:
+
+```python
+import json
+
+resultado = json.loads(resposta_do_llm)
+```
+
+e acessar:
+
+```python
+resultado["classificacao"]
+resultado["explicacao"]
+resultado["evidencias_utilizadas"]
+```
+
+Mas **não vamos fazer essa parte ainda**. Primeiro rode `python rag.py` com essa alteração. Se o JSON aparecer corretamente no prompt, marcamos o **9.6 como concluído** e partimos para o **9.7 — conectar o primeiro LLM local ao HealthCheck IA**.
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Perfeito. **O 9.6 está concluído e funcionando.** ✅
+
+O ponto principal era verificar se o prompt final estava exigindo uma saída em JSON válido, e agora ele está fazendo exatamente isso. O trecho apareceu corretamente no terminal:
+
+```json
+{
+    "classificacao": "SUSTENTADA PELAS EVIDÊNCIAS",
+    "explicacao": "Explique de forma curta e objetiva a conclusão.",
+    "evidencias_utilizadas": [1, 2, 3]
+}
+```
+
+Também ficaram corretas as regras que limitam o modelo a uma das cinco classificações e obrigam a usar apenas as evidências recuperadas.
+
+Então nosso progresso está assim:
+
+```text
+[X] 9.1 Entender Retrieval + Generation
+[X] 9.2 Criar montar_contexto_rag()
+[X] 9.3 Juntar alegação + evidências
+[X] 9.4 Criar regras do prompt
+[X] 9.5 Testar prompt completo
+[X] 9.6 Preparar saída estruturada em JSON ✅
+
+[ ] 9.7 Conectar LLM local
+[ ] 9.8 Receber análise do LLM
+[ ] 9.9 Integrar RAG ao FastAPI
+[ ] 9.10 Testar fluxo completo
+```
+
+Agora entramos no **9.7 — conectar um LLM local**.
+
+A partir daqui o projeto muda bastante, porque até agora seu sistema só estava preparando dados. No próximo passo ele vai realmente enviar esse prompt para um modelo de linguagem e receber uma análise.
+
+O fluxo vai passar a ser:
+
+```text
+Alegação do usuário
+        ↓
+Embedding
+        ↓
+Busca semântica
+        ↓
+TOP 3 evidências
+        ↓
+montar_prompt_rag()
+        ↓
+LLM LOCAL
+        ↓
+JSON
+        ↓
+{
+  "classificacao": "...",
+  "explicacao": "...",
+  "evidencias_utilizadas": [...]
+}
+```
+
+Para manter o projeto gratuito e simples, eu sugiro usar **Ollama** como servidor local do LLM. O Python conversa com ele através de uma API HTTP local, algo como:
+
+```text
+Python
+   ↓
+http://localhost:11434
+   ↓
+Ollama
+   ↓
+Modelo de linguagem
+```
+
+Uma observação importante antes de começarmos: o aviso que continua aparecendo:
+
+```text
+Warning: You are sending unauthenticated requests to the HF Hub.
+```
+
+não é erro. Ele é relacionado ao download/carregamento do modelo de embeddings do Hugging Face, não ao nosso RAG nem ao futuro Ollama. Seu código está funcionando normalmente.
+
+No **9.7**, eu faria em pequenos passos:
+
+```text
+9.7.1 — verificar se Ollama já está instalado
+9.7.2 — instalar Ollama, se necessário
+9.7.3 — escolher um modelo adequado
+9.7.4 — baixar o modelo
+9.7.5 — conversar com ele pelo terminal
+9.7.6 — chamar o Ollama através do Python
+9.7.7 — enviar o nosso prompt RAG
+```
+
+Vamos começar pelo **9.7.1**, sem instalar nada às cegas.
+
+No PowerShell execute:
+
+```powershell
+ollama --version
+```
+
+Me mande exatamente o que aparecer. A partir desse resultado eu te passo o próximo comando.
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
