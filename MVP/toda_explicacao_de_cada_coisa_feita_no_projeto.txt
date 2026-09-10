@@ -3654,4 +3654,338 @@ E aqui eu quero fazer uma coisa importante: **não vamos começar com FAISS nem 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+Perfeito. Agora vamos fazer o **8.2/8.3 sem pular etapa**: primeiro preparar os documentos, depois transformar cada um em pequenos trechos chamados **chunks**.
+
+O objetivo é sair de:
+
+```text
+1 arquivo grande
+```
+
+para algo assim:
+
+```text
+arquivo
+  ↓
+chunk 1
+chunk 2
+chunk 3
+chunk 4
+```
+
+E cada chunk precisa continuar sabendo **de qual arquivo e fonte ele veio**.
+
+Por enquanto, não vamos gerar embedding nenhum.
+
+Abra seu:
+
+```text
+backend/carregar_documentos.py
+```
+
+Nós vamos aproveitar a lista `documentos` que já existe e adicionar uma função de chunking.
+
+Abaixo desta parte:
+
+```python
+documentos_invalidos = []
+```
+
+adicione:
+
+```python
+def dividir_em_chunks(texto, tamanho_maximo=500):
+    paragrafos = texto.split("\n\n")
+
+    chunks = []
+    chunk_atual = ""
+
+    for paragrafo in paragrafos:
+        paragrafo = paragrafo.strip()
+
+        if not paragrafo:
+            continue
+
+        if len(chunk_atual) + len(paragrafo) <= tamanho_maximo:
+            chunk_atual += paragrafo + "\n\n"
+
+        else:
+            if chunk_atual:
+                chunks.append(chunk_atual.strip())
+
+            chunk_atual = paragrafo + "\n\n"
+
+    if chunk_atual:
+        chunks.append(chunk_atual.strip())
+
+    return chunks
+```
+
+Essa função recebe um texto e devolve vários blocos menores.
+
+Por exemplo:
+
+```python
+texto = """
+Dengue é uma arbovirose.
+
+A transmissão ocorre principalmente
+pela picada do Aedes aegypti.
+
+A doença pode apresentar sinais
+de alarme.
+"""
+```
+
+Pode virar:
+
+```text
+CHUNK 1
+Dengue é uma arbovirose.
+
+CHUNK 2
+A transmissão ocorre principalmente
+pela picada do Aedes aegypti.
+
+CHUNK 3
+A doença pode apresentar sinais
+de alarme.
+```
+
+Mas existe um detalhe importante: não estamos simplesmente quebrando a cada 500 caracteres.
+
+Estamos tentando preservar **parágrafos inteiros**.
+
+Isso é melhor do que cortar assim:
+
+```text
+A transmissão da dengue ocorre pela picada da fêmea
+do mosquito Aedes ae
+```
+
+e depois:
+
+```text
+gypti infectada pelo vírus.
+```
+
+Esse corte destruiria parte do contexto.
+
+Agora, depois de terminar o carregamento dos documentos, adicione:
+
+```python
+chunks = []
+
+for documento in documentos:
+    partes = dividir_em_chunks(documento["conteudo"])
+
+    for indice, parte in enumerate(partes):
+        chunks.append({
+            "arquivo": documento["arquivo"],
+            "chunk_id": indice,
+            "conteudo": parte
+        })
+```
+
+Agora criamos uma segunda estrutura.
+
+Antes:
+
+```python
+documentos
+```
+
+poderia ser:
+
+```python
+[
+    {
+        "arquivo": "ministerio_saude_dengue.md",
+        "conteudo": "..."
+    }
+]
+```
+
+Agora teremos também:
+
+```python
+chunks
+```
+
+com algo parecido com:
+
+```python
+[
+    {
+        "arquivo": "ministerio_saude_dengue.md",
+        "chunk_id": 0,
+        "conteudo": "Dengue é uma arbovirose..."
+    },
+
+    {
+        "arquivo": "ministerio_saude_dengue.md",
+        "chunk_id": 1,
+        "conteudo": "A transmissão ocorre..."
+    }
+]
+```
+
+Isso é muito importante para o futuro.
+
+Quando a busca semântica encontrar:
+
+```text
+chunk 4
+```
+
+vamos saber:
+
+```text
+qual texto foi encontrado
+qual documento originou o texto
+qual posição ele ocupa
+```
+
+No final do arquivo, acrescente:
+
+```python
+print(f"\nTotal de chunks gerados: {len(chunks)}")
+
+print("\nExemplo dos primeiros chunks:")
+
+for chunk in chunks[:5]:
+    print("\n----------------------------")
+    print(f"Arquivo: {chunk['arquivo']}")
+    print(f"Chunk: {chunk['chunk_id']}")
+    print(chunk["conteudo"][:300])
+```
+
+Então, conceitualmente, seu programa passa a fazer:
+
+```text
+data/
+  ↓
+18 arquivos .md
+  ↓
+carregar documentos
+  ↓
+validar estrutura
+  ↓
+dividir em chunks
+  ↓
+lista de chunks
+```
+
+Um ponto técnico importante: o `500` aqui:
+
+```python
+tamanho_maximo=500
+```
+
+significa aproximadamente **500 caracteres**, não 500 palavras nem 500 tokens.
+
+Estamos começando assim porque é simples de visualizar e depurar.
+
+Mais adiante podemos melhorar para usar tokens e até overlap entre chunks, algo como:
+
+```text
+Chunk 1:
+[A B C D E]
+
+Chunk 2:
+[D E F G H]
+```
+
+onde parte do conteúdo aparece nos dois chunks para preservar contexto.
+
+Mas **não vamos colocar overlap agora**.
+
+Quero primeiro provar que o chunking básico funciona.
+
+Depois de fazer essas alterações, rode:
+
+```powershell
+python carregar_documentos.py
+```
+
+Você deverá continuar vendo:
+
+```text
+Documentos encontrados: 18
+Com conteúdo: 18
+Vazios: 0
+Estrutura válida: 18
+Com problemas de estrutura: 0
+```
+
+e agora também algo como:
+
+```text
+Total de chunks gerados: 40
+```
+
+O número **não precisa ser 40**. Pode ser 30, 50, 70 etc., dependendo do tamanho dos seus documentos.
+
+Depois devem aparecer exemplos:
+
+```text
+----------------------------
+Arquivo: inca_cancer.md
+Chunk: 0
+...
+
+----------------------------
+Arquivo: inca_cancer.md
+Chunk: 1
+...
+```
+
+Faça somente essa alteração agora e me mande a saída do terminal. Aí a gente verifica se os chunks estão ficando semanticamente bons antes de instalar o Sentence Transformers.
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Uhuuu! 🚀 **Chunking funcionando certinho.**
+
+O resultado ficou muito bom:
+
+```text
+18 documentos
+93 chunks
+0 arquivos vazios
+0 problemas de estrutura
+```
+
+Isso significa que, em média, cada documento virou cerca de 5 chunks. Para o tamanho da sua base, está bem razoável.
+
+Os exemplos também mostram que a divisão preservou bem os parágrafos. Por exemplo, o `inca_cancer.md` foi separado em blocos de definição, fatores de risco, evidências e alegações relacionadas, sem cortar o texto no meio de uma palavra.
+
+Então fechamos esta parte:
+
+```text
+[X] 8.2 Preparar documentos
+[X] 8.3 Fazer chunking
+[ ] 8.4 Instalar Sentence Transformers ← PRÓXIMO
+[ ] 8.5 Escolher modelo de embeddings
+[ ] 8.6 Gerar primeiro embedding
+[ ] 8.7 Gerar embeddings dos 93 chunks
+[ ] 8.8 Calcular similaridade de cosseno
+[ ] 8.9 Fazer busca semântica
+```
+
+Agora vem a parte em que esses 93 textos vão virar vetores numéricos.
+
+No terminal, dentro de `backend`, o próximo comando será:
+
+```powershell
+pip install sentence-transformers
+```
+
+Mas antes de rodar, um detalhe: essa instalação também traz dependências como `transformers`, `torch` e outras bibliotecas, então pode demorar alguns minutos e baixar bastante coisa.
+
+Depois que terminar, **não vamos gerar os 93 embeddings de uma vez**. Primeiro faremos um teste simples com uma única frase para você ver exatamente o que o modelo devolve.
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
