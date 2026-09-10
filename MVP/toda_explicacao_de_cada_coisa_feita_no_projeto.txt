@@ -3988,4 +3988,92 @@ Depois que terminar, **não vamos gerar os 93 embeddings de uma vez**. Primeiro 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+Agora vamos escolher o modelo que vai transformar os **93 chunks** em vetores.
+
+Para o nosso MVP, eu escolheria:
+
+`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`
+
+Ele foi desenvolvido para representar sentenças e parágrafos em um espaço vetorial de **384 dimensões** e é indicado para tarefas como **similaridade e busca semântica**. Além disso, é multilíngue, treinado para mais de 50 idiomas, o que faz sentido para nossa base em português. ([Hugging Face][1])
+
+[Modelo no Hugging Face](https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2?utm_source=chatgpt.com)
+
+### Por que esse modelo?
+
+Nosso objetivo não é gerar texto ainda. O modelo receberá:
+
+```text
+"Vacinação contra influenza reduz o risco de formas graves."
+```
+
+e produzirá:
+
+```text
+[0.037, -0.184, 0.292, ..., 0.081]
+```
+
+com **384 números**. ([Hugging Face][1])
+
+Depois fazemos a mesma coisa com uma pesquisa:
+
+```text
+"A vacina da gripe ajuda a evitar casos graves?"
+```
+
+e comparamos os dois vetores.
+
+O próprio Sentence Transformers lista esse MiniLM multilíngue entre seus modelos pré-treinados para mais de 50 idiomas. Existe também o `paraphrase-multilingual-mpnet-base-v2`, mas para nosso primeiro MVP eu prefiro começar com o MiniLM: queremos validar o pipeline com um modelo compacto antes de aumentar a complexidade. ([Sbert][2])
+
+Então nossa decisão fica registrada:
+
+```text
+MODELO DE EMBEDDINGS
+
+Nome:
+sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+
+Tipo:
+Sentence Transformer multilíngue
+
+Saída:
+384 dimensões
+
+Uso no HealthCheck:
+Busca semântica
+
+Idioma principal do projeto:
+Português
+
+Treinaremos do zero?
+Não ❌
+
+Executaremos localmente?
+Sim ✅
+```
+
+Um detalhe importante: **você não precisa fazer outro `pip install` para esse modelo**. Já instalamos a biblioteca `sentence-transformers`. Na primeira vez que nosso Python executar:
+
+```python
+SentenceTransformer(
+    "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+)
+```
+
+a biblioteca fará o download dos arquivos do modelo; depois eles ficam em cache local para reutilização.
+
+Portanto:
+
+```text
+[X] 8.4 Sentence Transformers instalado
+[X] 8.5 Modelo escolhido ✅
+
+[ ] 8.6 GERAR NOSSO PRIMEIRO EMBEDDING ← AGORA
+```
+
+No **8.6**, vamos criar um arquivo separado chamado `teste_embedding.py`. Não vamos mexer no `carregar_documentos.py` ainda. Primeiro quero que você coloque **uma frase em português**, execute o modelo e veja aparecer na tela o vetor de 384 números. Aí embeddings deixam de ser só teoria e você vê exatamente o que está acontecendo. 🚀
+
+[1]: https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2?utm_source=chatgpt.com "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 · Hugging Face"
+[2]: https://sbert.net/docs/sentence_transformer/pretrained_models.html?utm_source=chatgpt.com "Pretrained Models — Sentence Transformers documentation"
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
