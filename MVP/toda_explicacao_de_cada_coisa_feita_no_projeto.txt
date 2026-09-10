@@ -8041,3 +8041,735 @@ Como o `content.js` já existe e foi feito antes de mudarmos o formato da API, *
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+Sim — agora dá para adaptar o `content.js` para a **resposta real do RAG + Llama**. O seu código atual ainda está esperando o formato antigo:
+
+```javascript
+{
+  classificacao: "enganosa",
+  confianca: 0.82
+}
+```
+
+Mas agora o backend retorna algo como:
+
+```json
+{
+  "classificacao": "SUSTENTADA PELAS EVIDÊNCIAS",
+  "explicacao": "...",
+  "evidencias_utilizadas": [1, 2, 3],
+  "evidencias": [...]
+}
+```
+
+Então precisamos remover toda a parte de `confianca`, parar de tratar a análise como simulada e criar um mapeamento visual para as cinco classificações.
+
+Para evitar você se perder trocando pedaços, pode **substituir todo o seu `content.js`** por este:
+
+```javascript
+async function analisarResultado(item) {
+  try {
+    const resposta = await fetch("http://127.0.0.1:8000/analisar", {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json"
+      },
+
+      body: JSON.stringify({
+        titulo: item.titulo,
+        descricao: item.descricao
+      })
+    });
+
+    if (!resposta.ok) {
+      throw new Error(`Erro HTTP: ${resposta.status}`);
+    }
+
+    const dados = await resposta.json();
+
+    console.log("Resposta do backend:", dados);
+
+    return dados;
+
+  } catch (erro) {
+    console.error("Erro ao conectar com o backend:", erro);
+
+    return null;
+  }
+}
+
+
+function escaparHTML(texto) {
+  const elemento = document.createElement("div");
+
+  elemento.textContent = texto ?? "";
+
+  return elemento.innerHTML;
+}
+
+
+function obterConfiguracaoClassificacao(classificacao) {
+
+  switch (classificacao) {
+
+    case "SUSTENTADA PELAS EVIDÊNCIAS":
+      return {
+        status: "Sustentada pelas evidências",
+        icone: "🟢",
+        classe: "healthcheck-sustentada"
+      };
+
+
+    case "PARCIALMENTE SUSTENTADA":
+      return {
+        status: "Parcialmente sustentada",
+        icone: "🟡",
+        classe: "healthcheck-parcial"
+      };
+
+
+    case "ENGANOSA":
+      return {
+        status: "Potencialmente enganosa",
+        icone: "🟠",
+        classe: "healthcheck-enganosa"
+      };
+
+
+    case "CONTRADITA PELAS EVIDÊNCIAS":
+      return {
+        status: "Contradita pelas evidências",
+        icone: "🔴",
+        classe: "healthcheck-contraditoria"
+      };
+
+
+    case "NÃO FOI POSSÍVEL VERIFICAR":
+      return {
+        status: "Não foi possível verificar",
+        icone: "⚪",
+        classe: "healthcheck-nao-verificada"
+      };
+
+
+    default:
+      return {
+        status: "Resultado recebido",
+        icone: "🔎",
+        classe: ""
+      };
+  }
+}
+
+
+async function capturarResultados() {
+
+  const resultados =
+    document.querySelectorAll("div.MjjYud");
+
+
+  for (const resultado of resultados) {
+
+    const tituloElemento =
+      resultado.querySelector("h3");
+
+    const linkElemento =
+      tituloElemento?.closest("a");
+
+
+    const descricaoElemento =
+      resultado.querySelector(".VwiC3b") ||
+      resultado.querySelector("[data-sncf]");
+
+
+    if (!tituloElemento || !linkElemento) {
+      continue;
+    }
+
+
+    if (resultado.querySelector(".healthcheck-card")) {
+      continue;
+    }
+
+
+    const item = {
+
+      titulo:
+        tituloElemento.innerText.trim(),
+
+      url:
+        linkElemento.href,
+
+      descricao:
+        descricaoElemento
+          ? descricaoElemento.innerText.trim()
+          : "Descrição não encontrada"
+
+    };
+
+
+    criarComponenteHealthCheck(
+      resultado,
+      item
+    );
+  }
+}
+
+
+async function criarComponenteHealthCheck(
+  resultado,
+  item
+) {
+
+  const card =
+    document.createElement("div");
+
+
+  card.className =
+    "healthcheck-card";
+
+
+  /*
+    Estado inicial enquanto
+    o backend realiza a análise.
+  */
+
+  card.innerHTML = `
+    <div class="healthcheck-header">
+
+      <div class="healthcheck-status">
+
+        <span>
+          🔎
+        </span>
+
+        <strong>
+          HealthCheck IA
+        </strong>
+
+      </div>
+
+      <div class="healthcheck-confidence">
+        Analisando...
+      </div>
+
+    </div>
+
+    <div class="healthcheck-loading">
+      Buscando evidências e consultando a IA...
+    </div>
+  `;
+
+
+  resultado.appendChild(card);
+
+
+  /*
+    Envia título e descrição
+    para o FastAPI.
+  */
+
+  const analise =
+    await analisarResultado(item);
+
+
+  /*
+    Caso o backend não responda.
+  */
+
+  if (!analise) {
+
+    card.innerHTML = `
+      <div class="healthcheck-header">
+
+        <div class="healthcheck-status healthcheck-erro">
+
+          <span>
+            ⚠️
+          </span>
+
+          <strong>
+            Não foi possível analisar
+          </strong>
+
+        </div>
+
+      </div>
+
+      <p>
+        O servidor HealthCheck IA não respondeu.
+      </p>
+    `;
+
+    return;
+  }
+
+
+  /*
+    Resultado REAL vindo
+    do RAG + Llama.
+  */
+
+  const classificacao =
+    analise.classificacao;
+
+  const explicacao =
+    analise.explicacao;
+
+  const evidencias =
+    analise.evidencias || [];
+
+  const evidenciasUtilizadas =
+    analise.evidencias_utilizadas || [];
+
+
+  const configuracao =
+    obterConfiguracaoClassificacao(
+      classificacao
+    );
+
+
+  /*
+    Monta a lista das evidências
+    recuperadas pelo RAG.
+  */
+
+  let htmlEvidencias = "";
+
+
+  evidencias.forEach(
+    (evidencia, indice) => {
+
+      const numero =
+        indice + 1;
+
+      const foiUtilizada =
+        evidenciasUtilizadas.includes(numero);
+
+
+      htmlEvidencias += `
+        <div class="healthcheck-evidence">
+
+          <p>
+
+            <strong>
+              Evidência ${numero}
+              ${foiUtilizada ? "✓" : ""}
+            </strong>
+
+          </p>
+
+          <p>
+            ${escaparHTML(evidencia.conteudo)}
+          </p>
+
+          <small>
+
+            Fonte:
+            ${escaparHTML(evidencia.arquivo)}
+
+          </small>
+
+        </div>
+      `;
+    }
+  );
+
+
+  /*
+    Atualiza o card com
+    a análise real.
+  */
+
+  card.innerHTML = `
+    <div class="healthcheck-header">
+
+      <div
+        class="
+          healthcheck-status
+          ${configuracao.classe}
+        "
+      >
+
+        <span>
+          ${configuracao.icone}
+        </span>
+
+        <strong>
+          ${configuracao.status}
+        </strong>
+
+      </div>
+
+    </div>
+
+
+    <button
+      class="healthcheck-button"
+      aria-expanded="false"
+      type="button"
+    >
+
+      Ver análise
+
+    </button>
+
+
+    <div
+      class="healthcheck-details"
+      hidden
+    >
+
+
+      <p>
+
+        <strong>
+          Classificação:
+        </strong>
+
+        ${escaparHTML(classificacao)}
+
+      </p>
+
+
+      <p>
+
+        <strong>
+          Explicação:
+        </strong>
+
+        ${escaparHTML(explicacao)}
+
+      </p>
+
+
+      <p>
+
+        <strong>
+          Resultado analisado:
+        </strong>
+
+        ${escaparHTML(item.titulo)}
+
+      </p>
+
+
+      <p>
+
+        <strong>
+          Site:
+        </strong>
+
+        ${escaparHTML(
+          new URL(item.url).hostname
+        )}
+
+      </p>
+
+
+      <hr>
+
+
+      <h4>
+        Evidências encontradas
+      </h4>
+
+
+      ${htmlEvidencias}
+
+
+      <p class="healthcheck-warning">
+
+        O HealthCheck IA apresenta
+        evidências para auxiliar na
+        avaliação da informação.
+        A análise não substitui
+        orientação profissional.
+
+      </p>
+
+    </div>
+  `;
+
+
+  const botao =
+    card.querySelector(
+      ".healthcheck-button"
+    );
+
+
+  const detalhes =
+    card.querySelector(
+      ".healthcheck-details"
+    );
+
+
+  botao.addEventListener(
+    "click",
+    () => {
+
+      const estaAberto =
+        botao.getAttribute(
+          "aria-expanded"
+        ) === "true";
+
+
+      botao.setAttribute(
+        "aria-expanded",
+        String(!estaAberto)
+      );
+
+
+      detalhes.hidden =
+        estaAberto;
+
+
+      botao.innerText =
+        estaAberto
+          ? "Ver análise"
+          : "Ocultar análise";
+
+    }
+  );
+}
+
+
+
+capturarResultados();
+
+
+
+const observer =
+  new MutationObserver(() => {
+
+    capturarResultados();
+
+  });
+
+
+
+observer.observe(
+  document.body,
+  {
+    childList: true,
+    subtree: true
+  }
+);
+```
+
+Agora há quatro mudanças importantes. Primeiro, **não existe mais `analise.confianca`**, porque seu backend atual não retorna esse campo. Isso é bom: não vamos transformar similaridade semântica em “probabilidade de verdade”.
+
+Segundo, esta função:
+
+```javascript
+obterConfiguracaoClassificacao()
+```
+
+converte a classificação do Llama em visual:
+
+```text
+🟢 Sustentada pelas evidências
+🟡 Parcialmente sustentada
+🟠 Potencialmente enganosa
+🔴 Contradita pelas evidências
+⚪ Não foi possível verificar
+```
+
+Terceiro, agora usamos:
+
+```javascript
+analise.explicacao
+```
+
+e:
+
+```javascript
+analise.evidencias
+```
+
+Então o usuário realmente verá **por que** a notícia recebeu aquela classificação.
+
+Quarto, acrescentei:
+
+```javascript
+function escaparHTML(texto)
+```
+
+Isso é uma proteção importante. Como título, descrição e texto gerado pela IA acabam aparecendo dentro de `innerHTML`, não queremos que algum texto contendo HTML seja interpretado pelo navegador como código.
+
+### Agora faça o teste
+
+Salve:
+
+```text
+content.js
+```
+
+Depois mantenha **um único** terminal rodando:
+
+```powershell
+uvicorn main:app --reload
+```
+
+No Chrome, abra:
+
+```text
+chrome://extensions
+```
+
+Encontre **HealthCheck IA** e clique no botão de **recarregar** da extensão.
+
+Depois abra uma nova pesquisa no Google. Para o primeiro teste, recomendo exatamente:
+
+```text
+vacina contra gripe ajuda a evitar casos graves
+```
+
+Não teste dez coisas diferentes ainda. Queremos primeiro verificar uma situação que sabemos que a base de conhecimento contém.
+
+Você deverá observar algo parecido com:
+
+```text
+Resultado do Google
+
+🟢 Sustentada pelas evidências
+[ Ver análise ]
+```
+
+Ao clicar em **Ver análise**:
+
+```text
+Classificação:
+SUSTENTADA PELAS EVIDÊNCIAS
+
+Explicação:
+As evidências indicam que...
+
+Evidências encontradas:
+
+Evidência 1 ✓
+...
+
+Evidência 2 ✓
+...
+
+Evidência 3 ✓
+...
+```
+
+Também abra o console do Chrome com `F12` → **Console**. Como mantivemos:
+
+```javascript
+console.log("Resposta do backend:", dados);
+```
+
+deve aparecer o JSON completo recebido do FastAPI.
+
+Se isso acontecer, teremos finalmente:
+
+```text
+Google
+  ↓
+Extensão Chrome
+  ↓
+FastAPI
+  ↓
+Embeddings
+  ↓
+Busca semântica
+  ↓
+RAG
+  ↓
+Ollama / Llama
+  ↓
+Classificação
+  ↓
+Explicação
+  ↓
+Evidências
+  ↓
+CARD NO GOOGLE
+```
+
+Aí sim poderemos marcar o **9.10 como concluído** e teremos o primeiro MVP realmente integrado do HealthCheck IA.
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Uhuuu! 🎉 **Etapa 9 concluída.** Agora vocês têm um RAG funcional integrado de ponta a ponta.
+
+```text
+[X] 9.1  Entender Retrieval + Generation
+[X] 9.2  montar_contexto_rag()
+[X] 9.3  Alegação + evidências
+[X] 9.4  Prompt e regras
+[X] 9.5  Testar prompt
+[X] 9.6  Saída estruturada JSON
+[X] 9.7  Conectar LLM local
+[X] 9.8  Receber e interpretar resposta
+[X] 9.9  Integrar RAG + LLM ao FastAPI
+[X] 9.10 Extensão Chrome + fluxo completo ✅
+```
+
+O mais importante é que agora não é mais uma simulação. O fluxo real está funcionando:
+
+```text
+Pesquisa no Google
+        ↓
+content.js captura o resultado
+        ↓
+POST /analisar
+        ↓
+FastAPI
+        ↓
+Embedding da alegação
+        ↓
+Busca semântica
+        ↓
+TOP 3 evidências
+        ↓
+Prompt RAG
+        ↓
+Ollama
+        ↓
+Llama 3.2 3B
+        ↓
+JSON estruturado
+        ↓
+FastAPI
+        ↓
+Extensão
+        ↓
+🟢/🟡/🟠/🔴/⚪
++ explicação
++ evidências
+```
+
+E vocês conseguiram manter uma característica essencial do HealthCheck: o sistema não entrega apenas um “verdadeiro/falso”. Ele apresenta **classificação + explicação + evidências**, permitindo que o usuário veja a base da análise.
+
+Antes de aumentar a base ou partir para métricas, eu faria uma etapa intermediária importante: **testar sistematicamente as cinco classificações**. Precisamos descobrir como o sistema se comporta com uma alegação sustentada, contradita, parcialmente sustentada, enganosa e uma para a qual a base não possui evidência suficiente. Isso provavelmente vai revelar os primeiros problemas reais do RAG.
+
+Então nosso próximo marco pode ser:
+
+```text
+ETAPA 10 — Validação do sistema
+
+10.1 Sustentada pelas evidências
+10.2 Contradita pelas evidências
+10.3 Parcialmente sustentada
+10.4 Enganosa
+10.5 Não foi possível verificar
+10.6 Testar alegações fora da base
+10.7 Analisar erros de retrieval
+10.8 Ajustar regras de classificação
+10.9 Criar conjunto de testes
+10.10 Medir desempenho
+```
+
+Esse é um ótimo momento para testar o sistema antes de adicionar mais complexidade.
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
