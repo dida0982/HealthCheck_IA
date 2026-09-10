@@ -4,15 +4,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from busca_semantica import buscar_evidencias
 
+
 app = FastAPI(
     title="HealthCheck IA API",
     version="1.0.0"
 )
 
-
-# =========================
-# CORS
-# =========================
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,23 +20,21 @@ app.add_middleware(
 )
 
 
-# =========================
-# MODELOS DE DADOS
-# =========================
-
 class AnaliseRequest(BaseModel):
     titulo: str
     descricao: str
 
 
+class Evidencia(BaseModel):
+    arquivo: str
+    chunk_id: int
+    conteudo: str
+    similaridade: float
+
+
 class AnaliseResponse(BaseModel):
-    classificacao: str
-    confianca: float
+    evidencias: list[Evidencia]
 
-
-# =========================
-# ROTAS
-# =========================
 
 @app.get("/")
 def raiz():
@@ -54,11 +49,17 @@ def raiz():
 )
 def analisar(dados: AnaliseRequest):
 
-    print("Título recebido:", dados.titulo)
-    print("Descrição recebida:", dados.descricao)
+    texto_para_analisar = (
+        dados.titulo
+        + " "
+        + dados.descricao
+    )
 
-    # RESPOSTA SIMULADA
+    evidencias = buscar_evidencias(
+        texto_para_analisar,
+        top_k=3
+    )
+
     return AnaliseResponse(
-        classificacao="enganosa",
-        confianca=0.82
+        evidencias=evidencias
     )
