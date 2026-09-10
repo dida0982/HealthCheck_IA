@@ -74,16 +74,35 @@ CLASSIFIQUE A ALEGAÇÃO EM APENAS UMA DAS CATEGORIAS:
 
 {contexto}
 
-FORMATO DA RESPOSTA:
+FORMATO OBRIGATÓRIO DA RESPOSTA:
 
-Classificação:
-[uma das categorias permitidas]
+Responda SOMENTE com um JSON válido.
 
-Explicação:
-[explicação curta baseada exclusivamente nas evidências]
+Não escreva nenhum texto antes ou depois do JSON.
 
-Evidências utilizadas:
-[indique quais evidências foram decisivas]
+Use exatamente esta estrutura:
+
+{{
+    "classificacao": "SUSTENTADA PELAS EVIDÊNCIAS",
+    "explicacao": "Explique de forma curta e objetiva a conclusão.",
+    "evidencias_utilizadas": [1, 2, 3]
+}}
+
+O campo "classificacao" deve conter exatamente uma destas opções:
+
+- SUSTENTADA PELAS EVIDÊNCIAS
+- PARCIALMENTE SUSTENTADA
+- ENGANOSA
+- CONTRADITA PELAS EVIDÊNCIAS
+- NÃO FOI POSSÍVEL VERIFICAR
+
+O campo "explicacao" deve conter uma explicação curta baseada somente nas evidências recuperadas.
+
+O campo "evidencias_utilizadas" deve conter somente os números das evidências realmente utilizadas na conclusão.
+
+Se nenhuma evidência for suficiente, utilize uma lista vazia:
+
+"evidencias_utilizadas": []
 """
 
     return prompt
