@@ -6,6 +6,32 @@ documentos = []
 arquivos_vazios = []
 documentos_invalidos = []
 
+def dividir_em_chunks(texto, tamanho_maximo=500):
+    paragrafos = texto.split("\n\n")
+
+    chunks = []
+    chunk_atual = ""
+
+    for paragrafo in paragrafos:
+        paragrafo = paragrafo.strip()
+
+        if not paragrafo:
+            continue
+
+        if len(chunk_atual) + len(paragrafo) <= tamanho_maximo:
+            chunk_atual += paragrafo + "\n\n"
+
+        else:
+            if chunk_atual:
+                chunks.append(chunk_atual.strip())
+
+            chunk_atual = paragrafo + "\n\n"
+
+    if chunk_atual:
+        chunks.append(chunk_atual.strip())
+
+    return chunks
+
 for arquivo in pasta_data.rglob("*.md"):
     conteudo = arquivo.read_text(encoding="utf-8")
 
