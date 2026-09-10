@@ -1,6 +1,6 @@
 # HealthCheck IA — Comandos de Terminal
-
 Este arquivo reúne apenas os comandos necessários para preparar e executar o projeto em uma máquina Windows.
+
 
 ## Primeira instalação
 
