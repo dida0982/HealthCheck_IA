@@ -4366,3 +4366,438 @@ Então o **8.6 está concluído com sucesso**. No próximo passo vamos criar jun
 ----------------------------------------------------------------------------------------------
 
 
+Bora! 🚀 Agora começamos o **8.7 — gerar embeddings dos 93 chunks automaticamente**.
+
+Por enquanto, nosso objetivo é somente chegar nisto:
+
+```text
+18 documentos
+     ↓
+93 chunks
+     ↓
+Sentence Transformer
+     ↓
+93 embeddings
+     ↓
+Matriz (93, 384)
+```
+
+Ainda **não vamos fazer a pesquisa semântica**. Primeiro vamos confirmar que conseguimos transformar todos os chunks em vetores.
+
+### 1. Crie o novo arquivo
+
+Dentro de `backend`, crie:
+
+```text
+busca_semantica.py
+```
+
+Sua estrutura ficará:
+
+```text
+backend/
+├── main.py
+├── carregar_documentos.py
+├── teste_embedding.py
+└── busca_semantica.py       ← NOVO
+```
+
+### 2. Comece importando o que precisamos
+
+Dentro de `busca_semantica.py`, coloque:
+
+```python
+from sentence_transformers import SentenceTransformer
+from carregar_documentos import chunks
+```
+
+A primeira linha:
+
+```python
+from sentence_transformers import SentenceTransformer
+```
+
+traz a ferramenta que gera embeddings.
+
+A segunda:
+
+```python
+from carregar_documentos import chunks
+```
+
+é muito interessante.
+
+Lembra que no outro arquivo criamos:
+
+```python
+chunks = []
+```
+
+e depois colocamos os 93 chunks dentro dessa lista?
+
+Agora o `busca_semantica.py` está dizendo:
+
+```text
+carregar_documentos.py
+
+possui:
+chunks
+
+        ↓
+
+busca_semantica.py
+
+quero usar esses chunks
+```
+
+Ou seja, **não precisamos carregar os 18 `.md` novamente manualmente**.
+
+### 3. Carregue nosso modelo
+
+Agora adicione:
+
+```python
+modelo = SentenceTransformer(
+    "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+)
+```
+
+É exatamente o modelo que testamos anteriormente.
+
+Como você já o baixou no teste anterior, normalmente ele será carregado do cache do computador.
+
+### 4. Pegue somente os textos dos chunks
+
+Nossa variável `chunks` contém objetos assim:
+
+```python
+{
+    "arquivo": "inca_cancer.md",
+    "chunk_id": 0,
+    "conteudo": "O câncer é..."
+}
+```
+
+Mas o modelo precisa receber os textos.
+
+Então coloque:
+
+```python
+textos = []
+
+for chunk in chunks:
+    textos.append(chunk["conteudo"])
+```
+
+Agora teremos:
+
+```text
+chunks
+ ↓
+
+[
+ {arquivo, chunk_id, conteudo},
+ {arquivo, chunk_id, conteudo},
+ ...
+]
+
+ ↓
+
+textos
+
+[
+ "texto do chunk 0",
+ "texto do chunk 1",
+ "texto do chunk 2",
+ ...
+]
+```
+
+Se temos 93 chunks:
+
+```python
+len(textos)
+```
+
+deverá ser:
+
+```text
+93
+```
+
+### 5. Agora vem a parte principal
+
+Adicione:
+
+```python
+embeddings = modelo.encode(
+    textos,
+    show_progress_bar=True
+)
+```
+
+Essa linha vai transformar **todos os 93 textos em vetores**.
+
+Antes fizemos:
+
+```python
+modelo.encode(frase)
+```
+
+e produzimos:
+
+```text
+1 frase
+↓
+1 vetor de 384 dimensões
+```
+
+Agora estamos fazendo:
+
+```text
+93 frases/chunks
+        ↓
+modelo.encode()
+        ↓
+93 vetores
+```
+
+Portanto teremos matematicamente uma matriz:
+
+```text
+            384 dimensões
+
+Chunk 0 → [.....................]
+Chunk 1 → [.....................]
+Chunk 2 → [.....................]
+Chunk 3 → [.....................]
+   ...
+Chunk 92 → [....................]
+
+          93 × 384
+```
+
+### 6. Vamos imprimir algumas informações
+
+No final coloque:
+
+```python
+print("\n=== RESULTADO ===")
+
+print(f"Quantidade de chunks: {len(chunks)}")
+print(f"Quantidade de textos: {len(textos)}")
+
+print(f"Formato dos embeddings: {embeddings.shape}")
+
+print("\nPrimeiro chunk:")
+print(chunks[0]["conteudo"][:300])
+
+print("\nArquivo de origem:")
+print(chunks[0]["arquivo"])
+
+print("\nID do chunk:")
+print(chunks[0]["chunk_id"])
+
+print("\nPrimeiros 10 números do embedding:")
+print(embeddings[0][:10])
+```
+
+### Seu `busca_semantica.py` completo
+
+Por enquanto, ele deve ficar **exatamente assim**:
+
+```python
+from sentence_transformers import SentenceTransformer
+from carregar_documentos import chunks
+
+
+modelo = SentenceTransformer(
+    "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+)
+
+
+textos = []
+
+for chunk in chunks:
+    textos.append(chunk["conteudo"])
+
+
+embeddings = modelo.encode(
+    textos,
+    show_progress_bar=True
+)
+
+
+print("\n=== RESULTADO ===")
+
+print(f"Quantidade de chunks: {len(chunks)}")
+print(f"Quantidade de textos: {len(textos)}")
+
+print(f"Formato dos embeddings: {embeddings.shape}")
+
+print("\nPrimeiro chunk:")
+print(chunks[0]["conteudo"][:300])
+
+print("\nArquivo de origem:")
+print(chunks[0]["arquivo"])
+
+print("\nID do chunk:")
+print(chunks[0]["chunk_id"])
+
+print("\nPrimeiros 10 números do embedding:")
+print(embeddings[0][:10])
+```
+
+### 7. Execute
+
+Salve e rode:
+
+```powershell
+python busca_semantica.py
+```
+
+Vai aparecer uma barra parecida com:
+
+```text
+Batches: 100%|████████████████| ...
+```
+
+E no final queremos principalmente isto:
+
+```text
+=== RESULTADO ===
+
+Quantidade de chunks: 93
+Quantidade de textos: 93
+Formato dos embeddings: (93, 384)
+```
+
+O `(93, 384)` é a confirmação mais importante.
+
+Significa:
+
+```text
+93 linhas
+×
+384 números por linha
+```
+
+Ou seja:
+
+```text
+93 chunks
+×
+1 embedding de 384 dimensões para cada chunk
+```
+
+Você provavelmente também verá novamente os prints:
+
+```text
+Documentos encontrados: 18
+...
+Total de chunks gerados: 93
+...
+```
+
+**Isso é esperado.** Acontece porque esta linha:
+
+```python
+from carregar_documentos import chunks
+```
+
+faz o Python executar o `carregar_documentos.py` para obter a variável `chunks`. Depois vamos organizar isso melhor.
+
+Por enquanto, **não altere mais nada**.
+
+Rode:
+
+```powershell
+python busca_semantica.py
+```
+
+e me mande a saída, principalmente a linha:
+
+```text
+Formato dos embeddings:
+```
+
+Se vier **`(93, 384)`**, teremos gerado os **93 embeddings do HealthCheck IA**. 🚀
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+UHUUU! 🚀 **Deu certo exatamente como queríamos.**
+
+A confirmação principal é esta:
+
+```text
+Quantidade de chunks: 93
+Quantidade de textos: 93
+Formato dos embeddings: (93, 384)
+```
+
+Isso significa:
+
+```text
+93 chunks
+↓
+93 embeddings
+↓
+cada embedding tem 384 dimensões
+```
+
+Então, tecnicamente, agora você já tem uma matriz:
+
+```text
+93 x 384
+```
+
+Ou seja, a **base textual já foi convertida em representação vetorial**. Isso conclui o **8.7**. ✅
+
+E aquelas linhas como:
+
+```text
+Primeiros 10 números do embedding:
+[-0.10019718 -0.04441126 ...]
+```
+
+são só os primeiros valores do vetor do primeiro chunk. O restante existe também, totalizando 384 posições.
+
+O aviso:
+
+```text
+Warning: You are sending unauthenticated requests to the HF Hub
+```
+
+continua não sendo problema. O modelo carregou normalmente e os embeddings foram gerados.
+
+Agora nosso progresso está assim:
+
+```text
+[X] 8.2 Preparar documentos
+[X] 8.3 Chunking
+[X] 8.4 Sentence Transformers
+[X] 8.5 Escolher modelo
+[X] 8.6 Primeiro embedding
+[X] 8.7 Embeddings dos 93 chunks ✅
+
+[ ] 8.8 Similaridade de cosseno ← AGORA
+[ ] 8.9 Primeira busca semântica
+[ ] 8.10 Integrar ao backend
+```
+
+O próximo passo é o que vai fazer tudo começar a parecer uma IA de verdade: vamos escrever uma pergunta, por exemplo:
+
+```text
+"Vacina contra gripe reduz casos graves?"
+```
+
+transformar essa pergunta em embedding e comparar com os **93 vetores** usando **similaridade de cosseno**.
+
+Aí o sistema vai nos devolver os chunks mais próximos semanticamente. Ou seja, começamos a sair de “vetores armazenados” para uma **busca semântica real**.
+
+Se quiser, já podemos fazer agora o **8.8 — similaridade de cosseno**, mexendo no mesmo `busca_semantica.py`.
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
