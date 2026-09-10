@@ -20,45 +20,61 @@ embeddings = modelo.encode(
 )
 
 
-pergunta = "A vacina contra gripe ajuda a evitar casos graves?"
+def buscar_evidencias(pergunta, top_k=3):
 
-embedding_pergunta = modelo.encode([pergunta])
+    embedding_pergunta = modelo.encode([pergunta])
+
+    similaridades = cosine_similarity(
+        embedding_pergunta,
+        embeddings
+    )[0]
+
+    indices_ordenados = similaridades.argsort()[::-1]
+
+    top_indices = indices_ordenados[:top_k]
+
+    resultados = []
+
+    for indice in top_indices:
+
+        chunk = chunks[indice]
+
+        resultados.append({
+            "arquivo": chunk["arquivo"],
+            "chunk_id": chunk["chunk_id"],
+            "conteudo": chunk["conteudo"],
+            "similaridade": float(similaridades[indice])
+        })
+
+    return resultados
 
 
-similaridades = cosine_similarity(
-    embedding_pergunta,
-    embeddings
-)[0]
+if __name__ == "__main__":
 
+    pergunta = "A vacina contra gripe ajuda a evitar casos graves?"
 
-top_k = 3
+    resultados = buscar_evidencias(
+        pergunta,
+        top_k=3
+    )
 
-indices_ordenados = similaridades.argsort()[::-1]
+    print("\n=== BUSCA SEMÂNTICA ===")
 
-top_indices = indices_ordenados[:top_k]
+    print("\nPergunta:")
+    print(pergunta)
 
+    print("\nTOP 3 resultados mais relevantes:\n")
 
-print("\n=== BUSCA SEMÂNTICA ===")
+    for posicao, resultado in enumerate(resultados, start=1):
 
-print("\nPergunta:")
-print(pergunta)
+        print("=" * 60)
 
-print(f"\nTOP {top_k} resultados mais relevantes:\n")
+        print(f"POSIÇÃO: {posicao}")
+        print(f"SIMILARIDADE: {resultado['similaridade']:.4f}")
+        print(f"ARQUIVO: {resultado['arquivo']}")
+        print(f"CHUNK ID: {resultado['chunk_id']}")
 
+        print("\nCONTEÚDO:")
+        print(resultado["conteudo"])
 
-for posicao, indice in enumerate(top_indices, start=1):
-
-    chunk = chunks[indice]
-    similaridade = similaridades[indice]
-
-    print("=" * 60)
-
-    print(f"POSIÇÃO: {posicao}")
-    print(f"SIMILARIDADE: {similaridade:.4f}")
-    print(f"ARQUIVO: {chunk['arquivo']}")
-    print(f"CHUNK ID: {chunk['chunk_id']}")
-
-    print("\nCONTEÚDO:")
-    print(chunk["conteudo"])
-
-    print()
+        print()
