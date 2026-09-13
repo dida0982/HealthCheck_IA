@@ -1,6 +1,7 @@
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 from carregar_documentos import chunks
+import re
 
 
 modelo = SentenceTransformer(
@@ -19,6 +20,21 @@ embeddings = modelo.encode(
     show_progress_bar=True
 )
 
+def calcular_sobreposicao_palavras(pergunta, texto):
+
+    palavras_pergunta = set(
+        re.findall(r"\b\w{4,}\b", pergunta.lower())
+    )
+
+    palavras_texto = set(
+        re.findall(r"\b\w{4,}\b", texto.lower())
+    )
+
+    palavras_iguais = palavras_pergunta.intersection(
+        palavras_texto
+    )
+
+    return len(palavras_iguais)
 
 def buscar_evidencias(pergunta, top_k=3):
 
