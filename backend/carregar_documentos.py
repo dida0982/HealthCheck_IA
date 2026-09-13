@@ -6,6 +6,32 @@ documentos = []
 arquivos_vazios = []
 documentos_invalidos = []
 
+def remover_secoes_nao_evidenciais(texto):
+    linhas = texto.splitlines()
+
+    linhas_filtradas = []
+    ignorando_secao = False
+
+    secoes_ignoradas = {
+        "## Alegações relacionadas",
+        "## Palavras-chave"
+    }
+
+    for linha in linhas:
+        linha_limpa = linha.strip()
+
+        if linha_limpa in secoes_ignoradas:
+            ignorando_secao = True
+            continue
+
+        # Se encontrar uma nova seção Markdown, volta a incluir conteúdo
+        if linha_limpa.startswith("## "):
+            ignorando_secao = False
+
+        if not ignorando_secao:
+            linhas_filtradas.append(linha)
+
+    return "\n".join(linhas_filtradas).strip()
 
 # 1. FUNÇÃO DE CHUNKING
 def dividir_em_chunks(texto, tamanho_maximo=500):
@@ -86,7 +112,12 @@ for arquivo in pasta_data.rglob("*.md"):
 chunks = []
 
 for documento in documentos:
-    partes = dividir_em_chunks(documento["conteudo"])
+
+    conteudo_limpo = remover_secoes_nao_evidenciais(
+        documento["conteudo"]
+    )
+
+    partes = dividir_em_chunks(conteudo_limpo)
 
     for indice, parte in enumerate(partes):
 
