@@ -9324,3 +9324,334 @@ O próximo passo que eu faria é **corrigir o chunking para remover `## Alegaç�
 ---------------------------------------------------------------------------------------------------------------------------------------------
 
 
+Esse teste mostrou que a correção do **chunking funcionou**, mas revelou um segundo problema independente: agora o **retrieval trouxe evidência correta**, porém o LLM classificou errado.
+
+Antes, o problema era este:
+
+```text
+❌ Retrieval recuperava:
+"Não há formas de prevenção contra câncer."
+```
+
+Agora ele recuperou corretamente:
+
+```text
+✅ Evidência 2:
+"Prevenção: hábitos saudáveis, vacinação contra HPV e hepatite B,
+rastreamento e diagnóstico precoce."
+
+✅ Evidência 3:
+"Prevenção: vacinação contra HPV e hepatite B,
+rastreamento e diagnóstico precoce."
+```
+
+Ou seja, para a alegação:
+
+```text
+"Câncer não pode ser prevenido."
+```
+
+as evidências dizem exatamente o contrário. Portanto, a resposta correta deveria ser:
+
+```text
+CONTRADITA PELAS EVIDÊNCIAS
+```
+
+Mas o modelo respondeu:
+
+```text
+SUSTENTADA PELAS EVIDÊNCIAS
+```
+
+e justificou com:
+
+> “o câncer é uma das principais causas de morte no mundo e existem mais de 100 tipos diferentes de câncer.”
+
+Esse conteúdo é verdadeiro, mas **não responde à proposição que está sendo verificada**. O modelo se distraiu com fatos relacionados ao tema “câncer”, em vez de avaliar o núcleo da alegação: **se existe ou não prevenção**.
+
+Então nosso diagnóstico agora fica:
+
+```text
+10.2 CONTRADITA PELAS EVIDÊNCIAS
+
+Retrieval:
+✅ PASSOU
+
+Classificação do LLM:
+❌ FALHOU
+
+Explicação:
+❌ usou fatos verdadeiros, mas irrelevantes para a alegação
+
+Seleção das evidências:
+❌ marcou [1, 2, 3]
+   embora a evidência 1 não seja necessária para decidir
+   se câncer pode ou não ser prevenido
+```
+
+Isso é importante porque **não devemos mexer novamente no chunking**. O chunking agora fez o trabalho dele.
+
+Nosso estado passa a ser:
+
+```text
+ETAPA 10 — Validação
+
+10.1 Sustentada
+✅ PASSOU
+
+10.2 Contradita
+❌ classificação incorreta
+
+10.3 Parcialmente sustentada
+⏸
+
+10.4 Enganosa
+⏸
+
+10.5 Não foi possível verificar
+⏸
+
+10.6 Separação system/user
+✅ CONCLUÍDA
+
+10.7 Análise de erros de retrieval
+✅ problema identificado
+✅ Alegações relacionadas removidas
+✅ Palavras-chave removidas
+✅ chunks: 92 → 73
+✅ retrieval corrigido
+
+10.8 Ajustar regras de classificação
+🔵 PRÓXIMO PASSO
+```
+
+Agora precisamos ensinar explicitamente ao modelo que ele deve avaliar **a proposição central da alegação**, não apenas verificar se existem fatos relacionados ao assunto.
+
+Eu colocaria uma regra decisiva no `system prompt`:
+
+```text
+Antes de classificar, identifique qual é a afirmação central da alegação.
+
+Compare somente essa afirmação central com as evidências.
+
+A presença de informações verdadeiras sobre o mesmo tema não significa
+que a alegação está sustentada.
+
+Se a alegação afirmar X e as evidências afirmarem explicitamente o
+contrário de X, a classificação deve ser:
+"CONTRADITA PELAS EVIDÊNCIAS".
+```
+
+E precisamos definir melhor as cinco classes. Algo assim:
+
+```text
+REGRAS DE CLASSIFICAÇÃO:
+
+SUSTENTADA PELAS EVIDÊNCIAS:
+As evidências confirmam diretamente a afirmação central da alegação.
+
+CONTRADITA PELAS EVIDÊNCIAS:
+As evidências apresentam informação diretamente incompatível ou oposta
+à afirmação central da alegação.
+
+PARCIALMENTE SUSTENTADA:
+Parte relevante da alegação é confirmada, mas outra parte não é
+confirmada ou necessita de ressalvas.
+
+ENGANOSA:
+A alegação utiliza informação verdadeira ou parcialmente verdadeira,
+mas a apresenta de forma que pode levar a uma conclusão incorreta.
+
+NÃO FOI POSSÍVEL VERIFICAR:
+As evidências recuperadas não são suficientes para confirmar,
+contradizer ou avaliar adequadamente a alegação.
+```
+
+E eu acrescentaria uma regra especialmente importante:
+
+```text
+NÃO classifique uma alegação como "SUSTENTADA PELAS EVIDÊNCIAS"
+apenas porque as evidências contêm informações verdadeiras relacionadas
+ao mesmo assunto.
+
+A evidência deve sustentar especificamente a afirmação central.
+```
+
+Isso ataca exatamente o erro que acabamos de observar.
+
+Então **não vamos para 10.3 ainda**. O próximo passo correto é o **10.8.1 — fortalecer o `montar_system_prompt()` com critérios explícitos para as cinco classificações**.
+
+Depois repetimos **exatamente a mesma alegação**, sem alterar o corpus nem a busca. Se mudar de:
+
+```text
+SUSTENTADA
+```
+
+para:
+
+```text
+CONTRADITA
+```
+
+teremos evidência de que corrigimos a segunda camada do problema.
+
+
+------------------------------------------------------------------------------------------------------------
+
+
+Agora sim: **o teste 10.2 passou**.
+
+O resultado correto veio como:
+
+```text
+CONTRADITA PELAS EVIDÊNCIAS
+```
+
+e a explicação finalmente comparou a alegação central com o conteúdo recuperado. Isso confirma que as novas regras do `system prompt` corrigiram o erro de classificação.
+
+O estado da etapa fica assim:
+
+```text
+ETAPA 10 — Validação do sistema
+
+10.1 Sustentada pelas evidências
+✅ PASSOU
+
+10.2 Contradita pelas evidências
+✅ PASSOU
+
+10.3 Parcialmente sustentada
+⏳ PRÓXIMO
+
+10.4 Enganosa
+⏳
+
+10.5 Não foi possível verificar
+⏳
+
+10.6 Separação system/user
+✅ CONCLUÍDA
+
+10.7 Erros de retrieval
+✅ corrigidos
+✅ "Alegações relacionadas" removidas
+✅ "Palavras-chave" removidas
+✅ chunks: 92 → 73
+
+10.8 Ajuste das regras de classificação
+✅ correção da análise da afirmação central
+```
+
+Tem só um detalhe menor: a explicação ainda citou “tratamentos eficazes”, o que não é necessário para decidir a questão de prevenção. Mas isso não invalida a classificação. Depois podemos refinar a explicação para ficar mais focada.
+
+Agora eu seguiria para **10.3 — PARCIALMENTE SUSTENTADA**.
+
+Use este teste no Swagger:
+
+```json
+{
+  "titulo": "Câncer pode ser prevenido completamente",
+  "descricao": "Hábitos saudáveis e vacinação ajudam na prevenção do câncer e garantem que uma pessoa nunca desenvolverá câncer."
+}
+```
+
+Aqui temos duas partes:
+
+```text
+"hábitos saudáveis e vacinação ajudam na prevenção"
+→ sustentado
+
+"garantem que a pessoa nunca desenvolverá câncer"
+→ não sustentado
+```
+
+Por isso esperamos:
+
+```text
+PARCIALMENTE SUSTENTADA
+```
+
+Me mande o `Response body` completo desse teste.
+
+
+---------------------------------------------------------------------------------------------------------------------------
+
+
+Boa. Agora o **10.3 passou**. A mudança no `system prompt` funcionou exatamente como queríamos.
+
+O modelo identificou corretamente as duas partes da alegação: prevenção por hábitos/vacinação está sustentada, enquanto a garantia de “nunca desenvolver câncer” não está. Por isso, `PARCIALMENTE SUSTENTADA` é a classificação adequada.
+
+Um detalhe para anotarmos: ele marcou evidências `[1, 2]`, mas a evidência 2 é pouco útil para essa decisão. Depois podemos melhorar a seleção das evidências utilizadas; não precisamos mexer nisso agora.
+
+Nosso estado é:
+
+```text
+ETAPA 10 — Validação do sistema
+
+10.1 Sustentada pelas evidências
+✅ PASSOU
+
+10.2 Contradita pelas evidências
+✅ PASSOU
+
+10.3 Parcialmente sustentada
+✅ PASSOU
+
+10.4 Enganosa
+🔵 PRÓXIMO
+
+10.5 Não foi possível verificar
+⏳
+
+10.6 Separação system/user
+✅ CONCLUÍDA
+
+10.7 Erros de retrieval
+✅ CORRIGIDOS
+   92 → 73 chunks
+
+10.8 Regras de classificação
+✅ afirmação central
+✅ contradita
+✅ parcialmente sustentada
+```
+
+### Agora: 10.4 — ENGANOSA
+
+Precisamos escolher uma alegação que seja **diferente da parcialmente sustentada**. Ela deve pegar um fato verdadeiro e usá-lo para chegar a uma conclusão incorreta.
+
+Teste no Swagger:
+
+```json
+{
+  "titulo": "Vacina contra HPV elimina o risco de qualquer câncer",
+  "descricao": "Como a vacinação contra HPV ajuda na prevenção do câncer, quem toma essa vacina fica protegido contra todos os tipos de câncer."
+}
+```
+
+Aqui existe uma estrutura enganosa:
+
+```text
+FATO:
+Vacinação contra HPV é mencionada como medida de prevenção.
+✅
+
+DISTORÇÃO:
+Isso significaria proteção contra TODOS os tipos de câncer.
+❌
+
+CONCLUSÃO:
+Transforma uma medida específica de prevenção
+em proteção geral contra qualquer câncer.
+```
+
+Portanto, para nossa taxonomia, queremos:
+
+```text
+ENGANOSA
+```
+
+**Não altere mais nenhum código agora.** Rode exatamente esse teste e me mande o `Response body` completo. Assim saberemos se as regras que colocamos para diferenciar `PARCIALMENTE SUSTENTADA` de `ENGANOSA` realmente funcionam nos dois sentidos.
+
+
+00000000000000000000000000000000000000000000000000000000000000000000000
