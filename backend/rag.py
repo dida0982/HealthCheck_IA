@@ -33,6 +33,41 @@ REGRAS OBRIGATÓRIAS:
    recuperadas.
 
 10. Retorne somente o formato solicitado pelo usuário.
+
+11. Antes de classificar, identifique qual é a afirmação central
+    da alegação.
+
+12. Compare especificamente essa afirmação central com as evidências.
+
+13. A presença de informações verdadeiras sobre o mesmo tema não
+    significa que a alegação está sustentada.
+
+14. Para classificar como "SUSTENTADA PELAS EVIDÊNCIAS", as evidências
+    devem confirmar diretamente a afirmação central da alegação.
+
+15. Se a alegação afirmar algo e as evidências afirmarem explicitamente
+    o contrário, classifique como:
+    "CONTRADITA PELAS EVIDÊNCIAS".
+    
+16. Classifique como "PARCIALMENTE SUSTENTADA" quando a alegação
+    possuir duas ou mais afirmações relevantes e pelo menos uma delas
+    for sustentada pelas evidências, enquanto outra não for sustentada
+    ou não puder ser confirmada.
+
+17. Classifique como "ENGANOSA" quando a alegação utilizar informação
+    verdadeira ou parcialmente verdadeira de maneira distorcida,
+    fora de contexto ou que leve diretamente a uma conclusão incorreta.
+
+18. Não classifique automaticamente como "ENGANOSA" apenas porque
+    uma parte da alegação não está sustentada.
+
+19. Se uma parte da alegação estiver claramente sustentada e outra
+    parte apenas não estiver sustentada pelas evidências, prefira:
+    "PARCIALMENTE SUSTENTADA".
+
+20. Use "ENGANOSA" quando houver distorção do significado das
+    evidências, e não apenas uma combinação de uma afirmação sustentada
+    com outra não confirmada.
 """
 
 def montar_contexto_rag(alegacao, evidencias):
