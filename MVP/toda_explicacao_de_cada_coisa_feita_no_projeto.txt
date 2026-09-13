@@ -9137,3 +9137,190 @@ Faça **só essa alteração**, salve o `rag.py` e me diga quando estiver pronto
 --------------------------------------------------------------------------------------------------------------------------------
 
 
+Esse teste foi muito importante porque revelou um erro real do RAG.
+
+O resultado do **10.2 falhou**. Para essa entrada, o esperado era:
+
+```text
+CONTRADITA PELAS EVIDÊNCIAS
+```
+
+mas o modelo retornou:
+
+```text
+ENGANOSA
+```
+
+O problema principal não parece estar no Llama nem na separação `system + user`. Está no **retrieval**.
+
+As três evidências recuperadas foram trechos como:
+
+```text
+## Alegações relacionadas
+
+- "Não existe prevenção contra câncer."
+- "Não há formas de prevenção contra câncer."
+```
+
+Essas frases não são evidências científicas. Elas são **exemplos de alegações que o documento pretende desmentir**. Só que, para a busca semântica, a frase:
+
+```text
+"Câncer não pode ser prevenido"
+```
+
+é extremamente parecida semanticamente com:
+
+```text
+"Não há formas de prevenção contra câncer."
+```
+
+Então o embedding faz exatamente o que foi projetado para fazer:
+
+```text
+Pergunta falsa
+        ↓
+similaridade textual/semântica
+        ↓
+Alegação falsa armazenada na base
+        ↓
+score alto
+```
+
+O problema é que depois o Llama recebe isso como:
+
+```text
+EVIDÊNCIA 1
+"Não existe prevenção contra câncer."
+```
+
+e não sabe que aquilo é apenas uma **alegação falsa de exemplo**, e não uma afirmação factual da OMS/OPAS/INCA.
+
+Isso explica também esta frase problemática da resposta:
+
+> “aparentemente contradiz a própria evidência que não existem formas de prevenção contra câncer”
+
+O modelo interpretou literalmente o conteúdo recuperado.
+
+### Estado da validação
+
+```text
+10.1 SUSTENTADA
+✅ PASSOU
+
+10.2 CONTRADITA
+❌ FALHOU
+
+Motivo:
+❌ erro de retrieval
+❌ chunks de "Alegações relacionadas" estão entrando como evidência
+```
+
+E isso é uma descoberta boa para o desenvolvimento: **não devemos tentar consertar isso apenas mexendo no prompt**. O corpus está enviando informação ambígua para o modelo.
+
+Minha recomendação agora é interromper temporariamente os testes 10.3–10.5 e atacar esse problema como:
+
+```text
+10.7 — Analisar erros de retrieval
+```
+
+A correção mais importante seria **não indexar as seções `## Alegações relacionadas` como evidência científica**.
+
+Por exemplo, hoje temos algo parecido com:
+
+```markdown
+## Resumo
+informação científica...
+
+## Evidências
+informação científica...
+
+## Alegações relacionadas
+- "Não há formas de prevenção contra câncer."
+- "Todo câncer é hereditário."
+
+## Palavras-chave
+...
+```
+
+Para o banco vetorial, o ideal é indexar:
+
+```text
+Resumo
+Conteúdo científico
+Prevenção
+Tratamento
+Fatores de risco
+...
+```
+
+e excluir:
+
+```text
+Alegações relacionadas
+Palavras-chave
+```
+
+Assim, para:
+
+```text
+"Câncer não pode ser prevenido"
+```
+
+o retrieval tenderia a recuperar algo como:
+
+```text
+Prevenção: hábitos saudáveis, vacinação contra HPV e hepatite B,
+rastreamento e diagnóstico precoce.
+```
+
+Então o Llama conseguiria comparar:
+
+```text
+ALEGAÇÃO
+"Câncer não pode ser prevenido"
+
+versus
+
+EVIDÊNCIA
+"Existem estratégias de prevenção..."
+
+↓
+
+CONTRADITA PELAS EVIDÊNCIAS
+```
+
+Esse é exatamente o comportamento que queremos.
+
+Então eu marcaria nosso projeto agora assim:
+
+```text
+ETAPA 10 — Validação
+
+10.1 Sustentada
+✅ PASSOU
+
+10.2 Contradita
+❌ FALHOU — erro de retrieval identificado
+
+10.3 Parcialmente sustentada
+⏸ aguardando correção do retrieval
+
+10.4 Enganosa
+⏸ aguardando correção do retrieval
+
+10.5 Não foi possível verificar
+⏸ aguardando correção do retrieval
+
+10.6 Separação system/user
+✅ CONCLUÍDA
+
+10.7 Análise de erros de retrieval
+🔵 EM ANDAMENTO
+```
+
+O próximo passo que eu faria é **corrigir o chunking para remover `## Alegações relacionadas` e `## Palavras-chave` antes de gerar os embeddings**. Depois regeneramos os chunks e repetimos exatamente esse mesmo teste. Isso vai melhorar muito mais o HealthCheck IA do que tentar “ensinar” o prompt a ignorar esse erro.
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+
