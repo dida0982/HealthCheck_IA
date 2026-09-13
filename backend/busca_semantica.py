@@ -45,7 +45,26 @@ def buscar_evidencias(pergunta, top_k=3):
         embeddings
     )[0]
 
-    indices_ordenados = similaridades.argsort()[::-1]
+    scores_finais = []
+
+    for indice, similaridade in enumerate(similaridades):
+
+        sobreposicao = calcular_sobreposicao_palavras(
+            pergunta,
+            chunks[indice]["conteudo"]
+        )
+
+        bonus_lexico = sobreposicao * 0.02
+
+        score_final = similaridade + bonus_lexico
+
+        scores_finais.append(score_final)
+
+    indices_ordenados = sorted(
+        range(len(scores_finais)),
+        key=lambda indice: scores_finais[indice],
+        reverse=True
+    )
 
     top_indices = indices_ordenados[:top_k]
 
