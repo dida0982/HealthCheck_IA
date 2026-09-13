@@ -27,7 +27,11 @@ python -m venv .venv
 CMD:
 
 ```bat
-.venv\Scripts\activate
+.venv\Scripts\activate=
+
+ou 
+
+.\.venv\Scripts\Activate.ps1
 ```
 
 PowerShell:
