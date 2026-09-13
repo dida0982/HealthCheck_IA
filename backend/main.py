@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
 from busca_semantica import buscar_evidencias
-from rag import montar_user_prompt
+from rag import montar_system_prompt, montar_user_prompt
 
 app = FastAPI(
     title="HealthCheck IA API",
@@ -67,8 +67,11 @@ def analisar(dados: AnaliseRequest):
         top_k=3
     )
 
-    # 2. Monta o prompt RAG com as mesmas evidências
-    prompt = montar_user_prompt(
+    # 2. Monta os prompts
+
+    system_prompt = montar_system_prompt()
+
+    user_prompt = montar_user_prompt(
         texto_para_analisar,
         evidencias
     )
@@ -77,10 +80,11 @@ def analisar(dados: AnaliseRequest):
     url_ollama = "http://localhost:11434/api/generate"
 
     dados_ollama = {
-        "model": "llama3.2:3b",
-        "prompt": prompt,
-        "stream": False
-    }
+    "model": "llama3.2:3b",
+    "system": system_prompt,
+    "prompt": user_prompt,
+    "stream": False
+}
 
     try:
 
