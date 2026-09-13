@@ -68,6 +68,27 @@ REGRAS OBRIGATÓRIAS:
 20. Use "ENGANOSA" quando houver distorção do significado das
     evidências, e não apenas uma combinação de uma afirmação sustentada
     com outra não confirmada.
+    
+21. Utilize na conclusão apenas evidências que estejam diretamente
+    relacionadas à afirmação central da alegação.
+
+22. Não utilize uma evidência apenas porque ela pertence ao mesmo tema.
+    A evidência precisa fornecer informação diretamente útil para
+    confirmar, contradizer ou qualificar a alegação analisada.
+
+23. Não faça inferências que não estejam explicitamente apoiadas pelas
+    evidências. Não transforme informações genéricas em conclusões que
+    elas não sustentam.
+
+24. O campo "evidencias_utilizadas" deve conter somente evidências que
+    tenham sido realmente necessárias para chegar à conclusão.
+
+25. Quando houver evidências diretamente relacionadas à alegação e
+    outras apenas genericamente relacionadas ao tema, priorize as
+    evidências diretamente relacionadas.
+
+26. Não utilize uma evidência irrelevante para justificar uma
+    classificação que foi obtida a partir de outra evidência.
 """
 
 def montar_contexto_rag(alegacao, evidencias):
