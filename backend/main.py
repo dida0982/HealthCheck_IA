@@ -64,7 +64,7 @@ def analisar(dados: AnaliseRequest):
     # 1. Busca as evidências
     evidencias = buscar_evidencias(
         texto_para_analisar,
-        top_k=3
+        top_k=5
     )
 
     # 2. Monta os prompts
