@@ -10117,3 +10117,221 @@ Por enquanto **não rode o HealthCheck nessas alegações**. Estamos construindo
 Depois de colar e salvar essas 5 linhas, me diga **“pronto”**. Aí fazemos as próximas 5: `PARCIALMENTE SUSTENTADA`.
 
 
+Perfeito. A **Etapa 12.4 está concluída**.
+
+Seu piloto ficou assim:
+
+```text
+25 casos avaliados
+16 acertos
+9 erros
+Acurácia preliminar: 64,00%
+```
+
+E o mais importante: agora você já tem o arquivo:
+
+```text
+tests/resultados_validacao.csv
+```
+
+com **esperado × produzido × status** para cada alegação.
+
+Pela nossa sequência original, o próximo item é:
+
+```text
+12.5 — Criar dataset completo
+```
+
+Só que aqui tem uma decisão importante: **eu não recomendo expandir direto para 200 alegações antes de analisarmos esses 9 erros**. Se houver um problema estrutural nas regras de classificação ou no retrieval, podemos acabar criando 200 casos em cima de um comportamento que ainda precisa ser entendido.
+
+Então eu faria uma pequena validação intermediária, sem mudar a numeração oficial da sua Etapa 12: olhar os erros desse piloto e identificar o padrão. Já dá para notar algo forte: o sistema está confundindo principalmente:
+
+```text
+PARCIALMENTE SUSTENTADA
+ENGANOSA
+CONTRADITA PELAS EVIDÊNCIAS
+```
+
+Enquanto `NÃO FOI POSSÍVEL VERIFICAR` acertou **5/5**, o que é um sinal bom.
+
+Antes de criar as 175 alegações restantes, vamos analisar os **9 erros** do `resultados_validacao.csv` e descobrir exatamente onde está a confusão. Isso evita “consertar no escuro”.
+
+Me envie o conteúdo de `tests/resultados_validacao.csv` — ou, se preferir, apenas as linhas com `status = ERRO` — e eu faço essa análise com você.
+
+
+
+Boa. Esses 9 erros mostram um padrão bem claro, e **não devemos simplesmente mudar o gabarito para fazer o modelo acertar**. O objetivo agora é descobrir se o problema está no LLM, nas regras de classificação ou no retrieval.
+
+Dos 9 erros, **8 estão concentrados na fronteira entre `PARCIALMENTE`, `ENGANOSA` e `CONTRADITA`**. O caso 5 é diferente.
+
+### O que os erros estão mostrando
+
+**Caso 5 — SUSTENTADA → PARCIALMENTE**
+
+> Eliminar água parada ajuda a prevenir dengue.
+
+A alegação é compatível com a evidência que diz que eliminar locais com água parada ajuda no combate aos criadouros. Aqui o esperado `SUSTENTADA` continua defensável. Esse erro pode ter vindo do retrieval: precisamos posteriormente verificar exatamente quais chunks chegaram ao Llama.
+
+**Casos 6 e 9 — PARCIALMENTE → ENGANOSA**
+
+Aqui o modelo está interpretando o exagero da segunda parte como uma **distorção da informação verdadeira**.
+
+No 6:
+
+```text
+atividade física ajuda na prevenção       ← sustentado
++
+não precisa de acompanhamento médico      ← não sustentado
+```
+
+No 9:
+
+```text
+câncer pode causar metástase              ← sustentado
++
+todo câncer provoca febre alta            ← não sustentado
+```
+
+Pelas regras que definimos, esses deveriam ser `PARCIALMENTE SUSTENTADA`, porque são duas afirmações separáveis e apenas uma possui suporte. Portanto, não alteraria esses gabaritos.
+
+**Casos 12, 13 e 15 — ENGANOSA → PARCIALMENTE**
+
+Este é provavelmente o problema mais interessante.
+
+Veja o 13:
+
+```text
+Eliminar água parada combate criadouros
+                 ↓
+          informação verdadeira
+                 ↓
+"logo fico totalmente protegido contra dengue"
+                 ↓
+          conclusão exagerada
+```
+
+Isso foi construído propositalmente como `ENGANOSA`. Diferentemente do caso 6, a segunda parte é apresentada como **conclusão derivada da primeira**.
+
+O Llama não está distinguindo bem:
+
+```text
+A é sustentado + B não é sustentado
+            =
+PARCIALMENTE SUSTENTADA
+```
+
+de:
+
+```text
+A é sustentado
+      ↓
+A é usado para justificar B
+      ↓
+B é uma conclusão distorcida
+            =
+ENGANOSA
+```
+
+Esse é um problema real de fronteira semântica entre as duas classes.
+
+**Casos 16 e 17 — CONTRADITA → PARCIALMENTE**
+
+Esses me preocupam mais.
+
+No 16:
+
+> A dengue é sempre uma doença leve e não pode evoluir para formas graves.
+
+Se o corpus recuperado contém explicitamente que dengue pode evoluir para formas graves, temos oposição direta:
+
+```text
+ALEGAÇÃO:
+não pode evoluir para forma grave
+
+EVIDÊNCIA:
+pode evoluir para forma grave
+
+→ CONTRADITA
+```
+
+Não deveria virar `PARCIALMENTE`.
+
+O mesmo vale para o 17 se a evidência recuperada diz que a transmissão ocorre principalmente pela picada da fêmea infectada do `Aedes aegypti`.
+
+Aqui há uma possibilidade importante: **o problema pode não estar no Llama**. O buscador pode não estar entregando ao modelo o chunk que contém a oposição necessária.
+
+**Caso 18 — CONTRADITA → ENGANOSA**
+
+Também existe oposição direta:
+
+```text
+ALEGAÇÃO:
+hábitos saudáveis, vacinação e rastreamento
+não possuem relação com prevenção
+
+EVIDÊNCIA:
+essas são medidas de prevenção
+
+→ CONTRADITA
+```
+
+O modelo está interpretando a falsidade como `ENGANOSA`, quando nossas regras exigem `CONTRADITA` diante de oposição explícita.
+
+### Diagnóstico do piloto
+
+Temos:
+
+```text
+SUSTENTADA → PARCIALMENTE          1
+
+PARCIALMENTE → ENGANOSA            2
+
+ENGANOSA → PARCIALMENTE            3
+
+CONTRADITA → PARCIALMENTE          2
+CONTRADITA → ENGANOSA              1
+```
+
+Isso revela duas questões diferentes:
+
+**1. Fronteira `ENGANOSA × PARCIALMENTE`**
+
+É o principal problema conceitual. Foram **5 erros** só nessa fronteira.
+
+**2. `CONTRADITA` não está sendo reconhecida corretamente**
+
+Dos 5 casos esperados como `CONTRADITA`, o modelo acertou somente os casos 19 e 20: **2/5**. Isso merece investigação antes de criarmos as 200 alegações.
+
+E tem uma coisa importante: **não vamos alterar o prompt ainda**.
+
+Primeiro precisamos responder:
+
+> Nos casos errados, o Llama recebeu as evidências corretas e classificou errado, ou o nosso RAG entregou evidências ruins/incompletas?
+
+Essa distinção é fundamental. Se mexermos no prompt quando o problema é retrieval, estaremos tentando corrigir o componente errado.
+
+## Próximo passo
+
+Vamos fazer um **diagnóstico do retrieval dos 9 erros**.
+
+Não precisamos rodar as 25 novamente. Vamos adaptar temporariamente nosso teste para mostrar, em cada erro, algo como:
+
+```text
+ID 16
+Esperado: CONTRADITA PELAS EVIDÊNCIAS
+Produzido: PARCIALMENTE SUSTENTADA
+
+EVIDÊNCIA 1:
+arquivo: ...
+similaridade: ...
+texto: ...
+
+EVIDÊNCIA 2:
+arquivo: ...
+similaridade: ...
+texto: ...
+```
+
+Assim conseguiremos enxergar **exatamente o que o Llama recebeu** antes de classificá-lo.
+
+Esse é o passo correto antes de aumentar de 25 para 200 casos. E os **64% não são um fracasso**: o piloto acabou de cumprir sua função, que era justamente revelar essas fragilidades antes da avaliação científica definitiva.
