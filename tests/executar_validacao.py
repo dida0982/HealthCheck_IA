@@ -75,8 +75,28 @@ def executar_validacao():
 
             if acertou:
                 print("Resultado: ✅ ACERTO")
+
             else:
                 print("Resultado: ❌ ERRO")
+
+                print("\nEVIDÊNCIAS RECEBIDAS PELO LLM:")
+
+                evidencias = resultado_api.get("evidencias", [])
+
+                if not evidencias:
+                    print("Nenhuma evidência retornada.")
+
+                for indice, evidencia in enumerate(evidencias, start=1):
+
+                    print()
+                    print(f"Evidência {indice}")
+                    print(f"Arquivo: {evidencia.get('arquivo', 'N/A')}")
+                    print(
+                        f"Similaridade: "
+                        f"{evidencia.get('similaridade', 'N/A')}"
+                    )
+                    print("Evidência completa:")
+                    print(evidencia)
 
             resultados.append({
                 "id": caso["id"],
