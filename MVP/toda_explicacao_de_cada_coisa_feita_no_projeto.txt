@@ -10501,3 +10501,98 @@ tests/dataset_avaliacao_final.csv
 ```
 
 com essas 200 alegações independentes. Essa é a **Etapa 12.5**.
+
+
+=
+=
+=
+==
+
+
+Excelente. Agora temos um resultado de avaliação completo e, principalmente, ele mostra **onde o HealthCheck funciona bem e onde está o principal gargalo**.
+
+## Resultado oficial da avaliação
+
+Foram avaliadas **200 alegações inéditas**, balanceadas igualmente entre as cinco classes.
+
+| Métrica             |  Resultado |
+| ------------------- | ---------: |
+| Alegações avaliadas |        200 |
+| Acertos             |    **151** |
+| Erros               |         49 |
+| Accuracy            | **75,50%** |
+| Precision macro     | **79,72%** |
+| Recall macro        | **75,50%** |
+| F1-score macro      | **72,87%** |
+| F1 weighted         | **72,87%** |
+
+Portanto, para apresentação acadêmica, o número mais interessante não é só a acurácia. Podemos registrar:
+
+> **O HealthCheck IA foi avaliado em um conjunto independente de 200 alegações, balanceado entre cinco classes, alcançando 75,5% de acurácia e F1-score macro de 72,87%.**
+
+Isso é muito mais defensável do que apresentar os **88% do piloto**, porque aqueles 25 casos foram usados durante o desenvolvimento do prompt. Os 200 foram reservados para avaliação.
+
+## O que aconteceu em cada classe
+
+A classe com melhor recall foi `SUSTENTADA PELAS EVIDÊNCIAS`: **40/40**, ou 100%. O F1 ficou em **81,63%** porque o modelo também colocou algumas alegações de outras classes como sustentadas.
+
+`NÃO FOI POSSÍVEL VERIFICAR` também teve **40/40**, com F1 de **84,21%**, o maior das cinco classes. Isso é especialmente interessante para o HealthCheck: o sistema demonstrou capacidade de reconhecer quando a base não oferece evidência suficiente, em vez de necessariamente inventar uma conclusão.
+
+`ENGANOSA` teve **33/40 = 82,5% de recall**, com F1 de **76,74%**.
+
+`CONTRADITA PELAS EVIDÊNCIAS` teve **26/40 = 65% de recall**, mas precision muito alta, **92,86%**. Ou seja: quando o sistema decide chamar algo de contradito, normalmente está certo; o problema é que deixa passar algumas contradições.
+
+E encontramos claramente o maior problema:
+
+**`PARCIALMENTE SUSTENTADA`: apenas 12/40 corretas, recall de 30% e F1 de 45,28%.**
+
+Das 28 parciais erradas:
+
+```text
+16 → SUSTENTADA
+10 → NÃO FOI POSSÍVEL VERIFICAR
+ 1 → ENGANOSA
+ 1 → CONTRADITA
+```
+
+Isso revela algo importante sobre o comportamento do classificador: ele tem dificuldade em fazer uma **avaliação composicional**, isto é, perceber que uma mesma alegação possui uma parte apoiada pelas evidências e outra parte não verificável.
+
+Também encontramos outro padrão muito claro nas contraditas:
+
+```text
+26 → CONTRADITA  ✅
+12 → ENGANOSA
+ 2 → SUSTENTADA
+```
+
+Portanto, há uma confusão relevante entre **contradição** e **informação enganosa**.
+
+## Situação da Etapa 12
+
+Podemos marcar:
+
+```text
+[x] 12.1 — Definir estrutura do dataset
+[x] 12.2 — Criar primeiro conjunto pequeno de validação
+[x] 12.3 — Automatizar execução das alegações
+[x] 12.4 — Registrar esperado x produzido
+[x] 12.5 — Criar dataset completo
+[x] 12.6 — Calcular accuracy
+[x] 12.7 — Calcular precision
+[x] 12.8 — Calcular recall
+[x] 12.9 — Calcular F1-score
+[x] 12.10 — Gerar matriz de confusão
+[ ] 12.11 — Analisar erros por categoria   ← AGORA
+[ ] 12.12 — Registrar experimentos no MLflow
+```
+
+E tem uma decisão metodológica importante: **não vamos corrigir o prompt agora para tentar aumentar esses 75,5%.** Se usássemos os erros desses 200 exemplos para modificar o prompt e depois apresentássemos a nova pontuação nos mesmos 200 casos, eles deixariam de funcionar como conjunto de teste independente.
+
+Agora vamos para a **12.11**. Como já temos `resultados_avaliacao_final.csv`, o próximo passo é identificar exatamente **quais foram os 49 erros**, agrupá-los por `esperada → produzida` e descobrir os padrões que fizeram o modelo errar. Isso vai nos dar material muito bom para a seção de limitações e para a apresentação.
+
+
+=
+=
+=
+==
+
