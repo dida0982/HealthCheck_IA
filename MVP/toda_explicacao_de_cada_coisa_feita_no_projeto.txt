@@ -10783,3 +10783,936 @@ O próximo marco do planejamento original é a **ETAPA 13 — Pensamento crític
 =
 
 
+Perfeito. A **ETAPA 13** não é para aumentar a acurácia do classificador; ela muda **como o resultado é apresentado ao usuário**. O objetivo é impedir que o HealthCheck pareça uma “máquina da verdade”.
+
+Vamos organizar assim:
+
+```text
+ETAPA 13 — Pensamento crítico
+
+13.1 — Definir mensagens educativas para cada classificação
+13.2 — Exibir explicação antes de qualquer conclusão absoluta
+13.3 — Mostrar claramente as evidências utilizadas
+13.4 — Permitir consultar as fontes originais
+13.5 — Adicionar orientação “antes de compartilhar”
+13.6 — Informar quando as evidências forem insuficientes
+13.7 — Informar que a classificação é produzida por IA
+13.8 — Criar bloco fixo de pensamento crítico no card
+13.9 — Integrar essas mensagens à extensão Chrome
+13.10 — Testar visualmente as cinco classificações
+```
+
+Vamos começar apenas pela **13.1**.
+
+A ideia é cada classe ter uma mensagem que estimule julgamento, em vez de simplesmente dizer “verdadeiro” ou “falso”.
+
+Podemos definir assim no produto:
+
+```text
+SUSTENTADA PELAS EVIDÊNCIAS
+
+🟢 Evidências favoráveis
+
+As fontes consultadas apresentam informações compatíveis com a afirmação.
+
+Antes de concluir:
+Leia as evidências e consulte as fontes originais.
+```
+
+```text
+PARCIALMENTE SUSTENTADA
+
+🟡 Evidências parcialmente favoráveis
+
+Parte da afirmação é sustentada pelas fontes consultadas, mas outros trechos
+não possuem evidência suficiente.
+
+Antes de concluir:
+Observe quais partes da afirmação possuem suporte e quais ainda precisam
+ser verificadas.
+```
+
+```text
+ENGANOSA
+
+🟠 Informação potencialmente enganosa
+
+A afirmação contém elementos compatíveis com as evidências, mas apresenta
+uma conclusão exagerada, distorcida ou mais forte do que as fontes permitem.
+
+Antes de compartilhar:
+Compare a conclusão da afirmação com aquilo que as fontes realmente dizem.
+```
+
+```text
+CONTRADITA PELAS EVIDÊNCIAS
+
+🔴 Evidências contraditórias
+
+As fontes consultadas apresentam informações incompatíveis com a afirmação.
+
+Veja por quê:
+Analise a explicação e compare diretamente a afirmação com as evidências.
+
+Antes de compartilhar:
+Consulte as fontes originais e verifique o contexto.
+```
+
+```text
+NÃO FOI POSSÍVEL VERIFICAR
+
+⚪ Evidências insuficientes
+
+A base consultada não possui evidências suficientes para confirmar nem
+contradizer essa afirmação.
+
+Isso não significa que a informação seja verdadeira ou falsa.
+
+Antes de compartilhar:
+Procure outras fontes confiáveis e atualizadas.
+```
+
+E podemos colocar uma mensagem comum no final de **todos os cards**:
+
+```text
+🤖 Análise assistida por IA
+
+O HealthCheck IA é uma ferramenta de apoio à análise de informações.
+A classificação não substitui avaliação profissional nem a consulta às
+fontes originais.
+```
+
+Esse último ponto é especialmente importante porque separa claramente:
+
+```text
+IA decide a verdade ❌
+
+IA recupera evidências + organiza informações
++ ajuda o usuário a avaliar ✅
+```
+
+Então podemos marcar:
+
+```text
+[x] 13.1 — Definir mensagens educativas para cada classificação
+[ ] 13.2 — Exibir explicação antes de qualquer conclusão absoluta
+[ ] 13.3 — Mostrar claramente as evidências utilizadas
+[ ] 13.4 — Permitir consultar as fontes originais
+[ ] 13.5 — Adicionar orientação “antes de compartilhar”
+[ ] 13.6 — Informar quando as evidências forem insuficientes
+[ ] 13.7 — Informar que a classificação é produzida por IA
+[ ] 13.8 — Criar bloco fixo de pensamento crítico no card
+[ ] 13.9 — Integrar à extensão Chrome
+[ ] 13.10 — Testar as cinco classificações
+```
+
+Agora o próximo passo é a **13.2**: vamos definir exatamente **como o card deve organizar classificação → explicação → evidências → fontes → orientação**, antes de mexermos no `content.js`.
+
+=
+=
+=
+=
+=
+
+Certo. Na **13.2**, vamos definir a ordem visual e lógica do card antes de tocar no código.
+
+A estrutura que eu recomendo para cada resultado é esta:
+
+```text
+┌─────────────────────────────────────────────┐
+│ 🔎 HealthCheck IA                          │
+├─────────────────────────────────────────────┤
+
+🔴 Evidências contraditórias
+
+As fontes consultadas apresentam informações
+incompatíveis com a afirmação analisada.
+
+POR QUE O SISTEMA CLASSIFICOU ASSIM?
+
+A alegação afirma que [...]
+As evidências recuperadas indicam que [...]
+
+──────────────────────────────────────────────
+
+EVIDÊNCIAS UTILIZADAS
+
+1. Ministério da Saúde
+   Trecho relevante da evidência...
+
+2. Fiocruz
+   Trecho relevante da evidência...
+
+3. OMS
+   Trecho relevante da evidência...
+
+──────────────────────────────────────────────
+
+CONSULTE AS FONTES
+
+→ Ministério da Saúde
+→ Fiocruz
+→ OMS
+
+──────────────────────────────────────────────
+
+💭 ANTES DE COMPARTILHAR
+
+Compare a afirmação com as evidências
+apresentadas e consulte as fontes originais.
+
+──────────────────────────────────────────────
+
+🤖 Análise assistida por IA
+
+O HealthCheck IA auxilia na análise de
+informações e não deve ser tratado como
+uma autoridade absoluta.
+└─────────────────────────────────────────────┘
+```
+
+A ordem é importante:
+
+```text
+1. Classificação
+        ↓
+2. Explicação
+        ↓
+3. Evidências
+        ↓
+4. Fontes originais
+        ↓
+5. Orientação de pensamento crítico
+        ↓
+6. Aviso de uso de IA
+```
+
+Isso evita um problema que teríamos se mostrássemos apenas:
+
+```text
+🔴 FAKE
+```
+
+O usuário receberia uma conclusão pronta sem entender **como** o sistema chegou nela.
+
+No nosso caso, o card deve responder progressivamente a seis perguntas:
+
+```text
+O que o sistema encontrou?
+→ classificação
+
+Por que chegou nisso?
+→ explicação
+
+Em que está se baseando?
+→ evidências
+
+De onde vieram essas evidências?
+→ fontes
+
+O que eu devo fazer com essa informação?
+→ orientação crítica
+
+Quem produziu essa análise?
+→ sistema assistido por IA
+```
+
+Também faria uma mudança importante na linguagem. Em vez de mostrar o nome técnico bruto:
+
+```text
+CONTRADITA PELAS EVIDÊNCIAS
+```
+
+na interface podemos mostrar:
+
+```text
+🔴 Evidências contraditórias
+```
+
+Mas internamente continuamos usando:
+
+```python
+"CONTRADITA PELAS EVIDÊNCIAS"
+```
+
+Ou seja, **não mudamos o classificador**. Só transformamos a classificação técnica em uma mensagem mais compreensível para o usuário.
+
+O mesmo vale para as cinco classes:
+
+| Classe interna                | Texto exibido                         |
+| ----------------------------- | ------------------------------------- |
+| `SUSTENTADA PELAS EVIDÊNCIAS` | 🟢 Evidências favoráveis              |
+| `PARCIALMENTE SUSTENTADA`     | 🟡 Evidências parcialmente favoráveis |
+| `ENGANOSA`                    | 🟠 Informação potencialmente enganosa |
+| `CONTRADITA PELAS EVIDÊNCIAS` | 🔴 Evidências contraditórias          |
+| `NÃO FOI POSSÍVEL VERIFICAR`  | ⚪ Evidências insuficientes            |
+
+E tem uma decisão de design que eu considero importante para a 13.2: **a explicação deve vir antes das evidências completas**. Assim o usuário primeiro entende o raciocínio e depois pode conferir a base usada.
+
+Com isso:
+
+```text
+[x] 13.1 — Definir mensagens educativas
+[x] 13.2 — Definir organização do card
+[ ] 13.3 — Mostrar claramente as evidências utilizadas
+[ ] 13.4 — Permitir consultar as fontes originais
+[ ] 13.5 — Orientação antes de compartilhar
+[ ] 13.6 — Evidências insuficientes
+[ ] 13.7 — Informar uso de IA
+[ ] 13.8 — Criar bloco fixo de pensamento crítico
+[ ] 13.9 — Integrar à extensão
+[ ] 13.10 — Testar as cinco classificações
+```
+
+A **13.2 está concluída**. O próximo passo é a **13.3**, em que vamos definir exatamente **o que mostrar de cada evidência recuperada pelo RAG** — fonte, trecho, similaridade e quantidade — sem ainda mexer no `content.js`.
+
+
+Certo. Na **13.3**, vamos decidir exatamente o que o usuário deve enxergar sobre as evidências recuperadas pelo RAG.
+
+Eu sugiro mostrar **no máximo 3 evidências principais** no card. O backend pode continuar recuperando `top_k=5`, mas a interface não precisa despejar tudo de uma vez. O ideal é priorizar clareza.
+
+Cada evidência deve ter quatro elementos:
+
+```text
+1. Fonte
+2. Trecho utilizado
+3. Similaridade
+4. Posição entre as evidências recuperadas
+```
+
+Visualmente, poderia ficar assim:
+
+```text
+EVIDÊNCIAS UTILIZADAS
+
+1. Ministério da Saúde
+Similaridade: 82%
+
+“A dengue pode evoluir para formas graves
+e apresentar sinais de alarme...”
+
+2. Fiocruz
+Similaridade: 78%
+
+“A principal forma de transmissão ocorre
+pela picada da fêmea infectada...”
+
+3. OMS
+Similaridade: 74%
+
+“A dengue é uma infecção viral transmitida
+principalmente por mosquitos...”
+```
+
+Mas há um detalhe importante: a **similaridade não deve ser apresentada como “confiança da verdade”**.
+
+Por exemplo:
+
+```text
+Similaridade: 82%
+```
+
+significa algo próximo de:
+
+> o trecho recuperado semanticamente é relativamente parecido/relevante para a alegação pesquisada.
+
+Não significa:
+
+> há 82% de chance de a alegação ser verdadeira.
+
+Então, na interface, eu usaria uma legenda pequena:
+
+```text
+ℹ Similaridade indica o quanto o trecho recuperado
+está relacionado semanticamente à afirmação.
+Não representa probabilidade de verdade.
+```
+
+Também evitaria mostrar os chunks inteiros. Cada trecho pode ter algo como **2 a 4 linhas**, porque chunks muito grandes deixam o card impossível de ler.
+
+A estrutura de cada evidência fica:
+
+```text
+┌────────────────────────────────────┐
+│ 1. Ministério da Saúde             │
+│ Similaridade: 82%                  │
+│                                    │
+│ Trecho relevante:                  │
+│ “...”                              │
+│                                    │
+│ Ver fonte original →               │
+└────────────────────────────────────┘
+```
+
+E aqui entra uma regra importante para o pensamento crítico: **não esconder evidências que discordem da conclusão do modelo**, caso elas apareçam entre as recuperadas. O usuário deve conseguir verificar o material que realmente foi usado pelo sistema.
+
+Para quantidade, eu definiria:
+
+```text
+Backend recupera: 5 evidências
+Card mostra inicialmente: 3
+Botão: “Ver todas as evidências”
+```
+
+Assim mantemos o `top_k=5` da avaliação científica, mas não sobrecarregamos visualmente a extensão.
+
+Então a **13.3** fica definida assim:
+
+```text
+[x] Mostrar fonte de cada evidência
+[x] Mostrar trecho relevante
+[x] Mostrar similaridade sem tratá-la como confiança
+[x] Exibir 3 evidências inicialmente
+[x] Manter até 5 disponíveis
+[x] Não esconder evidências conflitantes
+[x] Evitar chunks muito longos
+```
+
+Com isso:
+
+```text
+[x] 13.1 — Mensagens educativas
+[x] 13.2 — Organização do card
+[x] 13.3 — Definir exibição das evidências
+[ ] 13.4 — Permitir consultar as fontes originais
+[ ] 13.5 — Orientação antes de compartilhar
+[ ] 13.6 — Evidências insuficientes
+[ ] 13.7 — Informar uso de IA
+[ ] 13.8 — Bloco fixo de pensamento crítico
+[ ] 13.9 — Integrar à extensão
+[ ] 13.10 — Testar as cinco classificações
+```
+
+A próxima é a **13.4**, em que vamos definir como o usuário chega da evidência exibida até a **fonte original oficial**.
+
+
+Certo. Na **13.4**, vamos definir como cada evidência leva o usuário até a **fonte oficial original**, ainda sem mexer no `content.js`.
+
+A ideia central é simples: o HealthCheck não deve dizer apenas “segundo a OMS”. O usuário precisa conseguir **abrir a fonte e conferir por conta própria**.
+
+### Como deve aparecer no card
+
+Cada evidência terá algo deste tipo:
+
+```text
+1. Ministério da Saúde
+
+Trecho relevante:
+“A dengue pode evoluir para formas graves...”
+
+Similaridade: 82%
+
+🔗 Consultar fonte original
+```
+
+Ao clicar em **“Consultar fonte original”**, abrimos a página oficial em uma nova aba.
+
+Para isso, cada documento da nossa base precisa possuir metadados que permitam rastrear sua origem. O ideal é que cada `.md` tenha pelo menos:
+
+```text
+Fonte: Ministério da Saúde
+Título: Dengue — Ministério da Saúde
+URL: endereço oficial da página/documento
+Data de acesso: 14/09/2026
+```
+
+Isso nos dá uma cadeia de rastreabilidade:
+
+```text
+Alegação do Google
+        ↓
+HealthCheck
+        ↓
+chunk recuperado pelo RAG
+        ↓
+documento da nossa base
+        ↓
+fonte oficial original
+```
+
+Esse ponto é importante academicamente porque o HealthCheck deixa de pedir que o usuário simplesmente **confie na resposta da IA**. Ele permite verificar a evidência usada.
+
+Também vamos estabelecer uma regra: o botão deve apontar para **a fonte real daquele documento**, e não simplesmente para a página inicial da organização. Por exemplo, se o chunk veio de um material específico sobre dengue do Ministério da Saúde, o link deve levar ao material correspondente.
+
+Para documentos da nossa base, teremos fontes como Ministério da Saúde, Anvisa, Fiocruz, OMS/OPAS e INCA. Na interface, podemos ainda mostrar o domínio para deixar a procedência evidente:
+
+```text
+Fonte: Ministério da Saúde
+gov.br/saude
+
+🔗 Consultar fonte original
+```
+
+### E se o link não existir?
+
+Não inventamos URL e não criamos um link genérico. O card mostra:
+
+```text
+Fonte: Ministério da Saúde
+
+⚠ Link original não cadastrado na base.
+```
+
+Isso também nos ajuda a identificar documentos que precisam ter os metadados completados.
+
+### Decisão da 13.4
+
+Fica definido que cada evidência terá **organização responsável + título/documento + URL original + botão para consultar a fonte**, e o link abrirá em nova aba. O objetivo não é tirar o usuário do HealthCheck, mas permitir que ele audite a análise.
+
+Com isso:
+
+```text
+[x] 13.1 — Mensagens educativas
+[x] 13.2 — Organização do card
+[x] 13.3 — Exibição das evidências
+[x] 13.4 — Consulta às fontes originais
+[ ] 13.5 — Orientação antes de compartilhar
+[ ] 13.6 — Evidências insuficientes
+[ ] 13.7 — Informar uso de IA
+[ ] 13.8 — Bloco fixo de pensamento crítico
+[ ] 13.9 — Integrar à extensão
+[ ] 13.10 — Testar as cinco classificações
+```
+
+**13.4 concluída como especificação.** Mais adiante, na integração, teremos que verificar se os **18 arquivos `.md` realmente possuem suas URLs originais cadastradas**. Se não tiverem, precisaremos acrescentá-las antes de implementar o botão.
+
+Agora seguimos para a **13.5 — definir exatamente a orientação “Antes de compartilhar”**, adaptando a mensagem conforme cada uma das cinco classificações.
+
+Certo. Na **13.5** vamos transformar o “Antes de compartilhar” em uma intervenção curta de pensamento crítico. A mensagem deve mudar conforme o tipo de resultado, porque cada classificação exige uma atitude diferente do usuário.
+
+Eu usaria estas cinco mensagens oficiais no produto:
+
+```text
+🟢 SUSTENTADA PELAS EVIDÊNCIAS
+
+💭 Antes de compartilhar
+
+As fontes consultadas são compatíveis com a afirmação, mas isso não
+dispensa a verificação do contexto.
+
+Leia as evidências e consulte as fontes originais antes de compartilhar.
+```
+
+```text
+🟡 PARCIALMENTE SUSTENTADA
+
+💭 Antes de compartilhar
+
+Parte da afirmação possui suporte nas evidências, mas outra parte
+não pôde ser confirmada.
+
+Verifique separadamente cada informação antes de compartilhar
+a afirmação completa.
+```
+
+```text
+🟠 ENGANOSA
+
+💭 Antes de compartilhar
+
+Uma informação verdadeira ou plausível pode estar sendo usada para
+sustentar uma conclusão exagerada ou distorcida.
+
+Compare a afirmação completa com aquilo que as fontes realmente dizem
+antes de compartilhar.
+```
+
+```text
+🔴 CONTRADITA PELAS EVIDÊNCIAS
+
+💭 Antes de compartilhar
+
+As evidências encontradas apresentam informações incompatíveis com
+a afirmação.
+
+Leia a explicação e confira as fontes originais antes de compartilhar
+essa informação.
+```
+
+```text
+⚪ NÃO FOI POSSÍVEL VERIFICAR
+
+💭 Antes de compartilhar
+
+Não encontramos evidências suficientes na base consultada para confirmar
+ou contradizer essa afirmação.
+
+Isso não significa que ela seja verdadeira ou falsa.
+Procure outras fontes confiáveis antes de compartilhar.
+```
+
+Há uma escolha importante aqui: **não vamos impedir o compartilhamento** e nem colocar algo como “NÃO COMPARTILHE”. O HealthCheck deve estimular julgamento, não tomar a decisão pelo usuário.
+
+Também evitaria frases como:
+
+```text
+❌ Esta notícia é falsa.
+❌ Não compartilhe.
+❌ A IA determinou que isso é mentira.
+```
+
+O comportamento desejado é:
+
+```text
+Afirmação
+    ↓
+Classificação do sistema
+    ↓
+Por quê?
+    ↓
+Quais evidências?
+    ↓
+De onde vieram?
+    ↓
+💭 Antes de compartilhar
+    ↓
+Usuário toma a decisão
+```
+
+Isso se conecta diretamente ao objetivo da Etapa 13: **a IA não substitui o pensamento crítico; ela fornece elementos para que o usuário faça uma avaliação mais informada.**
+
+Podemos considerar:
+
+```text
+[x] 13.1 — Mensagens educativas
+[x] 13.2 — Organização do card
+[x] 13.3 — Exibição das evidências
+[x] 13.4 — Consulta às fontes originais
+[x] 13.5 — Orientação “Antes de compartilhar”
+[ ] 13.6 — Evidências insuficientes
+[ ] 13.7 — Informar uso de IA
+[ ] 13.8 — Bloco fixo de pensamento crítico
+[ ] 13.9 — Integrar à extensão
+[ ] 13.10 — Testar as cinco classificações
+```
+
+**13.5 concluída.** Na **13.6**, precisamos tratar com cuidado o resultado `NÃO FOI POSSÍVEL VERIFICAR`, porque esse é justamente o caso em que o HealthCheck precisa dizer claramente **“eu não sei com as evidências disponíveis”**, sem transformar ausência de evidência em falsidade.
+
+Perfeito. A **13.6** é justamente para definir o comportamento correto quando o sistema **não encontra evidência suficiente**.
+
+A mensagem não pode soar como:
+
+```text
+❌ Isso é falso.
+```
+
+nem como:
+
+```text
+⚠️ Provavelmente é falso.
+```
+
+O correto é assumir incerteza de forma explícita:
+
+```text
+⚪ Evidências insuficientes
+
+O HealthCheck IA não encontrou evidências suficientes
+na base consultada para confirmar ou contradizer
+esta afirmação.
+```
+
+Logo abaixo, eu colocaria:
+
+```text
+O que isso significa?
+
+• A afirmação não foi confirmada.
+• A afirmação também não foi desmentida.
+• A ausência de evidências na nossa base não prova
+  que a informação seja falsa.
+```
+
+E depois:
+
+```text
+💭 Antes de compartilhar
+
+Procure outras fontes confiáveis e atualizadas.
+Consulte fontes oficiais ou profissionais qualificados
+quando a informação puder afetar decisões de saúde.
+```
+
+Essa classe também deve deixar clara uma limitação importante do nosso sistema:
+
+```text
+A análise considera apenas as evidências disponíveis
+na base de conhecimento do HealthCheck IA.
+```
+
+Isso é tecnicamente correto, porque nosso RAG não pesquisa automaticamente toda a internet. Ele trabalha com a base que construímos.
+
+Então, para a implementação futura, a classe interna continua sendo:
+
+```text
+NÃO FOI POSSÍVEL VERIFICAR
+```
+
+mas o usuário verá algo mais amigável:
+
+```text
+⚪ Evidências insuficientes
+```
+
+A lógica conceitual fica:
+
+```text
+Alegação
+   ↓
+Busca na base
+   ↓
+Não há evidência suficiente
+   ↓
+NÃO concluir verdadeiro/falso
+   ↓
+Explicar a limitação
+   ↓
+Orientar o usuário a procurar outras fontes
+```
+
+E há uma regra que devemos preservar daqui para frente:
+
+> **Ausência de evidência não deve ser tratada como evidência de falsidade.**
+
+Isso também é importante para sua apresentação acadêmica, porque demonstra que o HealthCheck foi projetado para **expressar incerteza**, em vez de obrigar o modelo a escolher uma resposta quando não possui base suficiente.
+
+Então estamos assim:
+
+```text
+[x] 13.1 — Mensagens educativas
+[x] 13.2 — Organização do card
+[x] 13.3 — Exibição das evidências
+[x] 13.4 — Consulta às fontes originais
+[x] 13.5 — Orientação “Antes de compartilhar”
+[x] 13.6 — Tratamento de evidências insuficientes
+[ ] 13.7 — Informar que a análise é produzida por IA
+[ ] 13.8 — Bloco fixo de pensamento crítico
+[ ] 13.9 — Integrar à extensão
+[ ] 13.10 — Testar as cinco classificações
+```
+
+**Ainda não precisamos escrever nada no VS Code.** A 13.6 também é definição de comportamento.
+
+Agora podemos seguir para a **13.7 — deixar explícito para o usuário que a análise foi produzida com auxílio de IA e que ela pode cometer erros**.
+
+
+Certo. A **13.7** serve para deixar transparente que o resultado do HealthCheck **não é uma decisão humana nem uma verdade absoluta**. O sistema usa IA para interpretar a alegação e as evidências recuperadas pelo RAG.
+
+Eu colocaria um aviso curto e permanente no final de todos os cards:
+
+```text
+🤖 Análise assistida por Inteligência Artificial
+
+Esta análise foi gerada com auxílio de IA a partir das
+evidências disponíveis na base do HealthCheck IA.
+
+A IA pode cometer erros. Confira as evidências e consulte
+as fontes originais antes de tomar uma decisão.
+```
+
+Isso deve aparecer **nas cinco classificações**, inclusive quando o resultado for 🟢 Evidências favoráveis. Um resultado favorável não significa que o usuário deva confiar automaticamente na IA.
+
+Também é importante não usar frases como:
+
+```text
+❌ “A IA confirmou que esta informação é verdadeira.”
+
+❌ “O HealthCheck garante que esta informação é falsa.”
+
+❌ “Esta classificação é 100% confiável.”
+```
+
+Isso seria incompatível inclusive com o que encontramos na avaliação científica: o sistema obteve **75,5% de acurácia e F1 macro de 72,87%** no conjunto final. Portanto, já temos evidência experimental de que ele pode classificar incorretamente algumas alegações.
+
+O fluxo final do card começa a ficar bem sólido:
+
+```text
+🔎 HealthCheck IA
+
+🔴 Evidências contraditórias
+
+POR QUE O SISTEMA CLASSIFICOU ASSIM?
+[explicação]
+
+EVIDÊNCIAS UTILIZADAS
+[evidência 1]
+[evidência 2]
+[evidência 3]
+
+CONSULTE AS FONTES
+[links das fontes originais]
+
+💭 ANTES DE COMPARTILHAR
+Compare a afirmação com as evidências apresentadas
+e consulte as fontes originais.
+
+🤖 ANÁLISE ASSISTIDA POR IA
+Esta análise foi gerada com auxílio de IA.
+A IA pode cometer erros.
+```
+
+Uma decisão importante: **eu não colocaria “75,5% de acurácia” dentro de cada card**. Esse número pertence à documentação, metodologia e apresentação do projeto. Exibi-lo ao lado de uma análise individual poderia ser interpretado incorretamente como “75,5% de chance desta classificação estar certa”.
+
+Portanto:
+
+```text
+[x] 13.1 — Mensagens educativas
+[x] 13.2 — Organização do card
+[x] 13.3 — Exibição das evidências
+[x] 13.4 — Consulta às fontes originais
+[x] 13.5 — Orientação “Antes de compartilhar”
+[x] 13.6 — Tratamento de evidências insuficientes
+[x] 13.7 — Transparência sobre uso de IA
+[ ] 13.8 — Bloco fixo de pensamento crítico
+[ ] 13.9 — Integrar à extensão
+[ ] 13.10 — Testar as cinco classificações
+```
+
+**Ainda não precisamos alterar nada no VS Code.** A 13.7 encerra mais uma definição de comportamento.
+
+Na **13.8**, juntaremos tudo isso em um **bloco fixo de pensamento crítico**, definindo exatamente o componente que ficará no card antes de finalmente partirmos para a implementação na **13.9**.
+
+
+Exatamente. A **13.8** é a última etapa de especificação antes de começarmos a programar. Agora vamos consolidar o que decidimos da 13.1 até a 13.7 em **um componente padrão**.
+
+### Estrutura definitiva do card
+
+Independentemente da classificação, o HealthCheck seguirá esta estrutura:
+
+```text
+┌──────────────────────────────────────────────────┐
+│ 🔎 HealthCheck IA                               │
+├──────────────────────────────────────────────────┤
+│                                                  │
+│ 🔴 EVIDÊNCIAS CONTRADITÓRIAS                    │
+│                                                  │
+│ As fontes consultadas apresentam informações    │
+│ incompatíveis com a afirmação analisada.         │
+│                                                  │
+│ ──────────────────────────────────────────────── │
+│                                                  │
+│ 🔍 POR QUE O SISTEMA CLASSIFICOU ASSIM?         │
+│                                                  │
+│ [Explicação produzida pela análise do RAG/LLM]   │
+│                                                  │
+│ ──────────────────────────────────────────────── │
+│                                                  │
+│ 📚 EVIDÊNCIAS UTILIZADAS                         │
+│                                                  │
+│ 1. Ministério da Saúde                           │
+│ Similaridade: 82%                                │
+│                                                  │
+│ “Trecho relevante recuperado...”                 │
+│                                                  │
+│ 🔗 Consultar fonte original                      │
+│                                                  │
+│ 2. Fiocruz                                       │
+│ Similaridade: 78%                                │
+│                                                  │
+│ “Trecho relevante recuperado...”                 │
+│                                                  │
+│ 🔗 Consultar fonte original                      │
+│                                                  │
+│ 3. OMS                                           │
+│ Similaridade: 74%                                │
+│                                                  │
+│ “Trecho relevante recuperado...”                 │
+│                                                  │
+│           [ Ver todas as evidências ]             │
+│                                                  │
+│ ℹ Similaridade representa a relação semântica    │
+│ entre o trecho e a afirmação. Não representa     │
+│ probabilidade de a informação ser verdadeira.    │
+│                                                  │
+│ ──────────────────────────────────────────────── │
+│                                                  │
+│ 💭 ANTES DE COMPARTILHAR                         │
+│                                                  │
+│ As evidências encontradas apresentam informações│
+│ incompatíveis com a afirmação.                   │
+│                                                  │
+│ Leia a explicação e confira as fontes originais  │
+│ antes de compartilhar essa informação.           │
+│                                                  │
+│ ──────────────────────────────────────────────── │
+│                                                  │
+│ 🤖 ANÁLISE ASSISTIDA POR IA                     │
+│                                                  │
+│ Esta análise foi gerada com auxílio de IA a      │
+│ partir das evidências disponíveis na base do     │
+│ HealthCheck IA.                                  │
+│                                                  │
+│ A IA pode cometer erros. Confira as evidências   │
+│ e consulte as fontes originais antes de tomar    │
+│ uma decisão.                                     │
+│                                                  │
+└──────────────────────────────────────────────────┘
+```
+
+A **estrutura permanece igual para todas as cinco classes**. O que muda dinamicamente é o ícone/cor, título, mensagem educativa, explicação e orientação “Antes de compartilhar”.
+
+Por exemplo:
+
+```text
+🟢 Evidências favoráveis
+🟡 Evidências parcialmente favoráveis
+🟠 Informação potencialmente enganosa
+🔴 Evidências contraditórias
+⚪ Evidências insuficientes
+```
+
+No caso especial de `NÃO FOI POSSÍVEL VERIFICAR`, acrescentaremos a mensagem que definimos na 13.6:
+
+```text
+⚪ Evidências insuficientes
+
+O HealthCheck IA não encontrou evidências suficientes
+na base consultada para confirmar ou contradizer
+esta afirmação.
+
+Isso não significa que a informação seja verdadeira
+ou falsa.
+```
+
+### Um detalhe importante antes de codarmos
+
+Esse card é a **especificação desejada**. Na 13.9 vamos confrontá-la com o JSON que o backend realmente entrega atualmente.
+
+Precisamos verificar se já recebemos:
+
+```text
+classificação     ✓
+explicação        ✓
+evidências        ✓
+
+fonte             → verificar
+trecho            → verificar
+similaridade      → verificar
+URL original      → verificar
+```
+
+Se algum dado necessário não estiver chegando ao `content.js`, não vamos inventá-lo no frontend. Ajustaremos primeiro o backend/base para fornecer esse dado.
+
+Isso é especialmente importante para as **URLs das fontes originais** que discutimos na 13.4.
+
+Portanto, encerramos a fase conceitual:
+
+```text
+[x] 13.1 — Mensagens educativas
+[x] 13.2 — Organização do card
+[x] 13.3 — Exibição das evidências
+[x] 13.4 — Consulta às fontes originais
+[x] 13.5 — Orientação “Antes de compartilhar”
+[x] 13.6 — Tratamento de evidências insuficientes
+[x] 13.7 — Transparência sobre uso de IA
+[x] 13.8 — Bloco fixo de pensamento crítico
+
+[ ] 13.9 — Integrar à extensão
+[ ] 13.10 — Testar as cinco classificações
+```
+
+**Até aqui, nenhuma alteração no VS Code era necessária.**
+
+A **13.9 é diferente: agora finalmente vamos programar.** E para não quebrarmos o que já funciona, o primeiro passo da 13.9 deve ser **inspecionar o `content.js` atual e o formato exato da resposta atual do `/analisar` antes de alterar qualquer coisa**.
+
+
