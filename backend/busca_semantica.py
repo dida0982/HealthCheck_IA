@@ -78,7 +78,13 @@ def buscar_evidencias(pergunta, top_k=3):
             "arquivo": chunk["arquivo"],
             "chunk_id": chunk["chunk_id"],
             "conteudo": chunk["conteudo"],
-            "similaridade": float(similaridades[indice])
+            "similaridade": float(similaridades[indice]),
+            "titulo": chunk["titulo"],
+            "fonte": chunk["fonte"],
+            "url": chunk["url"],
+            "tema": chunk["tema"],
+            "subtema": chunk["subtema"],
+            "data_acesso": chunk["data_acesso"]
         })
 
     return resultados
@@ -108,6 +114,12 @@ if __name__ == "__main__":
         print(f"SIMILARIDADE: {resultado['similaridade']:.4f}")
         print(f"ARQUIVO: {resultado['arquivo']}")
         print(f"CHUNK ID: {resultado['chunk_id']}")
+        print(f"TÍTULO: {resultado['titulo']}")
+        print(f"FONTE: {resultado['fonte']}")
+        print(f"URL: {resultado['url']}")
+        print(f"TEMA: {resultado['tema']}")
+        print(f"SUBTEMA: {resultado['subtema']}")
+        print(f"DATA DE ACESSO: {resultado['data_acesso']}")
 
         print("\nCONTEÚDO:")
         print(resultado["conteudo"])
