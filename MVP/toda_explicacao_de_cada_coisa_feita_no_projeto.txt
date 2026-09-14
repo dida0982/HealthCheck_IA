@@ -11907,3 +11907,58 @@ O próximo arquivo que precisamos inspecionar é `backend/carregar_documentos.py
 
 
 
+Sim — o teste passou.
+
+O `/analisar` agora está devolvendo corretamente, dentro de cada item de `evidencias`:
+
+```text
+titulo
+fonte
+url
+tema
+subtema
+data_acesso
+```
+
+Além disso, continuam chegando normalmente os campos antigos:
+
+```text
+arquivo
+chunk_id
+conteudo
+similaridade
+```
+
+Então podemos considerar esta parte concluída:
+
+```text
+[x] carregar_documentos.py preserva metadados
+[x] busca_semantica.py repassa metadados
+[x] main.py expõe metadados no /analisar
+[x] Swagger confirmou a resposta completa
+```
+
+Tem também um ponto importante: `evidencias_utilizadas` veio com `[1, 2, 3, 4, 5]`, então nesse caso o LLM declarou que usou todas as cinco evidências recuperadas.
+
+Agora já temos tudo que o `content.js` precisa para montar o card da Etapa 13:
+
+```text
+classificacao
+explicacao
+evidencias_utilizadas
+evidencias[].conteudo
+evidencias[].similaridade
+evidencias[].titulo
+evidencias[].fonte
+evidencias[].url
+evidencias[].tema
+evidencias[].subtema
+evidencias[].data_acesso
+```
+
+O próximo passo é mexer **somente no `extension/content.js`** para transformar a resposta atual naquele card de pensamento crítico que definimos, sem alterar mais nada no backend.
+
+Antes de editar, o mais seguro é eu inspecionar novamente o `content.js` atual e te entregar exatamente quais blocos substituir, para não quebrarmos a captura dos resultados do Google.
+
+
+
