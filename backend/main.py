@@ -85,7 +85,8 @@ def analisar(dados: AnaliseRequest):
     "prompt": user_prompt,
     "stream": False,
     "options": {
-        "temperature": 0
+        "temperature": 0,
+        "seed": 42
     }
 }
 
