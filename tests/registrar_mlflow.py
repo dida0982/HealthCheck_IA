@@ -10,6 +10,13 @@ from sklearn.metrics import (
 
 BASE_DIR = Path(__file__).parent
 
+PROJECT_DIR = BASE_DIR.parent
+MLFLOW_DB = PROJECT_DIR / "mlflow.db"
+
+mlflow.set_tracking_uri(
+    f"sqlite:///{MLFLOW_DB.as_posix()}"
+)
+
 ARQUIVO_RESULTADOS = BASE_DIR / "resultados_avaliacao_final.csv"
 ARQUIVO_MATRIZ = BASE_DIR / "matriz_confusao.csv"
 ARQUIVO_ERROS = BASE_DIR / "erros_avaliacao_final.csv"
