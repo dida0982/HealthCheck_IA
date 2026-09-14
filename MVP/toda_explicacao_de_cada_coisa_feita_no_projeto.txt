@@ -12155,3 +12155,119 @@ Me diga o que apareceu — ou mande um print — antes de fazermos a próxima al
 
 
 
+Perfeito. Então podemos marcar:
+
+```text
+[x] 13.9 — Integrar essas mensagens à extensão Chrome
+[x] 13.10 — Testar visualmente as cinco classificações
+```
+
+Com isso, a **ETAPA 13 — Pensamento crítico está concluída**. O status geral agora fica:
+
+```text
+[x] ETAPA 01 — Definir MVP
+[x] ETAPA 02 — Extensão Chrome básica
+[x] ETAPA 03 — Capturar resultados do Google
+[x] ETAPA 04 — Criar componente visual
+[x] ETAPA 05 — Backend Python/FastAPI
+[x] ETAPA 06 — Conectar Chrome + Python
+[x] ETAPA 07 — Base de conhecimento em saúde
+[x] ETAPA 08 — Embeddings + busca semântica
+[x] ETAPA 09 — Construir RAG
+[x] ETAPA 10 — Integrar LLM
+[x] ETAPA 11 — Sistema de classificação
+[x] ETAPA 12 — Avaliação científica
+[x] ETAPA 13 — Pensamento crítico
+[ ] ETAPA 14 — Segurança e limitações
+[ ] ETAPA 15 — GitHub e documentação
+[ ] ETAPA 16 — Apresentação
+```
+
+O que ficou pronto na Etapa 13: linguagem não absoluta, explicação antes da conclusão, evidências rastreáveis, links das fontes, aviso de similaridade, “Antes de compartilhar”, transparência sobre uso de IA, tratamento correto de evidência insuficiente e teste visual das cinco classes sem sobrecarregar sua máquina.
+
+O próximo passo é a **ETAPA 14 — Segurança e limitações**. Vamos continuar do mesmo jeito: uma subetapa por vez.
+
+
+Certo. Vamos usar esse texto como a definição oficial da **ETAPA 14** e continuar sem pular etapas.
+
+Eu dividiria assim:
+
+```text
+ETAPA 14 — Segurança e limitações
+
+[ ] 14.1 — Definir política de abstenção
+[ ] 14.2 — Impedir respostas sem suporte das evidências
+[ ] 14.3 — Tratar evidências insuficientes
+[ ] 14.4 — Tratar evidências contraditórias
+[ ] 14.5 — Documentar limitações do sistema
+[ ] 14.6 — Documentar possíveis vieses
+[ ] 14.7 — Definir política de atualização da base
+[ ] 14.8 — Documentar falsos positivos e falsos negativos
+[ ] 14.9 — Definir orientações de uso responsável
+[ ] 14.10 — Testar casos críticos de segurança
+```
+
+## 14.1 — Política de abstenção
+
+Vamos fazer **somente essa agora**.
+
+A regra central do HealthCheck IA será:
+
+> **Quando as evidências recuperadas não forem suficientes para sustentar uma classificação, o sistema deve se abster de concluir se a alegação é verdadeira ou falsa.**
+
+Nesse caso, a saída correta será:
+
+```text
+⚪ Evidências insuficientes
+
+O HealthCheck IA não encontrou evidências suficientes
+na base consultada para confirmar ou contradizer
+esta afirmação.
+
+Isso não significa que a informação seja verdadeira
+ou falsa.
+```
+
+Isso cria três regras importantes para o projeto:
+
+```text
+REGRA 1
+Sem evidência suficiente → não concluir.
+
+REGRA 2
+Ausência de evidência → não significa falsidade.
+
+REGRA 3
+A IA não pode preencher lacunas usando conhecimento
+próprio quando a base recuperada não sustenta a resposta.
+```
+
+A terceira é especialmente importante porque o projeto é um **RAG**. Queremos que o Qwen classifique a alegação **com base nos documentos recuperados**, e não que invente uma justificativa plausível usando apenas o conhecimento aprendido durante o treinamento.
+
+Também precisamos distinguir uma situação:
+
+```text
+EVIDÊNCIA INSUFICIENTE
+→ ⚪ NÃO FOI POSSÍVEL VERIFICAR
+
+EVIDÊNCIA SUFICIENTE QUE CONTRADIZ A ALEGAÇÃO
+→ 🔴 CONTRADITA PELAS EVIDÊNCIAS
+```
+
+Ou seja, `NÃO FOI POSSÍVEL VERIFICAR` não é uma versão mais fraca de `CONTRADITA`. São situações diferentes.
+
+### Política oficial de abstenção
+
+Podemos registrar para documentação posteriormente:
+
+> **Política de abstenção do HealthCheck IA:** o sistema deve evitar emitir conclusões quando as evidências recuperadas não fornecerem suporte suficiente para avaliar a alegação. Nesses casos, a classificação deve indicar que não foi possível verificar a informação, sem inferir que a ausência de evidência representa falsidade. O modelo deve fundamentar sua análise exclusivamente nas evidências fornecidas pelo mecanismo de recuperação e não deve completar lacunas utilizando informações não presentes no contexto recuperado.
+
+Com isso, conceitualmente:
+
+```text
+[x] 14.1 — Definir política de abstenção
+```
+
+O próximo será **14.2 — Impedir respostas sem suporte das evidências**. Aí vamos verificar o `system_prompt` atual do `rag.py` e descobrir se essa regra está realmente sendo imposta ao Qwen, em vez de apenas existir na documentação.
+
+
