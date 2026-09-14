@@ -151,9 +151,17 @@ for arquivo in pasta_data.rglob("*.md"):
                 "faltando": campos_faltando
             })
 
+        metadados = extrair_metadados(conteudo)
+
         documentos.append({
             "arquivo": arquivo.name,
-            "conteudo": conteudo
+            "conteudo": conteudo,
+            "titulo": metadados["titulo"],
+            "fonte": metadados["fonte"],
+            "url": metadados["url"],
+            "tema": metadados["tema"],
+            "subtema": metadados["subtema"],
+            "data_acesso": metadados["data_acesso"]
         })
 
     else:
