@@ -170,4 +170,20 @@ O campo "evidencias_utilizadas" deve conter somente os números das evidências 
 Se nenhuma evidência for suficiente, utilize:
 
 "evidencias_utilizadas": []
+
+IMPORTANTE SOBRE AS EVIDÊNCIAS:
+
+- Os números em "evidencias_utilizadas" devem corresponder exatamente
+  aos números das evidências apresentadas acima.
+
+- Antes de responder, confira se cada afirmação da explicação está
+  explicitamente presente nas evidências indicadas.
+
+- Não atribua a uma evidência uma informação que pertença a outra.
+
+- Não reformule uma evidência de maneira que acrescente informação
+  que não esteja escrita nela.
+
+- Se a conclusão exigir mais de uma evidência, inclua todas as
+  evidências necessárias em "evidencias_utilizadas".
 """
