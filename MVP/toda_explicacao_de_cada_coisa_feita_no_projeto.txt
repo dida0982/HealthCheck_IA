@@ -10335,3 +10335,70 @@ texto: ...
 Assim conseguiremos enxergar **exatamente o que o Llama recebeu** antes de classificá-lo.
 
 Esse é o passo correto antes de aumentar de 25 para 200 casos. E os **64% não são um fracasso**: o piloto acabou de cumprir sua função, que era justamente revelar essas fragilidades antes da avaliação científica definitiva.
+
+=
+=
+=
+=
+=
+
+Estamos na **ETAPA 12 — Avaliação científica**, e mais especificamente no meio do diagnóstico do classificador.
+
+O projeto já concluiu as etapas de MVP, extensão, backend, base de evidências, embeddings/busca semântica, RAG, integração com LLM e sistema de classificação. Isso bate com o planejamento do arquivo, em que a avaliação científica é a etapa de criar um dataset de teste, comparar o resultado esperado com o produzido e calcular métricas como accuracy, precision, recall, F1-score e matriz de confusão. 
+
+Hoje, dentro da Etapa 12, já fizemos isto: criamos o dataset piloto de 25 alegações, automatizamos a execução, salvamos esperado x produzido e medimos a acurácia preliminar. O primeiro resultado foi **64%**, depois começamos a investigar os erros. Descobrimos que o retrieval estava correto nos IDs 16, 17 e 18, mas o `llama3.2:3b` estava interpretando mal as classes.
+
+Onde paramos exatamente: estamos tentando entender o **ID 17**:
+
+```text
+Alegação:
+"Dengue é transmitida principalmente de pessoa para pessoa."
+
+Esperado:
+CONTRADITA PELAS EVIDÊNCIAS
+
+Evidência recuperada:
+"A principal forma de transmissão ocorre pela picada
+da fêmea infectada do mosquito Aedes aegypti."
+```
+
+O modelo continua escolhendo outras classes, mesmo com a evidência correta. Já tentamos melhorar o `rag.py`, mas isso causou regressões nas outras 25 questões. Por isso, decidimos **parar de empilhar regras no prompt**.
+
+O próximo passo imediato é o teste que eu tinha acabado de propor: verificar se o modelo consegue reconhecer essa contradição numa tarefa muito mais simples, apenas:
+
+```text
+Existe contradição entre a alegação e a evidência?
+
+SIM ou NÃO
+```
+
+Se ele responder `SIM`, o problema é principalmente a complexidade da classificação em cinco classes. Nesse caso, provavelmente vamos separar a decisão em etapas: primeiro detectar contradição, depois escolher entre as outras classes.
+
+Depois disso, o que ainda falta no projeto é:
+
+```text
+ETAPA 12 — Avaliação científica
+[x] 12.1 Estrutura do dataset
+[x] 12.2 Dataset piloto
+[x] 12.3 Execução automatizada
+[x] 12.4 Esperado x produzido
+[ ] Diagnóstico/estabilização do classificador ← ESTAMOS AQUI
+[ ] 12.5 Dataset final
+[ ] 12.6 Accuracy
+[ ] 12.7 Precision
+[ ] 12.8 Recall
+[ ] 12.9 F1-score
+[ ] 12.10 Matriz de confusão
+[ ] 12.11 Análise dos erros
+[ ] 12.12 MLflow
+
+[ ] ETAPA 13 — Pensamento crítico
+[ ] ETAPA 14 — Segurança e limitações
+[ ] ETAPA 15 — GitHub e documentação
+[ ] ETAPA 16 — Apresentação
+```
+
+O planejamento original também prevê que, depois da avaliação, o sistema mostre evidências em vez de apenas dizer “fake”, documente limitações e falsos positivos/negativos, organize o GitHub e finalize com uma demonstração da extensão + métricas.  
+
+Então, resumindo em uma frase: **o sistema já funciona de ponta a ponta; o que estamos fazendo agora é tornar a classificação confiável o bastante para podermos congelar o modelo e começar a avaliação científica final.**
+
