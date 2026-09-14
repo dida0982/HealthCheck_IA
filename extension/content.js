@@ -300,6 +300,9 @@ let htmlEvidencias = "";
 evidencias.forEach(
   (evidencia, indice) => {
 
+    const evidenciaExtra =
+      indice >= 3;
+
     const numero =
       indice + 1;
 
@@ -325,7 +328,10 @@ evidencias.forEach(
 
 
     htmlEvidencias += `
-      <div class="healthcheck-evidence">
+      <div
+        class="healthcheck-evidence ${evidenciaExtra ? "healthcheck-evidence-extra" : ""}"
+        ${evidenciaExtra ? "hidden" : ""}
+      >
 
         <p>
           <strong>
@@ -389,6 +395,17 @@ evidencias.forEach(
   }
 );
 
+if (evidencias.length > 3) {
+  htmlEvidencias += `
+    <button
+      class="healthcheck-show-evidences"
+      type="button"
+      aria-expanded="false"
+    >
+      Ver todas as evidências (${evidencias.length})
+    </button>
+  `;
+}
 
   /*
     Atualiza o card com
@@ -565,6 +582,55 @@ evidencias.forEach(
 
     }
   );
+
+const botaoEvidencias =
+  card.querySelector(
+    ".healthcheck-show-evidences"
+  );
+
+
+if (botaoEvidencias) {
+
+  botaoEvidencias.addEventListener(
+    "click",
+    () => {
+
+      const extras =
+        card.querySelectorAll(
+          ".healthcheck-evidence-extra"
+        );
+
+      const estaAberto =
+        botaoEvidencias.getAttribute(
+          "aria-expanded"
+        ) === "true";
+
+
+      extras.forEach(
+        (evidencia) => {
+
+          evidencia.hidden =
+            estaAberto;
+
+        }
+      );
+
+
+      botaoEvidencias.setAttribute(
+        "aria-expanded",
+        String(!estaAberto)
+      );
+
+
+      botaoEvidencias.innerText =
+        estaAberto
+          ? `Ver todas as evidências (${evidencias.length})`
+          : "Mostrar menos evidências";
+
+    }
+  );
+}
+
 }
 
 
