@@ -10735,3 +10735,51 @@ Agora entramos na **12.12 — MLflow**. E aqui vale fazer direito: registrar mod
 =
 
 
+Agora sim. **Está 100% funcionando.** Esse print confirma que a Etapa 12.12 foi registrada corretamente no MLflow.
+
+Dá para confirmar visualmente no seu print:
+
+* Experimento: `HealthCheck_IA_Avaliacao_Final`
+* Run: `qwen2.5_7b_avaliacao_final_200`
+* Status: **Finished**
+* `accuracy`: **0.755**
+* `precision_macro`: **0.7972**
+* `recall_macro`: **0.755**
+* `f1_macro`: **0.7287**
+* `total_acertos`: **151**
+* `total_erros`: **49**
+* `taxa_erro`: **0.245**
+* métricas individuais das cinco classes também foram registradas.
+* As tags mostram `HealthCheck IA`, `12.12 - Avaliacao cientifica` e `LLM local via Ollama`.
+
+Você pode clicar em **Artifacts**, no topo, para conferir os CSVs que registramos. Mais abaixo em **Parameters** estarão `qwen2.5:7b`, `temperature=0`, `seed=42`, `top_k=5`, tamanho do dataset etc.
+
+Portanto:
+
+```text
+[x] ETAPA 12 — AVALIAÇÃO CIENTÍFICA
+    [x] 12.1  Estrutura do dataset
+    [x] 12.2  Dataset piloto
+    [x] 12.3  Execução automatizada
+    [x] 12.4  Esperado x produzido
+    [x] 12.5  Dataset final — 200 alegações
+    [x] 12.6  Accuracy
+    [x] 12.7  Precision
+    [x] 12.8  Recall
+    [x] 12.9  F1-score
+    [x] 12.10 Matriz de confusão
+    [x] 12.11 Análise dos 49 erros
+    [x] 12.12 MLflow
+```
+
+**ETAPA 12 concluída.** E agora temos algo importante para mostrar academicamente: não apenas construímos o HealthCheck; fizemos uma avaliação independente, identificamos quantitativamente suas limitações e registramos o experimento de forma reproduzível.
+
+O próximo marco do planejamento original é a **ETAPA 13 — Pensamento crítico**. Não precisamos mexer mais nessa avaliação nem tentar transformar os 75,5% em um número artificialmente maior usando o mesmo conjunto de teste.
+
+
+=
+=
+=
+=
+
+
