@@ -326,6 +326,47 @@ evidencias.forEach(
     const urlFonte =
       evidencia.url || "";
 
+    const conteudoLimpo =
+  (evidencia.conteudo || "")
+    .split("\n")
+    .filter((linha) => {
+
+      const texto =
+        linha.trim();
+
+      if (texto.startsWith("# ")) {
+        return false;
+      }
+
+      if (texto.startsWith("## ")) {
+        return false;
+      }
+
+      if (texto.startsWith("Fonte:")) {
+        return false;
+      }
+
+      if (texto.startsWith("URL:")) {
+        return false;
+      }
+
+      if (texto.startsWith("Tema:")) {
+        return false;
+      }
+
+      if (texto.startsWith("Subtema:")) {
+        return false;
+      }
+
+      if (texto.startsWith("Data de acesso:")) {
+        return false;
+      }
+
+      return true;
+    })
+    .join("\n")
+    .trim();
+
 
     htmlEvidencias += `
       <div
@@ -364,7 +405,7 @@ evidencias.forEach(
         }
 
         <p>
-          ${escaparHTML(evidencia.conteudo)}
+          ${escaparHTML(conteudoLimpo)}
         </p>
 
         ${
