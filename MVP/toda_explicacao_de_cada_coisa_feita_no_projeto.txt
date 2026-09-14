@@ -11962,3 +11962,196 @@ Antes de editar, o mais seguro é eu inspecionar novamente o `content.js` atual 
 
 
 
+Ótimo. Agora vamos fazer **somente a segunda alteração no `content.js`**: melhorar como cada evidência é exibida.
+
+Hoje, dentro de `criarComponenteHealthCheck()`, procure este bloco que começa em:
+
+```javascript
+let htmlEvidencias = "";
+```
+
+e termina depois do:
+
+```javascript
+evidencias.forEach(...)
+```
+
+Substitua **esse bloco inteiro** por:
+
+```javascript
+let htmlEvidencias = "";
+
+
+evidencias.forEach(
+  (evidencia, indice) => {
+
+    const numero =
+      indice + 1;
+
+    const foiUtilizada =
+      evidenciasUtilizadas.includes(numero);
+
+    const similaridade =
+      typeof evidencia.similaridade === "number"
+        ? (evidencia.similaridade * 100).toFixed(1)
+        : null;
+
+    const fonte =
+      evidencia.fonte ||
+      evidencia.arquivo ||
+      "Fonte não identificada";
+
+    const tituloFonte =
+      evidencia.titulo ||
+      "Documento consultado";
+
+    const urlFonte =
+      evidencia.url || "";
+
+
+    htmlEvidencias += `
+      <div class="healthcheck-evidence">
+
+        <p>
+          <strong>
+            Evidência ${numero}
+            ${foiUtilizada ? "✓" : ""}
+          </strong>
+        </p>
+
+
+        <p>
+          <strong>
+            ${escaparHTML(fonte)}
+          </strong>
+        </p>
+
+
+        <p>
+          ${escaparHTML(tituloFonte)}
+        </p>
+
+
+        ${
+          similaridade
+            ? `
+              <p>
+                <small>
+                  Similaridade semântica:
+                  ${similaridade}%
+                </small>
+              </p>
+            `
+            : ""
+        }
+
+
+        <p>
+          ${escaparHTML(evidencia.conteudo)}
+        </p>
+
+
+        ${
+          urlFonte
+            ? `
+              <p>
+                <a
+                  href="${escaparHTML(urlFonte)}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="healthcheck-source-link"
+                >
+                  🔗 Consultar fonte original
+                </a>
+              </p>
+            `
+            : `
+              <p>
+                <small>
+                  ⚠ Link original não cadastrado na base.
+                </small>
+              </p>
+            `
+        }
+
+      </div>
+    `;
+  }
+);
+```
+
+### O que mudou
+
+Antes aparecia algo como:
+
+```text
+Evidência 1 ✓
+
+[trecho...]
+
+Fonte: ministerio_saude_gripe.md
+```
+
+Agora deverá aparecer mais próximo de:
+
+```text
+Evidência 1 ✓
+
+Ministério da Saúde
+Vacina contra influenza
+
+Similaridade semântica: 80.3%
+
+[trecho da evidência...]
+
+🔗 Consultar fonte original
+```
+
+E o link abrirá diretamente a página oficial cadastrada no `.md`.
+
+Também estamos chamando corretamente de:
+
+```text
+Similaridade semântica: 80.3%
+```
+
+e **não** de:
+
+```text
+Confiança: 80.3%
+```
+
+porque esse número mede relação semântica entre a afirmação e o trecho recuperado; não é probabilidade de a afirmação ser verdadeira.
+
+Ainda **não vamos limitar para três evidências nem criar o “Ver todas as evidências”**. Primeiro vamos garantir que os novos metadados aparecem corretamente na extensão.
+
+Salve o `content.js`.
+
+Depois vá em:
+
+```text
+chrome://extensions/
+```
+
+e clique no botão de **recarregar 🔄** da extensão HealthCheck IA.
+
+Mantenha o FastAPI rodando e faça uma busca no Google, por exemplo:
+
+```text
+vacina contra gripe ajuda a evitar casos graves
+```
+
+Abra **“Ver análise”** em um resultado e veja se aparecem:
+
+```text
+nome da fonte
+título
+similaridade semântica
+trecho
+🔗 Consultar fonte original
+```
+
+Me diga o que apareceu — ou mande um print — antes de fazermos a próxima alteração.
+
+
+

@@ -435,72 +435,92 @@ evidencias.forEach(
     >
 
 
-      <p>
+      <div class="healthcheck-critical-intro">
 
-        <strong>
-          Classificação:
-        </strong>
+        <p>
+          ${escaparHTML(configuracao.mensagem)}
+        </p>
 
-        ${escaparHTML(classificacao)}
-
-      </p>
-
-
-      <p>
-
-        <strong>
-          Explicação:
-        </strong>
-
-        ${escaparHTML(explicacao)}
-
-      </p>
-
-
-      <p>
-
-        <strong>
-          Resultado analisado:
-        </strong>
-
-        ${escaparHTML(item.titulo)}
-
-      </p>
-
-
-      <p>
-
-        <strong>
-          Site:
-        </strong>
-
-        ${escaparHTML(
-          new URL(item.url).hostname
-        )}
-
-      </p>
+      </div>
 
 
       <hr>
 
 
-      <h4>
-        Evidências encontradas
-      </h4>
+      <section class="healthcheck-section">
+
+        <h4>
+          🔍 POR QUE O SISTEMA CLASSIFICOU ASSIM?
+        </h4>
+
+        <p>
+          ${escaparHTML(explicacao)}
+        </p>
+
+      </section>
 
 
-      ${htmlEvidencias}
+      <hr>
 
 
-      <p class="healthcheck-warning">
+      <section class="healthcheck-section">
 
-        O HealthCheck IA apresenta
-        evidências para auxiliar na
-        avaliação da informação.
-        A análise não substitui
-        orientação profissional.
+        <h4>
+          📚 EVIDÊNCIAS UTILIZADAS
+        </h4>
 
-      </p>
+        ${htmlEvidencias}
+
+        <p>
+          <small>
+            ℹ Similaridade representa o quanto o trecho
+            recuperado está relacionado semanticamente
+            à afirmação analisada. Não representa
+            probabilidade de a informação ser verdadeira.
+          </small>
+        </p>
+
+      </section>
+
+
+      <hr>
+
+
+      <section class="healthcheck-section healthcheck-share">
+
+        <h4>
+          💭 ANTES DE COMPARTILHAR
+        </h4>
+
+        <p>
+          ${escaparHTML(configuracao.compartilhar)}
+        </p>
+
+      </section>
+
+
+      <hr>
+
+
+      <section class="healthcheck-section healthcheck-ai-notice">
+
+        <h4>
+          🤖 ANÁLISE ASSISTIDA POR IA
+        </h4>
+
+        <p>
+          Esta análise foi gerada com auxílio de
+          Inteligência Artificial a partir das evidências
+          disponíveis na base do HealthCheck IA.
+        </p>
+
+        <p>
+          A IA pode cometer erros. Confira as evidências
+          e consulte as fontes originais antes de tomar
+          uma decisão.
+        </p>
+
+      </section>
 
     </div>
   `;
