@@ -89,51 +89,60 @@ REGRAS OBRIGATÓRIAS:
 26. Nesses casos, se a alegação não puder ser confirmada nem refutada pelas
     evidências disponíveis, classifique como:
     "NÃO FOI POSSÍVEL VERIFICAR".
+    
+27. Frases como "as evidências não mencionam", "as evidências não apoiam",
+    "não há informação sobre" ou equivalentes indicam ausência de suporte,
+    e não contradição.
 
-27. Não classifique automaticamente como "ENGANOSA" apenas porque uma
+28. Se a própria explicação da análise concluir que as evidências apenas
+    não mencionam ou não sustentam a afirmação, sem apresentar uma informação
+    incompatível com ela, a classificação deve ser:
+    "NÃO FOI POSSÍVEL VERIFICAR".
+
+29. Não classifique automaticamente como "ENGANOSA" apenas porque uma
     parte da alegação não está sustentada.
 
-28. Se uma parte estiver claramente sustentada e outra apenas não puder
+30. Se uma parte estiver claramente sustentada e outra apenas não puder
     ser confirmada, sem distorção e sem contradição direta, classifique:
     "PARCIALMENTE SUSTENTADA".
 
-29. Use "ENGANOSA" quando houver uma relação de raciocínio distorcida,
+31. Use "ENGANOSA" quando houver uma relação de raciocínio distorcida,
     como utilizar uma informação verdadeira para justificar uma
     conclusão exagerada ou incorreta.
     
-30. Classifique como "ENGANOSA" quando uma informação verdadeira ou sustentada
+32. Classifique como "ENGANOSA" quando uma informação verdadeira ou sustentada
     pelas evidências for usada para justificar uma conclusão absoluta,
     exagerada ou mais forte do que as evidências permitem.
 
-31. Expressões como "garante", "impede completamente", "proteção total",
+33. Expressões como "garante", "impede completamente", "proteção total",
     "nunca", "sempre" ou equivalentes podem indicar uma conclusão exagerada
     quando as evidências sustentam apenas redução de risco, prevenção parcial
     ou benefício limitado.
 
-32. Nesses casos, não classifique como "PARCIALMENTE SUSTENTADA" apenas porque
+34. Nesses casos, não classifique como "PARCIALMENTE SUSTENTADA" apenas porque
     uma parte da alegação é verdadeira. Se a parte verdadeira for usada como
     base para uma conclusão distorcida ou exagerada, classifique como:
     "ENGANOSA".    
     
-33. Utilize na conclusão apenas evidências que estejam diretamente
+35. Utilize na conclusão apenas evidências que estejam diretamente
     relacionadas à afirmação central da alegação.
 
-34. Não utilize uma evidência apenas porque ela pertence ao mesmo tema.
+36. Não utilize uma evidência apenas porque ela pertence ao mesmo tema.
     A evidência precisa fornecer informação diretamente útil para
     confirmar, contradizer ou qualificar a alegação analisada.
 
-35. Não faça inferências que não estejam explicitamente apoiadas pelas
+37. Não faça inferências que não estejam explicitamente apoiadas pelas
     evidências. Não transforme informações genéricas em conclusões que
     elas não sustentam.
 
-36. O campo "evidencias_utilizadas" deve conter somente evidências que
+38. O campo "evidencias_utilizadas" deve conter somente evidências que
     tenham sido realmente necessárias para chegar à conclusão.
 
-37. Quando houver evidências diretamente relacionadas à alegação e
+39. Quando houver evidências diretamente relacionadas à alegação e
     outras apenas genericamente relacionadas ao tema, priorize as
     evidências diretamente relacionadas.
 
-38. Não utilize uma evidência irrelevante para justificar uma
+40. Não utilize uma evidência irrelevante para justificar uma
     classificação que foi obtida a partir de outra evidência.
 """
 
