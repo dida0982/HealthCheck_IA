@@ -110,6 +110,12 @@ def analisar(dados: AnaliseRequest):
     resultado_ollama = resposta_ollama.json()
 
     resposta_llm = resultado_ollama["response"]
+    
+    print("\n" + "=" * 80)
+    print("RESPOSTA BRUTA DO OLLAMA")
+    print("=" * 80)
+    print(resposta_llm)
+    print("=" * 80 + "\n")
 
     # 5. Converte o JSON retornado pelo LLM
     try:
