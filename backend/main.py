@@ -33,6 +33,12 @@ class Evidencia(BaseModel):
     chunk_id: int
     conteudo: str
     similaridade: float
+    titulo: str
+    fonte: str
+    url: str
+    tema: str
+    subtema: str
+    data_acesso: str
 
 
 class AnaliseResponse(BaseModel):
