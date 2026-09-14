@@ -294,46 +294,100 @@ async function criarComponenteHealthCheck(
     recuperadas pelo RAG.
   */
 
-  let htmlEvidencias = "";
+let htmlEvidencias = "";
 
 
-  evidencias.forEach(
-    (evidencia, indice) => {
+evidencias.forEach(
+  (evidencia, indice) => {
 
-      const numero =
-        indice + 1;
+    const numero =
+      indice + 1;
 
-      const foiUtilizada =
-        evidenciasUtilizadas.includes(numero);
+    const foiUtilizada =
+      evidenciasUtilizadas.includes(numero);
+
+    const similaridade =
+      typeof evidencia.similaridade === "number"
+        ? (evidencia.similaridade * 100).toFixed(1)
+        : null;
+
+    const fonte =
+      evidencia.fonte ||
+      evidencia.arquivo ||
+      "Fonte não identificada";
+
+    const tituloFonte =
+      evidencia.titulo ||
+      "Documento consultado";
+
+    const urlFonte =
+      evidencia.url || "";
 
 
-      htmlEvidencias += `
-        <div class="healthcheck-evidence">
+    htmlEvidencias += `
+      <div class="healthcheck-evidence">
 
-          <p>
+        <p>
+          <strong>
+            Evidência ${numero}
+            ${foiUtilizada ? "✓" : ""}
+          </strong>
+        </p>
 
-            <strong>
-              Evidência ${numero}
-              ${foiUtilizada ? "✓" : ""}
-            </strong>
+        <p>
+          <strong>
+            ${escaparHTML(fonte)}
+          </strong>
+        </p>
 
-          </p>
+        <p>
+          ${escaparHTML(tituloFonte)}
+        </p>
 
-          <p>
-            ${escaparHTML(evidencia.conteudo)}
-          </p>
+        ${
+          similaridade
+            ? `
+              <p>
+                <small>
+                  Similaridade semântica:
+                  ${similaridade}%
+                </small>
+              </p>
+            `
+            : ""
+        }
 
-          <small>
+        <p>
+          ${escaparHTML(evidencia.conteudo)}
+        </p>
 
-            Fonte:
-            ${escaparHTML(evidencia.arquivo)}
+        ${
+          urlFonte
+            ? `
+              <p>
+                <a
+                  href="${escaparHTML(urlFonte)}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="healthcheck-source-link"
+                >
+                  🔗 Consultar fonte original
+                </a>
+              </p>
+            `
+            : `
+              <p>
+                <small>
+                  ⚠ Link original não cadastrado na base.
+                </small>
+              </p>
+            `
+        }
 
-          </small>
-
-        </div>
-      `;
-    }
-  );
+      </div>
+    `;
+  }
+);
 
 
   /*
