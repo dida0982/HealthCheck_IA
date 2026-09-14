@@ -83,7 +83,10 @@ def analisar(dados: AnaliseRequest):
     "model": "llama3.2:3b",
     "system": system_prompt,
     "prompt": user_prompt,
-    "stream": False
+    "stream": False,
+    "options": {
+        "temperature": 0
+    }
 }
 
     try:
