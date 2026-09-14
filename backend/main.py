@@ -80,7 +80,7 @@ def analisar(dados: AnaliseRequest):
     url_ollama = "http://localhost:11434/api/generate"
 
     dados_ollama = {
-    "model": "llama3.2:3b",
+    "model": "qwen2.5:7b",
     "system": system_prompt,
     "prompt": user_prompt,
     "stream": False,
