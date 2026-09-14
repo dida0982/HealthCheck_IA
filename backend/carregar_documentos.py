@@ -6,6 +6,59 @@ documentos = []
 arquivos_vazios = []
 documentos_invalidos = []
 
+def extrair_metadados(conteudo):
+    metadados = {
+        "titulo": "",
+        "fonte": "",
+        "url": "",
+        "tema": "",
+        "subtema": "",
+        "data_acesso": ""
+    }
+
+    for linha in conteudo.splitlines():
+        linha = linha.strip()
+
+        if linha.startswith("# ") and not metadados["titulo"]:
+            metadados["titulo"] = linha[2:].strip()
+
+        elif linha.startswith("Fonte:"):
+            metadados["fonte"] = linha.replace(
+                "Fonte:",
+                "",
+                1
+            ).strip()
+
+        elif linha.startswith("URL:"):
+            metadados["url"] = linha.replace(
+                "URL:",
+                "",
+                1
+            ).strip()
+
+        elif linha.startswith("Tema:"):
+            metadados["tema"] = linha.replace(
+                "Tema:",
+                "",
+                1
+            ).strip()
+
+        elif linha.startswith("Subtema:"):
+            metadados["subtema"] = linha.replace(
+                "Subtema:",
+                "",
+                1
+            ).strip()
+
+        elif linha.startswith("Data de acesso:"):
+            metadados["data_acesso"] = linha.replace(
+                "Data de acesso:",
+                "",
+                1
+            ).strip()
+
+    return metadados
+
 def remover_secoes_nao_evidenciais(texto):
     linhas = texto.splitlines()
 
