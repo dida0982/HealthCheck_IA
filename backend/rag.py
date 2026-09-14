@@ -101,25 +101,39 @@ REGRAS OBRIGATÓRIAS:
     como utilizar uma informação verdadeira para justificar uma
     conclusão exagerada ou incorreta.
     
-30. Utilize na conclusão apenas evidências que estejam diretamente
+30. Classifique como "ENGANOSA" quando uma informação verdadeira ou sustentada
+    pelas evidências for usada para justificar uma conclusão absoluta,
+    exagerada ou mais forte do que as evidências permitem.
+
+31. Expressões como "garante", "impede completamente", "proteção total",
+    "nunca", "sempre" ou equivalentes podem indicar uma conclusão exagerada
+    quando as evidências sustentam apenas redução de risco, prevenção parcial
+    ou benefício limitado.
+
+32. Nesses casos, não classifique como "PARCIALMENTE SUSTENTADA" apenas porque
+    uma parte da alegação é verdadeira. Se a parte verdadeira for usada como
+    base para uma conclusão distorcida ou exagerada, classifique como:
+    "ENGANOSA".    
+    
+33. Utilize na conclusão apenas evidências que estejam diretamente
     relacionadas à afirmação central da alegação.
 
-31. Não utilize uma evidência apenas porque ela pertence ao mesmo tema.
+34. Não utilize uma evidência apenas porque ela pertence ao mesmo tema.
     A evidência precisa fornecer informação diretamente útil para
     confirmar, contradizer ou qualificar a alegação analisada.
 
-32. Não faça inferências que não estejam explicitamente apoiadas pelas
+35. Não faça inferências que não estejam explicitamente apoiadas pelas
     evidências. Não transforme informações genéricas em conclusões que
     elas não sustentam.
 
-33. O campo "evidencias_utilizadas" deve conter somente evidências que
+36. O campo "evidencias_utilizadas" deve conter somente evidências que
     tenham sido realmente necessárias para chegar à conclusão.
 
-34. Quando houver evidências diretamente relacionadas à alegação e
+37. Quando houver evidências diretamente relacionadas à alegação e
     outras apenas genericamente relacionadas ao tema, priorize as
     evidências diretamente relacionadas.
 
-35. Não utilize uma evidência irrelevante para justificar uma
+38. Não utilize uma evidência irrelevante para justificar uma
     classificação que foi obtida a partir de outra evidência.
 """
 
