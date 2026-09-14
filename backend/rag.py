@@ -64,29 +64,6 @@ REGRAS OBRIGATÓRIAS:
     explicitamente contradita pelas evidências. Nesse caso use:
     "CONTRADITA PELAS EVIDÊNCIAS".
 
-20. Considere que existe contradição direta quando a alegação e a
-    evidência fazem afirmações incompatíveis sobre o mesmo fato central.
-
-    Exemplos de contradição direta:
-
-    - Alegação: "A dengue não pode evoluir para formas graves."
-      Evidência: "A dengue pode evoluir para formas graves."
-      Classificação: "CONTRADITA PELAS EVIDÊNCIAS".
-
-    - Alegação: "A dengue é transmitida principalmente de pessoa para pessoa."
-      Evidência: "A transmissão ocorre principalmente pela picada da
-      fêmea infectada do mosquito Aedes aegypti."
-      Classificação: "CONTRADITA PELAS EVIDÊNCIAS".
-
-    - Alegação: "Não existem formas de prevenção contra o câncer."
-      Evidência: "A prevenção inclui hábitos saudáveis, vacinação,
-      rastreamento e diagnóstico precoce."
-      Classificação: "CONTRADITA PELAS EVIDÊNCIAS".
-
-21. Quando a evidência responder diretamente à mesma questão central
-    da alegação com uma afirmação incompatível, não use
-    "PARCIALMENTE SUSTENTADA" nem "ENGANOSA".
-    Use "CONTRADITA PELAS EVIDÊNCIAS".
 
 22. Não classifique automaticamente como "ENGANOSA" apenas porque uma
     parte da alegação não está sustentada.
