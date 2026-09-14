@@ -10596,3 +10596,142 @@ Agora vamos para a **12.11**. Como já temos `resultados_avaliacao_final.csv`, o
 =
 ==
 
+Perfeito. Agora temos evidência suficiente para concluir formalmente a **12.11 — Análise de erros por categoria**. O script confirmou **49 erros em 200 alegações**, uma taxa de erro de **24,5%**. 
+
+## 12.11 — Resultado da análise
+
+O padrão dominante ficou muito claro:
+
+| Confusão                   |  Casos |
+| -------------------------- | -----: |
+| PARCIAL → SUSTENTADA       | **16** |
+| CONTRADITA → ENGANOSA      | **12** |
+| PARCIAL → NÃO VERIFICÁVEL  | **10** |
+| ENGANOSA → NÃO VERIFICÁVEL |  **5** |
+| CONTRADITA → SUSTENTADA    |      2 |
+| ENGANOSA → PARCIAL         |      1 |
+| ENGANOSA → CONTRADITA      |      1 |
+| PARCIAL → ENGANOSA         |      1 |
+| PARCIAL → CONTRADITA       |      1 |
+
+Essas três primeiras confusões sozinhas representam **38 dos 49 erros (77,6%)**. 
+
+### Problema 1 — Alegações parcialmente sustentadas
+
+Este é, de longe, o principal gargalo. Das 40 alegações dessa classe, **28 foram classificadas incorretamente**, taxa de erro de **70%**. 
+
+O modelo frequentemente reconhece apenas uma parte da frase. Veja o ID 48:
+
+> Dengue pode causar febre alta **e perda de cabelo**.
+
+A primeira proposição possui suporte, enquanto a segunda não. Mesmo assim, o sistema retornou `SUSTENTADA PELAS EVIDÊNCIAS`. 
+
+Isso também aconteceu com alegações sobre câncer, diabetes, hipertensão, medicamentos e vacinas. Portanto, **não é um problema isolado de um tema**; é um padrão de raciocínio/classificação.
+
+**Diagnóstico:** dificuldade de decompor uma alegação composta em subalegações e avaliar cada uma separadamente.
+
+### Problema 2 — CONTRADITA confundida com ENGANOSA
+
+Foram **12 ocorrências**, o segundo maior grupo de erros. 
+
+Um exemplo excelente é o ID 139:
+
+> Atividade física não ajuda a prevenir diabetes tipo 2.
+
+Esperado:
+
+```text
+CONTRADITA PELAS EVIDÊNCIAS
+```
+
+Produzido:
+
+```text
+ENGANOSA
+```
+
+
+
+O sistema aparentemente percebe que a alegação está errada em relação às evidências, mas erra **o tipo da relação epistemológica**.
+
+Isso explica por que `CONTRADITA` teve precision alta, **92,86%**, mas recall de apenas **65%**: o modelo é conservador ao usar essa classe.
+
+### Problema 3 — PARCIAL confundida com NÃO VERIFICÁVEL
+
+Foram outros **10 casos**. 
+
+Por exemplo, no ID 70:
+
+> Medicamentos essenciais devem ter qualidade **e embalagem azul**.
+
+O sistema retornou `NÃO FOI POSSÍVEL VERIFICAR`, embora uma parte da alegação estivesse sustentada. 
+
+Aqui acontece praticamente o inverso do problema 1: em alguns casos o modelo olha para a parte sustentada e ignora a desconhecida; em outros olha para a parte desconhecida e ignora a sustentada.
+
+Isso reforça o diagnóstico de **problema de decomposição de alegações compostas**.
+
+### Problema 4 — ENGANOSA confundida com NÃO VERIFICÁVEL
+
+Foram **5 casos**. 
+
+Um exemplo é:
+
+> Todo medicamento essencial serve para qualquer doença.
+
+Esperado `ENGANOSA`, produzido `NÃO FOI POSSÍVEL VERIFICAR`. 
+
+Nesse caso o modelo não reconheceu adequadamente que uma informação relacionada à definição de medicamento essencial estava sendo ampliada para uma conclusão indevida.
+
+## Análise por tema
+
+Também temos:
+
+| Tema         | Erros |       Taxa |
+| ------------ | ----: | ---------: |
+| Medicamentos | 10/29 | **34,48%** |
+| Vacinas      | 13/44 | **29,55%** |
+| Dengue       |  8/32 |     25,00% |
+| Câncer       |  6/31 |     19,35% |
+| Diabetes     |  6/32 | **18,75%** |
+| Hipertensão  |  6/32 | **18,75%** |
+
+
+
+Mas eu **não concluiria simplesmente que o sistema é pior em medicamentos**. O dataset não possui exatamente a mesma quantidade de exemplos de cada tema, e parte da diferença pode ser explicada pela distribuição das classes difíceis dentro de cada tema.
+
+## Conclusão científica da 12.11
+
+Uma formulação boa para o relatório é:
+
+> **A análise dos 49 erros revelou que a principal limitação do sistema está na classificação de alegações compostas. A classe “Parcialmente Sustentada” apresentou 70% de erro, sendo frequentemente confundida com “Sustentada pelas Evidências” ou “Não foi possível verificar”. Esse comportamento indica dificuldade do modelo em decompor uma alegação em múltiplas proposições e avaliar individualmente o suporte fornecido pelas evidências. Também foi observada confusão relevante entre “Contradita pelas Evidências” e “Enganosa”, responsável por 12 erros, indicando dificuldade na diferenciação entre contradição direta e distorção de uma informação.**
+
+Isso é um resultado acadêmico útil: nós não estamos simplesmente dizendo que o modelo teve **75,5% de acurácia**; estamos explicando **por que os outros 24,5% falharam**.
+
+### Status
+
+```text
+[x] 12.1 — Definir estrutura do dataset
+[x] 12.2 — Criar primeiro conjunto pequeno
+[x] 12.3 — Automatizar execução
+[x] 12.4 — Registrar esperado x produzido
+[x] 12.5 — Criar dataset completo
+[x] 12.6 — Accuracy
+[x] 12.7 — Precision
+[x] 12.8 — Recall
+[x] 12.9 — F1-score
+[x] 12.10 — Matriz de confusão
+[x] 12.11 — Analisar erros por categoria
+[ ] 12.12 — Registrar experimentos no MLflow  ← PRÓXIMA
+```
+
+**A 12.11 está concluída.**
+
+Agora entramos na **12.12 — MLflow**. E aqui vale fazer direito: registrar modelo (`qwen2.5:7b`), `temperature=0`, `seed=42`, `top_k=5`, tamanho do dataset, accuracy, precision, recall, F1 e os arquivos de resultados/matriz como artefatos do experimento. Isso vai deixar a Etapa 12 fechada de forma bem profissional.
+
+=
+=
+=
+=
+=
+
+
