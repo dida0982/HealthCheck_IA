@@ -45,49 +45,79 @@ REGRAS OBRIGATÓRIAS:
 14. Para classificar como "SUSTENTADA PELAS EVIDÊNCIAS", as evidências
     devem confirmar diretamente a afirmação central da alegação.
 
-15. Se a alegação afirmar algo e as evidências afirmarem explicitamente
-    o contrário, classifique como:
+15. Antes de avaliar "PARCIALMENTE SUSTENTADA" ou "ENGANOSA",
+    verifique obrigatoriamente se existe contradição direta entre
+    a afirmação central da alegação e as evidências.
+
+16. Se a alegação afirmar algo e pelo menos uma evidência diretamente
+    relevante afirmar explicitamente o contrário, classifique como:
     "CONTRADITA PELAS EVIDÊNCIAS".
-    
-16. Classifique como "PARCIALMENTE SUSTENTADA" quando a alegação
-    possuir duas ou mais afirmações relevantes e pelo menos uma delas
-    for sustentada pelas evidências, enquanto outra não for sustentada
-    ou não puder ser confirmada.
 
-17. Classifique como "ENGANOSA" quando a alegação utilizar informação
-    verdadeira ou parcialmente verdadeira de maneira distorcida,
-    fora de contexto ou que leve diretamente a uma conclusão incorreta.
+17. Quando houver contradição direta da afirmação central,
+    "CONTRADITA PELAS EVIDÊNCIAS" tem prioridade sobre:
+    "PARCIALMENTE SUSTENTADA" e "ENGANOSA".
 
-18. Não classifique automaticamente como "ENGANOSA" apenas porque
-    uma parte da alegação não está sustentada.
+18. Não classifique como "PARCIALMENTE SUSTENTADA" quando a afirmação
+    central estiver explicitamente contradita pelas evidências.
 
-19. Se uma parte da alegação estiver claramente sustentada e outra
-    parte apenas não estiver sustentada pelas evidências, prefira:
+19. Não classifique como "ENGANOSA" quando a afirmação central estiver
+    explicitamente contradita pelas evidências. Nesse caso use:
+    "CONTRADITA PELAS EVIDÊNCIAS".
+
+20. Considere que existe contradição direta quando a alegação e a
+    evidência fazem afirmações incompatíveis sobre o mesmo fato central.
+
+    Exemplos de contradição direta:
+
+    - Alegação: "A dengue não pode evoluir para formas graves."
+      Evidência: "A dengue pode evoluir para formas graves."
+      Classificação: "CONTRADITA PELAS EVIDÊNCIAS".
+
+    - Alegação: "A dengue é transmitida principalmente de pessoa para pessoa."
+      Evidência: "A transmissão ocorre principalmente pela picada da
+      fêmea infectada do mosquito Aedes aegypti."
+      Classificação: "CONTRADITA PELAS EVIDÊNCIAS".
+
+    - Alegação: "Não existem formas de prevenção contra o câncer."
+      Evidência: "A prevenção inclui hábitos saudáveis, vacinação,
+      rastreamento e diagnóstico precoce."
+      Classificação: "CONTRADITA PELAS EVIDÊNCIAS".
+
+21. Quando a evidência responder diretamente à mesma questão central
+    da alegação com uma afirmação incompatível, não use
+    "PARCIALMENTE SUSTENTADA" nem "ENGANOSA".
+    Use "CONTRADITA PELAS EVIDÊNCIAS".
+
+22. Não classifique automaticamente como "ENGANOSA" apenas porque uma
+    parte da alegação não está sustentada.
+
+23. Se uma parte estiver claramente sustentada e outra apenas não puder
+    ser confirmada, sem distorção e sem contradição direta, classifique:
     "PARCIALMENTE SUSTENTADA".
 
-20. Use "ENGANOSA" quando houver distorção do significado das
-    evidências, e não apenas uma combinação de uma afirmação sustentada
-    com outra não confirmada.
+24. Use "ENGANOSA" quando houver uma relação de raciocínio distorcida,
+    como utilizar uma informação verdadeira para justificar uma
+    conclusão exagerada ou incorreta.
     
-21. Utilize na conclusão apenas evidências que estejam diretamente
+25. Utilize na conclusão apenas evidências que estejam diretamente
     relacionadas à afirmação central da alegação.
 
-22. Não utilize uma evidência apenas porque ela pertence ao mesmo tema.
+26. Não utilize uma evidência apenas porque ela pertence ao mesmo tema.
     A evidência precisa fornecer informação diretamente útil para
     confirmar, contradizer ou qualificar a alegação analisada.
 
-23. Não faça inferências que não estejam explicitamente apoiadas pelas
+27. Não faça inferências que não estejam explicitamente apoiadas pelas
     evidências. Não transforme informações genéricas em conclusões que
     elas não sustentam.
 
-24. O campo "evidencias_utilizadas" deve conter somente evidências que
+28. O campo "evidencias_utilizadas" deve conter somente evidências que
     tenham sido realmente necessárias para chegar à conclusão.
 
-25. Quando houver evidências diretamente relacionadas à alegação e
+29. Quando houver evidências diretamente relacionadas à alegação e
     outras apenas genericamente relacionadas ao tema, priorize as
     evidências diretamente relacionadas.
 
-26. Não utilize uma evidência irrelevante para justificar uma
+30. Não utilize uma evidência irrelevante para justificar uma
     classificação que foi obtida a partir de outra evidência.
 """
 
