@@ -50,41 +50,61 @@ function obterConfiguracaoClassificacao(classificacao) {
 
     case "SUSTENTADA PELAS EVIDÊNCIAS":
       return {
-        status: "Sustentada pelas evidências",
+        status: "Evidências favoráveis",
         icone: "🟢",
-        classe: "healthcheck-sustentada"
+        classe: "healthcheck-sustentada",
+        mensagem:
+          "As fontes consultadas são compatíveis com a afirmação, mas isso não dispensa a verificação do contexto.",
+        compartilhar:
+          "Leia as evidências e consulte as fontes originais antes de compartilhar."
       };
 
 
     case "PARCIALMENTE SUSTENTADA":
       return {
-        status: "Parcialmente sustentada",
+        status: "Evidências parcialmente favoráveis",
         icone: "🟡",
-        classe: "healthcheck-parcial"
+        classe: "healthcheck-parcial",
+        mensagem:
+          "Parte da afirmação possui suporte nas evidências, mas outra parte não pôde ser confirmada.",
+        compartilhar:
+          "Verifique separadamente cada informação antes de compartilhar a afirmação completa."
       };
 
 
     case "ENGANOSA":
       return {
-        status: "Potencialmente enganosa",
+        status: "Informação potencialmente enganosa",
         icone: "🟠",
-        classe: "healthcheck-enganosa"
+        classe: "healthcheck-enganosa",
+        mensagem:
+          "Uma informação verdadeira ou plausível pode estar sendo usada para sustentar uma conclusão exagerada ou distorcida.",
+        compartilhar:
+          "Compare a afirmação completa com aquilo que as fontes realmente dizem antes de compartilhar."
       };
 
 
     case "CONTRADITA PELAS EVIDÊNCIAS":
       return {
-        status: "Contradita pelas evidências",
+        status: "Evidências contraditórias",
         icone: "🔴",
-        classe: "healthcheck-contraditoria"
+        classe: "healthcheck-contraditoria",
+        mensagem:
+          "As evidências encontradas apresentam informações incompatíveis com a afirmação.",
+        compartilhar:
+          "Leia a explicação e confira as fontes originais antes de compartilhar essa informação."
       };
 
 
     case "NÃO FOI POSSÍVEL VERIFICAR":
       return {
-        status: "Não foi possível verificar",
+        status: "Evidências insuficientes",
         icone: "⚪",
-        classe: "healthcheck-nao-verificada"
+        classe: "healthcheck-nao-verificada",
+        mensagem:
+          "O HealthCheck IA não encontrou evidências suficientes na base consultada para confirmar ou contradizer esta afirmação. Isso não significa que a informação seja verdadeira ou falsa.",
+        compartilhar:
+          "Procure outras fontes confiáveis e atualizadas antes de compartilhar."
       };
 
 
@@ -92,7 +112,11 @@ function obterConfiguracaoClassificacao(classificacao) {
       return {
         status: "Resultado recebido",
         icone: "🔎",
-        classe: ""
+        classe: "",
+        mensagem:
+          "Analise as evidências apresentadas antes de tirar uma conclusão.",
+        compartilhar:
+          "Consulte as fontes originais antes de compartilhar."
       };
   }
 }
