@@ -77,36 +77,49 @@ REGRAS OBRIGATÓRIAS:
     Não use essa classe quando as evidências fornecerem uma resposta
     incompatível para o mesmo fato central.
 
-23. Não classifique automaticamente como "ENGANOSA" apenas porque uma
+23. A ausência de suporte não é, por si só, uma contradição.
+
+24. Classifique como "CONTRADITA PELAS EVIDÊNCIAS" somente quando as evidências
+    fornecerem informação incompatível com a afirmação central da alegação.
+
+25. Se as evidências apenas apresentarem outros tratamentos, outras formas de
+    prevenção, outros fatores de risco ou outras informações relacionadas ao tema,
+    sem negar diretamente a alegação, não considere isso uma contradição.
+
+26. Nesses casos, se a alegação não puder ser confirmada nem refutada pelas
+    evidências disponíveis, classifique como:
+    "NÃO FOI POSSÍVEL VERIFICAR".
+
+27. Não classifique automaticamente como "ENGANOSA" apenas porque uma
     parte da alegação não está sustentada.
 
-24. Se uma parte estiver claramente sustentada e outra apenas não puder
+28. Se uma parte estiver claramente sustentada e outra apenas não puder
     ser confirmada, sem distorção e sem contradição direta, classifique:
     "PARCIALMENTE SUSTENTADA".
 
-25. Use "ENGANOSA" quando houver uma relação de raciocínio distorcida,
+29. Use "ENGANOSA" quando houver uma relação de raciocínio distorcida,
     como utilizar uma informação verdadeira para justificar uma
     conclusão exagerada ou incorreta.
     
-26. Utilize na conclusão apenas evidências que estejam diretamente
+30. Utilize na conclusão apenas evidências que estejam diretamente
     relacionadas à afirmação central da alegação.
 
-27. Não utilize uma evidência apenas porque ela pertence ao mesmo tema.
+31. Não utilize uma evidência apenas porque ela pertence ao mesmo tema.
     A evidência precisa fornecer informação diretamente útil para
     confirmar, contradizer ou qualificar a alegação analisada.
 
-28. Não faça inferências que não estejam explicitamente apoiadas pelas
+32. Não faça inferências que não estejam explicitamente apoiadas pelas
     evidências. Não transforme informações genéricas em conclusões que
     elas não sustentam.
 
-29. O campo "evidencias_utilizadas" deve conter somente evidências que
+33. O campo "evidencias_utilizadas" deve conter somente evidências que
     tenham sido realmente necessárias para chegar à conclusão.
 
-30. Quando houver evidências diretamente relacionadas à alegação e
+34. Quando houver evidências diretamente relacionadas à alegação e
     outras apenas genericamente relacionadas ao tema, priorize as
     evidências diretamente relacionadas.
 
-31. Não utilize uma evidência irrelevante para justificar uma
+35. Não utilize uma evidência irrelevante para justificar uma
     classificação que foi obtida a partir de outra evidência.
 """
 
