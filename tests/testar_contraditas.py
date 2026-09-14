@@ -6,16 +6,10 @@ URL_API = "http://127.0.0.1:8000/analisar"
 
 casos = [
     {
-        "id": 21,
-        "titulo": "Água com limão cura diabetes",
-        "descricao": "Beber água com limão todos os dias cura completamente o diabetes em poucos dias.",
-        "esperado": "NÃO FOI POSSÍVEL VERIFICAR"
-    },
-    {
-        "id": 22,
-        "titulo": "Dormir oito horas impede o câncer",
-        "descricao": "Dormir exatamente oito horas todas as noites impede uma pessoa de desenvolver qualquer tipo de câncer.",
-        "esperado": "NÃO FOI POSSÍVEL VERIFICAR"
+        "id": 13,
+        "titulo": "Eliminar água parada garante proteção total contra dengue",
+        "descricao": "Como eliminar locais com água parada ajuda a combater os criadouros do Aedes aegypti, quem elimina água parada em casa fica totalmente protegido contra dengue.",
+        "esperado": "ENGANOSA"
     }
 ]
 
