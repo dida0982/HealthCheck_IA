@@ -64,37 +64,56 @@ REGRAS OBRIGATÓRIAS:
     explicitamente contradita pelas evidências. Nesse caso use:
     "CONTRADITA PELAS EVIDÊNCIAS".
 
+20. A classificação "CONTRADITA PELAS EVIDÊNCIAS" só deve ser usada quando
+    a evidência afirmar explicitamente o oposto da afirmação central da alegação.
 
-22. Não classifique automaticamente como "ENGANOSA" apenas porque uma
+21. Uma contradição direta não exige que a evidência repita literalmente
+    a alegação usando uma negação.
+
+    Também existe contradição quando a alegação e a evidência atribuem
+    valores incompatíveis à mesma propriedade ou ao mesmo fato central.
+
+    Por exemplo, se a alegação afirma que X é a principal causa,
+    principal forma, único meio ou característica de algo, e a evidência
+    atribui explicitamente esse mesmo papel a Y, incompatível com X,
+    considere que existe contradição direta.
+
+22. A ausência de confirmação, a apresentação de uma informação diferente,
+    a existência de outro tratamento, outra forma de prevenção ou outra causa
+    não constituem, por si só, uma contradição. Se as evidências apenas não
+    confirmarem nem contradisserem diretamente a alegação, considere
+    "NÃO FOI POSSÍVEL VERIFICAR" ou outra classe adequada.
+
+23. Não classifique automaticamente como "ENGANOSA" apenas porque uma
     parte da alegação não está sustentada.
 
-23. Se uma parte estiver claramente sustentada e outra apenas não puder
+24. Se uma parte estiver claramente sustentada e outra apenas não puder
     ser confirmada, sem distorção e sem contradição direta, classifique:
     "PARCIALMENTE SUSTENTADA".
 
-24. Use "ENGANOSA" quando houver uma relação de raciocínio distorcida,
+25. Use "ENGANOSA" quando houver uma relação de raciocínio distorcida,
     como utilizar uma informação verdadeira para justificar uma
     conclusão exagerada ou incorreta.
     
-25. Utilize na conclusão apenas evidências que estejam diretamente
+26. Utilize na conclusão apenas evidências que estejam diretamente
     relacionadas à afirmação central da alegação.
 
-26. Não utilize uma evidência apenas porque ela pertence ao mesmo tema.
+27. Não utilize uma evidência apenas porque ela pertence ao mesmo tema.
     A evidência precisa fornecer informação diretamente útil para
     confirmar, contradizer ou qualificar a alegação analisada.
 
-27. Não faça inferências que não estejam explicitamente apoiadas pelas
+28. Não faça inferências que não estejam explicitamente apoiadas pelas
     evidências. Não transforme informações genéricas em conclusões que
     elas não sustentam.
 
-28. O campo "evidencias_utilizadas" deve conter somente evidências que
+29. O campo "evidencias_utilizadas" deve conter somente evidências que
     tenham sido realmente necessárias para chegar à conclusão.
 
-29. Quando houver evidências diretamente relacionadas à alegação e
+30. Quando houver evidências diretamente relacionadas à alegação e
     outras apenas genericamente relacionadas ao tema, priorize as
     evidências diretamente relacionadas.
 
-30. Não utilize uma evidência irrelevante para justificar uma
+31. Não utilize uma evidência irrelevante para justificar uma
     classificação que foi obtida a partir de outra evidência.
 """
 
