@@ -1,1 +1,12 @@
 id,titulo,descricao,classe_esperada,tema
+1,"Há mais de 100 tipos de câncer","O câncer corresponde a um conjunto de mais de 100 doenças diferentes.","SUSTENTADA PELAS EVIDÊNCIAS","cancer"
+2,"O câncer pode causar metástase","Células cancerígenas podem se espalhar para outras regiões do corpo e atingir outros órgãos.","SUSTENTADA PELAS EVIDÊNCIAS","cancer"
+3,"Atividade física ajuda na prevenção do diabetes tipo 2","A prática regular de atividade física faz parte das medidas de prevenção do diabetes tipo 2.","SUSTENTADA PELAS EVIDÊNCIAS","diabetes"
+4,"Dengue é transmitida principalmente pelo Aedes aegypti","A principal forma de transmissão da dengue ocorre pela picada da fêmea infectada do mosquito Aedes aegypti.","SUSTENTADA PELAS EVIDÊNCIAS","dengue"
+5,"Eliminar água parada ajuda a prevenir dengue","Eliminar locais que acumulam água ajuda a combater os criadouros do mosquito transmissor da dengue.","SUSTENTADA PELAS EVIDÊNCIAS","dengue"
+
+6,"Atividade física previne diabetes tipo 2 e elimina a necessidade de acompanhamento médico","A prática regular de atividade física ajuda na prevenção do diabetes tipo 2 e pessoas fisicamente ativas não precisam de acompanhamento médico para controlar a doença.","PARCIALMENTE SUSTENTADA","diabetes"
+7,"Diabetes pode causar problemas renais e também provoca perda de audição em todos os pacientes","O diabetes pode causar insuficiência renal e todas as pessoas com a doença inevitavelmente perdem parte da audição.","PARCIALMENTE SUSTENTADA","diabetes"
+8,"Dengue pode causar febre alta e sempre provoca tosse intensa","A dengue pode provocar febre alta e dores no corpo e também causa tosse intensa em todos os pacientes.","PARCIALMENTE SUSTENTADA","dengue"
+9,"Câncer pode causar metástase e sempre provoca febre alta","As células cancerígenas podem se espalhar para outras regiões do corpo e toda pessoa com câncer apresenta febre alta.","PARCIALMENTE SUSTENTADA","cancer"
+10,"Eliminar água parada ajuda no combate à dengue e impede qualquer infecção pelo vírus","Eliminar locais que acumulam água ajuda a combater os criadouros do mosquito da dengue e garante que uma pessoa nunca será infectada pelo vírus.","PARCIALMENTE SUSTENTADA","dengue"

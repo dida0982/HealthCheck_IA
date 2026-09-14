@@ -9950,3 +9950,170 @@ Então a **12.1** pode ficar definida assim:
 O próximo passo é a **12.2: criar um conjunto inicial pequeno**, por exemplo **25 alegações — 5 de cada uma das cinco classes**. Só depois de confirmar que o pipeline de avaliação funciona, aumentamos para 100 ou 200.
 
 
+Exatamente. Vamos fazer **somente a 12.2 agora**.
+
+## 12.2 — Conjunto inicial de validação
+
+Vamos começar com **25 alegações**, perfeitamente balanceadas:
+
+```text
+5 × SUSTENTADA PELAS EVIDÊNCIAS
+5 × PARCIALMENTE SUSTENTADA
+5 × ENGANOSA
+5 × CONTRADITA PELAS EVIDÊNCIAS
+5 × NÃO FOI POSSÍVEL VERIFICAR
+
+TOTAL = 25
+```
+
+Mas há uma regra científica importante: **não podemos simplesmente inventar o gabarito das 25 alegações**. A `classe_esperada` precisa ser determinada com base no que está efetivamente presente na nossa base de evidências. Isso é especialmente importante porque o HealthCheck está sendo avaliado como um sistema RAG: o gabarito deve refletir o que a base permite concluir.
+
+Então, antes de montar o CSV, vamos criar o arquivo que receberá esse dataset.
+
+Na raiz do seu projeto:
+
+```text
+healthcheck-extension/
+```
+
+crie:
+
+```text
+tests/
+```
+
+E dentro dela:
+
+```text
+dataset_validacao.csv
+```
+
+Ficará:
+
+```text
+healthcheck-extension/
+│
+├── backend/
+├── data/
+├── extension/
+├── tests/
+│   └── dataset_validacao.csv
+└── README.md
+```
+
+Dentro de `dataset_validacao.csv`, coloque **por enquanto somente o cabeçalho**:
+
+```csv
+id,titulo,descricao,classe_esperada,tema
+```
+
+Não vamos preencher as 25 ainda.
+
+### Por que parar aqui?
+
+Porque o próximo subpasso da **12.2** será montar as 25 alegações usando os conteúdos reais da sua base — câncer, diabetes, hipertensão, dengue, medicamentos e vacinas — de forma que possamos justificar por que cada alegação recebeu determinado gabarito.
+
+Assim evitamos um erro metodológico grave como marcar manualmente:
+
+```text
+"X cura diabetes" → CONTRADITA
+```
+
+quando nossa base talvez apenas **não tenha informação suficiente para verificar X**. Nesse caso, o gabarito correto para o nosso sistema seria `NÃO FOI POSSÍVEL VERIFICAR`.
+
+Faça apenas a pasta + arquivo + cabeçalho. Depois me diga **“pronto”** e seguimos para montar as primeiras 5 alegações do dataset, começando por `SUSTENTADA PELAS EVIDÊNCIAS`.
+
+=-
+=
+=
+=
+
+Olhei o repositório de novo e, com base no que está **realmente implementado no GitHub agora**, sim: **estamos no ponto certo e não estamos pulando uma etapa funcional importante**.
+
+O repositório já tem as pastas principais `backend/`, `data/`, `extension/` e agora também `tests/`, o que mostra que você já iniciou corretamente a fase de avaliação.
+
+No backend, a busca semântica já está implementada com `SentenceTransformer`, similaridade de cosseno e o reranking híbrido com bônus lexical.  O `rag.py` já contém as cinco categorias de classificação e regras explícitas para distinguir sustentada, parcialmente sustentada, enganosa, contradita e “não foi possível verificar”.
+
+A integração com o LLM também está pronta no `main.py`: ele usa `llama3.2:3b`, recebe o `system_prompt` e `user_prompt`, retorna JSON estruturado e já está com:
+
+```python
+"options": {
+    "temperature": 0
+}
+```
+
+que foi justamente o ajuste que fizemos para estabilizar as classificações.
+
+Então, confrontando isso com o roteiro original que você enviou, o estado correto é:
+
+```text
+[x] 01 — Definir MVP
+[x] 02 — Extensão Chrome básica
+[x] 03 — Capturar resultados do Google
+[x] 04 — Criar componente visual
+[x] 05 — Backend FastAPI
+[x] 06 — Conectar extensão + backend
+[x] 07 — Base de evidências
+[x] 08 — Embeddings + busca semântica
+[x] 09 — RAG
+[x] 10 — Integrar LLM
+[x] 11 — Sistema de classificação
+
+🔵 12 — Avaliação científica  ← ESTAMOS AQUI
+
+[ ] 13 — Pensamento crítico
+[ ] 14 — Segurança e limitações
+[ ] 15 — GitHub e documentação
+[ ] 16 — Apresentação
+```
+
+E tem mais uma confirmação importante: no próprio GitHub já existe:
+
+```text
+tests/
+└── dataset_validacao.csv
+```
+
+Então você **já fez exatamente o primeiro movimento da Etapa 12**, criando a estrutura para o dataset de validação.
+
+### Uma coisa que não estamos pulando, mas precisa ficar anotada
+
+Há elementos da interface final, como exibir fontes/evidências de forma bonita para o usuário e a parte de pensamento crítico, que serão refinados nas etapas posteriores. Isso não bloqueia a avaliação científica agora, porque o backend já consegue produzir a informação necessária para medir a classificação.
+
+Portanto, pode seguir tranquilo:
+
+**a próxima atividade correta é mesmo a 12.2: preencher o dataset inicial de validação.**
+
+E eu manteria exatamente a estratégia combinada: primeiro **25 alegações balanceadas, 5 de cada classe**, para testar todo o pipeline de avaliação antes de aumentar para 100 ou 200.
+
+
+Vamos. Eu já conferi a base real do projeto e agora podemos montar as **primeiras 5 alegações da classe `SUSTENTADA PELAS EVIDÊNCIAS`** sem inventar gabarito.
+
+A base realmente contém documentos sobre câncer, dengue, diabetes, hipertensão, medicamentos e vacinas.  Para câncer, o INCA registrado no projeto diz, entre outras coisas, que existem mais de 100 tipos de câncer, que pode ocorrer metástase e que hábitos saudáveis e vacinação fazem parte da prevenção.  Para diabetes, a base da OMS registra prevenção do tipo 2 com alimentação saudável, atividade física, controle de peso e evitar tabaco, além de possíveis complicações.  Para dengue, o documento do Ministério da Saúde confirma transmissão principalmente pelo `Aedes aegypti`, quatro sorotipos, sintomas e combate aos criadouros.
+
+Então abra:
+
+```text
+tests/dataset_validacao.csv
+```
+
+Hoje ele está só com o cabeçalho no GitHub, como planejamos.
+
+Deixe assim:
+
+```csv
+id,titulo,descricao,classe_esperada,tema
+1,"Há mais de 100 tipos de câncer","O câncer corresponde a um conjunto de mais de 100 doenças diferentes.","SUSTENTADA PELAS EVIDÊNCIAS","cancer"
+2,"O câncer pode causar metástase","Células cancerígenas podem se espalhar para outras regiões do corpo e atingir outros órgãos.","SUSTENTADA PELAS EVIDÊNCIAS","cancer"
+3,"Atividade física ajuda na prevenção do diabetes tipo 2","A prática regular de atividade física faz parte das medidas de prevenção do diabetes tipo 2.","SUSTENTADA PELAS EVIDÊNCIAS","diabetes"
+4,"Dengue é transmitida principalmente pelo Aedes aegypti","A principal forma de transmissão da dengue ocorre pela picada da fêmea infectada do mosquito Aedes aegypti.","SUSTENTADA PELAS EVIDÊNCIAS","dengue"
+5,"Eliminar água parada ajuda a prevenir dengue","Eliminar locais que acumulam água ajuda a combater os criadouros do mosquito transmissor da dengue.","SUSTENTADA PELAS EVIDÊNCIAS","dengue"
+```
+
+Essas cinco são boas para nosso dataset porque o gabarito não depende de interpretação subjetiva. A base contém evidência direta para cada afirmação.
+
+Por enquanto **não rode o HealthCheck nessas alegações**. Estamos construindo o **gabarito independente primeiro**. Isso é importante: se nós olhássemos a resposta do modelo e depois ajustássemos `classe_esperada`, estaríamos contaminando a avaliação.
+
+Depois de colar e salvar essas 5 linhas, me diga **“pronto”**. Aí fazemos as próximas 5: `PARCIALMENTE SUSTENTADA`.
+
+
