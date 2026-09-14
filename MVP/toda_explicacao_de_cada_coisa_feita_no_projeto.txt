@@ -9655,3 +9655,298 @@ ENGANOSA
 
 
 00000000000000000000000000000000000000000000000000000000000000000000000
+
+Vamos continuar exatamente daí.
+
+O problema atual é que o `llama3.2:3b` está variando a classificação para a mesma entrada. No seu `main.py`, o payload enviado ao Ollama hoje está assim:
+
+```python
+dados_ollama = {
+    "model": "llama3.2:3b",
+    "system": system_prompt,
+    "prompt": user_prompt,
+    "stream": False
+}
+```
+
+Vamos fazer o primeiro ajuste de estabilidade: **reduzir a aleatoriedade da geração**.
+
+No `main.py`, troque esse bloco por:
+
+```python
+dados_ollama = {
+    "model": "llama3.2:3b",
+    "system": system_prompt,
+    "prompt": user_prompt,
+    "stream": False,
+    "options": {
+        "temperature": 0
+    }
+}
+```
+
+Só isso por enquanto.
+
+### O que `temperature: 0` faz
+
+A `temperature` controla a aleatoriedade da resposta.
+
+Com valores maiores, o modelo pode escolher caminhos diferentes a cada execução.
+
+Para o HealthCheck, isso é ruim porque queremos:
+
+```text
+mesma alegação
++
+mesmas evidências
+=
+classificação consistente
+```
+
+Então, em um sistema de classificação como o nosso, `temperature: 0` faz muito mais sentido do que deixar o comportamento padrão.
+
+Salve o `main.py`.
+
+Se o Uvicorn estiver com `--reload`, espere ele recarregar.
+
+Depois vamos executar **a mesma alegação do HPV 5 vezes**, mas agora tem uma regra importante:
+
+**não vamos executar até aparecer `ENGANOSA`.**
+
+Vamos registrar os cinco resultados, mesmo que estejam errados.
+
+Use sempre:
+
+```json
+{
+  "titulo": "Vacina contra HPV elimina o risco de qualquer câncer",
+  "descricao": "Como a vacinação contra HPV ajuda na prevenção do câncer, quem toma essa vacina fica protegido contra todos os tipos de câncer."
+}
+```
+
+E me mande somente as cinco classificações, por exemplo:
+
+```text
+Teste 1: ENGANOSA
+Teste 2: ENGANOSA
+Teste 3: PARCIALMENTE SUSTENTADA
+Teste 4: ENGANOSA
+Teste 5: ENGANOSA
+```
+
+Aí medimos objetivamente se `temperature: 0` resolveu a instabilidade.
+
+
+====================================
+====================================
+====================================
+====================================
+====================================
+
+
+Perfeito. Isso mostra que o ajuste funcionou.
+
+Agora podemos registrar esta parte assim:
+
+```text
+ETAPA 12 — Criar classificação
+
+12.1 Sustentada
+✅ PASSOU
+
+12.2 Contradita
+✅ PASSOU
+
+12.3 Parcialmente sustentada
+✅ PASSOU
+
+12.4 Enganosa
+✅ classificação correta
+✅ retrieval relevante
+✅ ranking corrigido
+✅ estabilidade testada
+
+Teste de estabilidade:
+5/5 = ENGANOSA
+
+12.6 Estabilidade do LLM
+✅ PASSOU
+```
+
+O ponto principal foi adicionar:
+
+```python
+"options": {
+    "temperature": 0
+}
+```
+
+Com isso, a mesma entrada + mesmas evidências passou a gerar a mesma classificação nas 5 execuções.
+
+Agora falta só fechar a última categoria da etapa 12:
+
+```text
+12.5 — NÃO FOI POSSÍVEL VERIFICAR
+```
+
+Vamos testar uma alegação para a qual a base não deveria ter evidência suficiente.
+
+Use no Swagger:
+
+```json
+{
+  "titulo": "Água com limão cura diabetes",
+  "descricao": "Beber água com limão todos os dias cura completamente o diabetes em poucos dias."
+}
+```
+
+Execute **uma vez apenas** e me mande o `Response body` inteiro.
+
+O resultado esperado, se o sistema estiver se comportando corretamente, é:
+
+```text
+NÃO FOI POSSÍVEL VERIFICAR
+```
+
+Se aparecer outra classificação, nós analisamos o motivo antes de encerrar a etapa 12.
+
+
+==========
+==========
+==========
+==========
+
+
+Ótimo. Esse teste passou.
+
+A resposta fez exatamente o que queríamos: não inventou evidência, não confundiu similaridade com confirmação e usou corretamente `evidencias_utilizadas: []`.
+
+Então podemos fechar a etapa 12 assim:
+
+```text
+ETAPA 12 — Criar classificação
+
+12.1 Sustentada pelas evidências
+✅ PASSOU
+
+12.2 Contradita pelas evidências
+✅ PASSOU
+
+12.3 Parcialmente sustentada
+✅ PASSOU
+
+12.4 Enganosa
+✅ PASSOU
+
+12.5 Não foi possível verificar
+✅ PASSOU
+
+12.6 Estabilidade do LLM
+✅ PASSOU
+5/5 respostas iguais com temperature = 0
+```
+
+Tem um detalhe técnico bom nessa resposta: o retrieval encontrou conteúdos sobre diabetes, mas como nenhum deles fala que “água com limão cura diabetes”, o modelo se absteve. Esse é exatamente o comportamento que o HealthCheck precisa ter.
+
+Então, agora sim:
+
+```text
+[x] 12 — Criar classificação
+```
+
+O próximo passo correto é:
+
+```text
+13 — Mostrar evidências/fontes
+```
+
+E aqui nós não precisamos começar do zero, porque o backend já retorna:
+
+```json
+"evidencias_utilizadas": [],
+"evidencias": [...]
+```
+
+O trabalho da etapa 13 vai ser fazer a extensão exibir isso de forma clara para o usuário.
+
+Se quiser, a gente continua agora na **etapa 13.1**, sem pular nada.
+
+=
+=
+=
+=
+
+Certo. Então agora estamos oficialmente na **ETAPA 12 — Avaliação científica**.
+
+O objetivo aqui é parar de validar com exemplos isolados e começar a medir o sistema de forma reproduzível. A ideia central do seu planejamento é exatamente esta: criar um conjunto de alegações com rótulo correto conhecido, rodar o HealthCheck nelas e comparar **esperado x produzido** para calcular métricas como accuracy, precision, recall, F1-score e matriz de confusão. 
+
+O primeiro passo não deve ser criar 200 alegações de uma vez. Vamos fazer assim:
+
+```text
+ETAPA 12 — Avaliação científica
+
+12.1 — Definir estrutura do dataset
+12.2 — Criar primeiro conjunto pequeno de validação
+12.3 — Automatizar execução das alegações
+12.4 — Registrar esperado x produzido
+12.5 — Criar dataset completo
+12.6 — Calcular accuracy
+12.7 — Calcular precision
+12.8 — Calcular recall
+12.9 — Calcular F1-score
+12.10 — Gerar matriz de confusão
+12.11 — Analisar erros por categoria
+12.12 — Registrar experimentos no MLflow
+```
+
+Vamos começar só pelo **12.1**.
+
+Eu sugiro que cada linha do dataset tenha esta estrutura:
+
+```csv
+id,titulo,descricao,classe_esperada,tema
+1,"Vacina contra HPV elimina o risco de qualquer câncer","Como a vacinação contra HPV ajuda na prevenção do câncer, quem toma essa vacina fica protegido contra todos os tipos de câncer.","ENGANOSA","cancer"
+2,"Água com limão cura diabetes","Beber água com limão todos os dias cura completamente o diabetes em poucos dias.","NÃO FOI POSSÍVEL VERIFICAR","diabetes"
+```
+
+As colunas seriam:
+
+* `id` → identificador da alegação;
+* `titulo` → título enviado ao endpoint;
+* `descricao` → texto complementar;
+* `classe_esperada` → nosso gabarito;
+* `tema` → câncer, diabetes, vacina, dengue etc.
+
+Essa estrutura já é suficiente para depois automatizarmos a chamada para:
+
+```text
+POST /analisar
+```
+
+e gerar algo como:
+
+```text
+classe_esperada               classe_produzida
+ENGANOSA                      ENGANOSA
+NÃO FOI POSSÍVEL VERIFICAR    NÃO FOI POSSÍVEL VERIFICAR
+CONTRADITA                    PARCIALMENTE SUSTENTADA
+...
+```
+
+Depois disso calculamos as métricas.
+
+Então a **12.1** pode ficar definida assim:
+
+```text
+12.1 — Estrutura do dataset
+✅ CSV
+✅ id
+✅ titulo
+✅ descricao
+✅ classe_esperada
+✅ tema
+```
+
+O próximo passo é a **12.2: criar um conjunto inicial pequeno**, por exemplo **25 alegações — 5 de cada uma das cinco classes**. Só depois de confirmar que o pipeline de avaliação funciona, aumentamos para 100 ou 200.
+
+
