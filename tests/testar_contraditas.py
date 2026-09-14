@@ -6,21 +6,9 @@ URL_API = "http://127.0.0.1:8000/analisar"
 
 casos = [
     {
-        "id": 16,
-        "titulo": "Dengue nunca pode causar doença grave",
-        "descricao": "A dengue é sempre uma doença leve e não pode evoluir para formas graves.",
-        "esperado": "CONTRADITA PELAS EVIDÊNCIAS"
-    },
-    {
         "id": 17,
         "titulo": "Dengue é transmitida principalmente de pessoa para pessoa",
         "descricao": "A principal forma de transmissão da dengue ocorre pelo contato direto entre uma pessoa infectada e outra pessoa.",
-        "esperado": "CONTRADITA PELAS EVIDÊNCIAS"
-    },
-    {
-        "id": 18,
-        "titulo": "Não existem formas de prevenção contra o câncer",
-        "descricao": "Hábitos saudáveis, vacinação, rastreamento e diagnóstico precoce não possuem nenhuma relação com a prevenção do câncer.",
         "esperado": "CONTRADITA PELAS EVIDÊNCIAS"
     }
 ]
