@@ -5,10 +5,16 @@ URL_API = "http://127.0.0.1:8000/analisar"
 
 casos = [
     {
-        "id": 22,
-        "titulo": "Dormir oito horas impede o câncer",
-        "descricao": "Dormir exatamente oito horas todas as noites impede uma pessoa de desenvolver qualquer tipo de câncer.",
-        "esperado": "NÃO FOI POSSÍVEL VERIFICAR"
+        "id": 18,
+        "titulo": "Não existem formas de prevenção contra o câncer",
+        "descricao": "Hábitos saudáveis, vacinação, rastreamento e diagnóstico precoce não possuem nenhuma relação com a prevenção do câncer.",
+        "esperado": "CONTRADITA PELAS EVIDÊNCIAS"
+    },
+    {
+        "id": 20,
+        "titulo": "Atividade física não ajuda na prevenção do diabetes tipo 2",
+        "descricao": "A prática regular de atividade física não possui relação com a prevenção do diabetes tipo 2.",
+        "esperado": "CONTRADITA PELAS EVIDÊNCIAS"
     }
 ]
 
