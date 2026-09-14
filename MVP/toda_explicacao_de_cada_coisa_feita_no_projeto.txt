@@ -11716,3 +11716,194 @@ Portanto, encerramos a fase conceitual:
 A **13.9 é diferente: agora finalmente vamos programar.** E para não quebrarmos o que já funciona, o primeiro passo da 13.9 deve ser **inspecionar o `content.js` atual e o formato exato da resposta atual do `/analisar` antes de alterar qualquer coisa**.
 
 
+Sim. Eu conferi o `content.js`, o `backend/main.py` e o `backend/busca_semantica.py` atuais no seu repositório.
+
+Hoje, o `/analisar` retorna exatamente esta estrutura:
+
+```json
+{
+  "classificacao": "...",
+  "explicacao": "...",
+  "evidencias_utilizadas": [1, 2],
+  "evidencias": [
+    {
+      "arquivo": "...",
+      "chunk_id": 0,
+      "conteudo": "...",
+      "similaridade": 0.82
+    }
+  ]
+}
+```
+
+Isso está definido no `AnaliseResponse` e no modelo `Evidencia` do `main.py`.
+
+E o `content.js` já usa hoje:
+
+* `analise.classificacao`
+* `analise.explicacao`
+* `analise.evidencias`
+* `analise.evidencias_utilizadas`
+
+Ele também já mostra `conteudo` e `arquivo` de cada evidência.
+
+O ponto importante é que o backend **já calcula a similaridade**, porque `buscar_evidencias()` retorna:
+
+```python
+{
+    "arquivo": chunk["arquivo"],
+    "chunk_id": chunk["chunk_id"],
+    "conteudo": chunk["conteudo"],
+    "similaridade": float(similaridades[indice])
+}
+```
+
+Então nosso diagnóstico antes de mexer em qualquer código é:
+
+```text
+classificação          ✅ já chega ao frontend
+explicação             ✅ já chega ao frontend
+evidências             ✅ já chegam ao frontend
+evidências utilizadas  ✅ já chegam ao frontend
+trecho/conteúdo        ✅ já chega ao frontend
+similaridade           ✅ já chega ao frontend
+arquivo de origem      ✅ já chega ao frontend
+
+nome amigável da fonte ⚠️ ainda não
+URL original           ❌ ainda não
+título da fonte        ❌ ainda não
+```
+
+Ou seja: **temos quase tudo que precisamos para a 13.9.**
+
+Existe inclusive uma coisa curiosa: a similaridade já chega ao navegador, mas o `content.js` atual **não mostra esse valor no card**. Então para essa parte não precisamos alterar o algoritmo nem o backend; basta aproveitar o campo que já existe.
+
+Já para o botão:
+
+```text
+🔗 Consultar fonte original
+```
+
+a situação é diferente. O backend atualmente não envia uma URL da fonte. Portanto, não devemos começar modificando o `content.js` e inventando links.
+
+### Primeiro passo real da 13.9
+
+Antes de editar o card, precisamos verificar **como os 18 arquivos `.md` guardam a origem das informações**.
+
+Precisamos descobrir se dentro deles já existem campos como:
+
+```text
+Fonte:
+URL:
+Título:
+```
+
+Se as URLs já existirem nos documentos, podemos reaproveitá-las. Se não existirem, vamos cadastrar essas informações corretamente.
+
+Então **não altere nenhum arquivo ainda**.
+
+O próximo passo é eu inspecionar os documentos da pasta `data/` e verificar exatamente quais metadados já existem. Depois disso, decidimos a menor alteração necessária no backend.
+
+
+
+Inspecionei os **18 documentos `.md` da pasta `data/`** no seu repositório.
+
+A boa notícia é: **as URLs originais já estão cadastradas.** Então não precisamos sair procurando fonte por fonte nem criar links manualmente.
+
+Os 18 arquivos seguem, na prática, este padrão de cabeçalho:
+
+```text
+# Título do documento
+
+Fonte: ...
+URL: ...
+Tema: ...
+Subtema: ...
+Data de acesso: ...
+```
+
+Por exemplo, o arquivo do INCA já possui `Fonte`, `URL`, `Tema`, `Subtema` e `Data de acesso`.  O mesmo padrão aparece nos documentos da OMS e OPAS sobre câncer.
+
+Confirmei também esse mesmo padrão nos arquivos de dengue, diabetes, hipertensão, medicamentos e vacinas. Por exemplo, o documento do Ministério da Saúde sobre dengue já aponta diretamente para a página oficial da dengue no `gov.br`.  O arquivo da Anvisa sobre vacinas também possui a URL oficial de farmacovigilância.  E os arquivos da Fiocruz e do Ministério da Saúde sobre influenza também já trazem suas respectivas URLs.
+
+Então nosso diagnóstico da 13.9 melhora bastante:
+
+```text
+DADOS QUE JÁ EXISTEM NOS .md
+
+✅ Título do documento — no primeiro # do Markdown
+✅ Fonte
+✅ URL original
+✅ Tema
+✅ Subtema
+✅ Data de acesso
+✅ Conteúdo/resumo/evidências
+```
+
+O problema não está na base. O problema está no caminho entre a base e o frontend.
+
+Atualmente o `buscar_evidencias()` devolve somente:
+
+```python
+{
+    "arquivo": ...,
+    "chunk_id": ...,
+    "conteudo": ...,
+    "similaridade": ...
+}
+```
+
+Ou seja, embora `Fonte:` e `URL:` já existam dentro dos `.md`, esses metadados **não estão sendo transportados pelo chunk até o `/analisar`**.
+
+Portanto, **não precisamos editar os 18 `.md`**.
+
+A menor alteração necessária é fazer o backend preservar esses metadados durante o carregamento dos documentos e enviá-los junto com cada evidência.
+
+O resultado ideal do `/analisar` passa a ser algo assim:
+
+```json
+{
+  "arquivo": "ministerio_saude_dengue.md",
+  "chunk_id": 2,
+  "conteudo": "Trecho recuperado...",
+  "similaridade": 0.82,
+  "fonte": "Ministério da Saúde",
+  "url": "https://www.gov.br/saude/...",
+  "tema": "Dengue",
+  "subtema": "Transmissão, sintomas e prevenção"
+}
+```
+
+E aí o `content.js` conseguirá montar corretamente:
+
+```text
+📚 Ministério da Saúde
+
+Trecho relevante:
+[...]
+
+Similaridade: 82%
+
+🔗 Consultar fonte original
+```
+
+### Situação da 13.9 agora
+
+```text
+[x] Inspecionar content.js
+[x] Inspecionar resposta do /analisar
+[x] Inspecionar os 18 documentos da pasta data/
+[x] Confirmar existência das URLs originais
+
+[ ] Fazer o backend carregar os metadados
+[ ] Fazer /analisar devolver os metadados
+[ ] Confirmar JSON no Swagger
+[ ] Depois alterar o content.js
+```
+
+Então agora começamos a **primeira alteração real no VS Code**.
+
+O próximo arquivo que precisamos inspecionar é `backend/carregar_documentos.py`, porque é ali que os `.md` são lidos e transformados em chunks. Antes de editar, precisamos ver exatamente como ele está montando cada `chunk`.
+
+
+
