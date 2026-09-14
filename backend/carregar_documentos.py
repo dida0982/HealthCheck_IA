@@ -190,7 +190,13 @@ for documento in documentos:
         chunks.append({
             "arquivo": documento["arquivo"],
             "chunk_id": indice,
-            "conteudo": parte_limpa
+            "conteudo": parte_limpa,
+            "titulo": documento["titulo"],
+            "fonte": documento["fonte"],
+            "url": documento["url"],
+            "tema": documento["tema"],
+            "subtema": documento["subtema"],
+            "data_acesso": documento["data_acesso"]
         })
 
 
