@@ -10402,3 +10402,102 @@ O planejamento original também prevê que, depois da avaliação, o sistema mos
 
 Então, resumindo em uma frase: **o sistema já funciona de ponta a ponta; o que estamos fazendo agora é tornar a classificação confiável o bastante para podermos congelar o modelo e começar a avaliação científica final.**
 
+=
+=
+==
+=
+
+
+Perfeito. Agora apareceu um padrão estável e, neste ponto, **eu não mexeria mais no prompt**.
+
+O resultado do conjunto piloto ficou:
+
+```text
+Total: 25
+Acertos: 22
+Erros: 3
+Acurácia preliminar: 88,00%
+```
+
+Os três erros são todos do mesmo tipo:
+
+```text
+ID 16: CONTRADITA → ENGANOSA
+ID 18: CONTRADITA → ENGANOSA
+ID 20: CONTRADITA → ENGANOSA
+```
+
+Isso é muito útil academicamente: o sistema está reconhecendo que as alegações estão erradas, mas ainda apresenta dificuldade específica em separar **“ENGANOSA” de “CONTRADITA PELAS EVIDÊNCIAS”**.
+
+E tem outro ponto importante: como usamos esses 25 exemplos repetidamente para ajustar o prompt, **eles não podem mais ser considerados nosso teste científico final**. Se continuarmos modificando as regras até obter 25/25, estaríamos basicamente treinando o prompt para acertar esse conjunto.
+
+Então vamos congelar esta configuração:
+
+```text
+Modelo: qwen2.5:7b
+temperature: 0
+seed: 42
+Top-K: 5 evidências
+Prompt: versão atual do rag.py
+Resultado piloto: 22/25 = 88%
+```
+
+Não altere mais o `rag.py` por enquanto.
+
+### ETAPA 12 até aqui
+
+```text
+[x] 12.1 — Definir estrutura do dataset
+[x] 12.2 — Criar primeiro conjunto pequeno de validação
+[x] 12.3 — Automatizar execução das alegações
+[x] 12.4 — Registrar esperado x produzido
+[ ] 12.5 — Criar dataset completo          ← AGORA
+[ ] 12.6 — Calcular accuracy
+[ ] 12.7 — Calcular precision
+[ ] 12.8 — Calcular recall
+[ ] 12.9 — Calcular F1-score
+[ ] 12.10 — Gerar matriz de confusão
+[ ] 12.11 — Analisar erros por categoria
+[ ] 12.12 — Registrar experimentos no MLflow
+```
+
+Agora entramos na **12.5 — Criar dataset completo**.
+
+O ideal para o trabalho é criar **200 alegações novas**, que não sejam essas 25 utilizadas durante o desenvolvimento:
+
+```text
+40 → SUSTENTADA PELAS EVIDÊNCIAS
+40 → PARCIALMENTE SUSTENTADA
+40 → ENGANOSA
+40 → CONTRADITA PELAS EVIDÊNCIAS
+40 → NÃO FOI POSSÍVEL VERIFICAR
+
+TOTAL = 200
+```
+
+Distribuídas entre os temas da nossa base:
+
+```text
+vacinas
+dengue
+diabetes
+hipertensão
+câncer
+medicamentos
+```
+
+E continuaremos usando exatamente:
+
+```csv
+id,titulo,descricao,classe_esperada,tema
+```
+
+**Não vamos usar essas 200 para ajustar o prompt.** Rodamos uma vez com a configuração congelada e o resultado que sair será o resultado científico que utilizaremos para calcular accuracy, precision, recall, F1 e matriz de confusão.
+
+O próximo passo, portanto, é montar o arquivo:
+
+```text
+tests/dataset_avaliacao_final.csv
+```
+
+com essas 200 alegações independentes. Essa é a **Etapa 12.5**.
