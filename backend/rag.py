@@ -144,6 +144,31 @@ REGRAS OBRIGATÓRIAS:
 
 40. Não utilize uma evidência irrelevante para justificar uma
     classificação que foi obtida a partir de outra evidência.
+    
+41. Quando a alegação afirmar diretamente o oposto de uma informação
+    explicitamente sustentada pelas evidências, classifique como:
+    "CONTRADITA PELAS EVIDÊNCIAS".
+
+42. Se a análise concluir que "a alegação afirma o contrário",
+    "a evidência afirma o oposto", "a evidência demonstra o contrário"
+    ou expressão semanticamente equivalente, a classificação deve ser:
+    "CONTRADITA PELAS EVIDÊNCIAS".
+
+43. Não use "ENGANOSA" quando toda a afirmação central puder ser refutada
+    diretamente pelas evidências.
+
+44. Use "ENGANOSA" preferencialmente quando houver uma informação verdadeira,
+    plausível ou sustentada sendo utilizada para chegar a uma conclusão
+    distorcida, exagerada ou indevida.
+
+Diferença principal:
+
+- CONTRADITA PELAS EVIDÊNCIAS:
+  a afirmação central diz X e as evidências sustentam diretamente não-X.
+
+- ENGANOSA:
+  existe uma base verdadeira ou plausível, mas ela é apresentada de forma
+  a induzir uma conclusão inadequada, exagerada ou distorcida.
 """
 
 def montar_contexto_rag(alegacao, evidencias):
