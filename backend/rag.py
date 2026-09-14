@@ -64,25 +64,18 @@ REGRAS OBRIGATÓRIAS:
     explicitamente contradita pelas evidências. Nesse caso use:
     "CONTRADITA PELAS EVIDÊNCIAS".
 
-20. A classificação "CONTRADITA PELAS EVIDÊNCIAS" só deve ser usada quando
-    a evidência afirmar explicitamente o oposto da afirmação central da alegação.
+20. Classifique como "CONTRADITA PELAS EVIDÊNCIAS" quando a evidência
+    fornecer uma resposta incompatível com a afirmação central da alegação.
 
-21. Uma contradição direta não exige que a evidência repita literalmente
-    a alegação usando uma negação.
+21. A contradição não exige uma negação literal. Também existe contradição
+    quando a alegação atribui uma propriedade, causa, forma principal,
+    característica ou resultado a X, mas a evidência atribui essa mesma
+    propriedade ou papel a Y de forma incompatível com X.
 
-    Também existe contradição quando a alegação e a evidência atribuem
-    valores incompatíveis à mesma propriedade ou ao mesmo fato central.
-
-    Por exemplo, se a alegação afirma que X é a principal causa,
-    principal forma, único meio ou característica de algo, e a evidência
-    atribui explicitamente esse mesmo papel a Y, incompatível com X,
-    considere que existe contradição direta.
-
-22. A ausência de confirmação, a apresentação de uma informação diferente,
-    a existência de outro tratamento, outra forma de prevenção ou outra causa
-    não constituem, por si só, uma contradição. Se as evidências apenas não
-    confirmarem nem contradisserem diretamente a alegação, considere
-    "NÃO FOI POSSÍVEL VERIFICAR" ou outra classe adequada.
+22. Use "NÃO FOI POSSÍVEL VERIFICAR" somente quando as evidências não
+    confirmarem nem contradisserem a afirmação central da alegação.
+    Não use essa classe quando as evidências fornecerem uma resposta
+    incompatível para o mesmo fato central.
 
 23. Não classifique automaticamente como "ENGANOSA" apenas porque uma
     parte da alegação não está sustentada.
