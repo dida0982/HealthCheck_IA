@@ -6,10 +6,10 @@ URL_API = "http://127.0.0.1:8000/analisar"
 
 casos = [
     {
-        "id": 17,
-        "titulo": "Dengue é transmitida principalmente de pessoa para pessoa",
-        "descricao": "A principal forma de transmissão da dengue ocorre pelo contato direto entre uma pessoa infectada e outra pessoa.",
-        "esperado": "CONTRADITA PELAS EVIDÊNCIAS"
+        "id": 22,
+        "titulo": "Dormir oito horas impede o câncer",
+        "descricao": "Dormir exatamente oito horas todas as noites impede uma pessoa de desenvolver qualquer tipo de câncer.",
+        "esperado": "NÃO FOI POSSÍVEL VERIFICAR"
     }
 ]
 
