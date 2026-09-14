@@ -231,6 +231,16 @@ print("\nExemplo dos primeiros chunks:")
 
 for chunk in chunks[:5]:
     print("\n----------------------------")
+
     print(f"Arquivo: {chunk['arquivo']}")
     print(f"Chunk: {chunk['chunk_id']}")
+
+    print(f"Título: {chunk['titulo']}")
+    print(f"Fonte: {chunk['fonte']}")
+    print(f"URL: {chunk['url']}")
+    print(f"Tema: {chunk['tema']}")
+    print(f"Subtema: {chunk['subtema']}")
+    print(f"Data de acesso: {chunk['data_acesso']}")
+
+    print("\nConteúdo:")
     print(chunk["conteudo"][:300])
