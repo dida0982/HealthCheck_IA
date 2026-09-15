@@ -12463,3 +12463,10 @@ E não precisamos rodar o Qwen para concluir essa parte, porque a regra já est�
 O próximo passo é **14.5 — Documentar as limitações do sistema**. Essa é importante para o trabalho acadêmico: vamos registrar claramente **o que o HealthCheck IA consegue fazer e o que ele não consegue garantir**.
 
 
+Pronto. Criei o **Slide 3 — A solução: HealthCheck IA**, mantendo a identidade visual dos anteriores.
+
+[Baixar Slide 3 — A solução: HealthCheck IA](sandbox:/mnt/data/HealthCheck_IA_Slide_03_Solucao.pptx)
+
+Ele mostra o fluxo **Detecta → Analisa → Busca evidências → Classifica → Explica**, uma representação do card da extensão e os três diferenciais: **evidências, rastreabilidade e pensamento crítico**.
+
+O próximo é o **Slide 4 — Como funciona para o usuário**.
