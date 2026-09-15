@@ -1,12 +1,16 @@
-# HealthCheck IA — Guia de Instalação e Execução
+# 🩺 HealthCheck IA — Guia de Instalação e Execução
 
-Este documento explica como preparar uma nova máquina para executar o projeto **HealthCheck IA**.
+Este documento explica como instalar e executar o **HealthCheck IA** em uma máquina Windows.
 
-Repositório:
+O sistema utiliza:
 
-```text
-https://github.com/dida0982/HealthCheck_IA
-```
+- Python;
+- FastAPI;
+- Sentence Transformers;
+- Ollama;
+- Qwen 2.5 7B;
+- extensão para Google Chrome;
+- MLflow para registro dos experimentos.
 
 ---
 
@@ -14,166 +18,205 @@ https://github.com/dida0982/HealthCheck_IA
 
 Antes de iniciar, instale:
 
-* Git
-* Python 3
-* Ollama
-* VS Code, PyCharm ou outro editor de código
+- Git;
+- Python 3;
+- Ollama;
+- Google Chrome;
+- VS Code ou outro editor de código.
 
-Confirme as instalações no terminal:
+Confirme as instalações:
 
-```bash
+```powershell
 git --version
 ```
 
-```bash
+```powershell
 python --version
 ```
 
-```bash
+```powershell
 ollama --version
 ```
 
+Se os três comandos retornarem suas respectivas versões, podemos continuar.
+
 ---
 
-# 2. Clonar o projeto
+# 2. Clonar o repositório
 
-Abra o CMD, PowerShell ou terminal e execute:
+Abra o PowerShell ou terminal.
 
-```bash
+Execute:
+
+```powershell
 git clone https://github.com/dida0982/HealthCheck_IA.git
 ```
 
-Entre na pasta:
+Entre no projeto:
 
-```bash
+```powershell
 cd HealthCheck_IA
 ```
 
-A estrutura principal do projeto é:
+A estrutura principal será semelhante a:
 
 ```text
 HealthCheck_IA/
 │
 ├── backend/
 ├── data/
+├── docs/
 ├── extension/
 ├── MVP/
-└── README.md
+├── tests/
+│
+├── .gitignore
+├── mlflow.db
+├── README.md
+└── requirements.txt
 ```
 
 ---
 
-# 3. Criar o ambiente virtual Python
+# 3. Criar o ambiente virtual
 
 Na raiz do projeto:
 
-```bash
-python -m venv .venv
+```powershell
+python -m venv backend/.venv
 ```
 
-O ambiente virtual evita conflitos entre as bibliotecas deste projeto e outros projetos instalados na máquina.
+O ambiente virtual será criado em:
 
-## Windows — CMD
-
-```bash
-.venv\Scripts\activate
+```text
+backend/.venv/
 ```
 
-## Windows — PowerShell
+Essa pasta não deve ser enviada ao GitHub.
+
+---
+
+# 4. Ativar o ambiente virtual
+
+No PowerShell:
 
 ```powershell
-.\.venv\Scripts\Activate.ps1
+.\backend\.venv\Scripts\Activate.ps1
 ```
 
 Depois da ativação deverá aparecer algo semelhante a:
 
 ```text
-(.venv) C:\...\HealthCheck_IA>
+(.venv) PS C:\...\HealthCheck_IA>
 ```
+
+## Caso o PowerShell bloqueie a ativação
+
+Se aparecer erro relacionado à política de execução, utilize:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
+
+Depois tente novamente:
+
+```powershell
+.\backend\.venv\Scripts\Activate.ps1
+```
+
+A alteração com `-Scope Process` vale somente para a sessão atual do PowerShell.
 
 ---
 
-# 4. Atualizar o pip
+# 5. Atualizar o pip
 
-Execute:
+Com o ambiente virtual ativo:
 
-```bash
+```powershell
 python -m pip install --upgrade pip
 ```
 
 ---
 
-# 5. Instalar as dependências
+# 6. Instalar as dependências
 
-Execute:
+O projeto possui:
 
-```bash
-pip install fastapi uvicorn requests pydantic sentence-transformers scikit-learn
+```text
+requirements.txt
 ```
 
-Entre as principais bibliotecas utilizadas atualmente estão:
+Portanto, não é necessário instalar cada biblioteca manualmente.
 
-* FastAPI
-* Uvicorn
-* Requests
-* Pydantic
-* Sentence Transformers
-* Scikit-learn
+Execute na raiz do projeto:
 
-O Sentence Transformers também poderá instalar automaticamente outras dependências, como:
+```powershell
+pip install -r requirements.txt
+```
 
-* PyTorch
-* Transformers
-* Hugging Face Hub
+Entre as principais dependências estão:
 
-Por isso essa instalação pode ser maior do que as demais.
+```text
+FastAPI
+Uvicorn
+Pydantic
+Requests
+Sentence Transformers
+Scikit-learn
+NumPy
+Pandas
+MLflow
+```
+
+O Sentence Transformers possui dependências adicionais e a instalação pode levar alguns minutos.
 
 ---
 
-# 6. Preparar o Ollama
+# 7. Preparar o Ollama
 
-O backend atualmente utiliza o modelo:
+O HealthCheck IA utiliza atualmente:
 
 ```text
-llama3.2:3b
+qwen2.5:7b
 ```
 
 Baixe o modelo:
 
-```bash
-ollama pull llama3.2:3b
+```powershell
+ollama pull qwen2.5:7b
 ```
 
-Confirme se ele está instalado:
+Depois confirme:
 
-```bash
+```powershell
 ollama list
 ```
 
-Deverá aparecer algo semelhante a:
+A lista deve conter:
 
 ```text
-NAME
-llama3.2:3b
+qwen2.5:7b
 ```
 
 ---
 
-# 7. Testar o Ollama
+# 8. Testar o modelo
 
 Execute:
 
-```bash
-ollama run llama3.2:3b
+```powershell
+ollama run qwen2.5:7b
 ```
 
-Digite uma mensagem:
+Digite uma mensagem simples.
+
+Por exemplo:
 
 ```text
 Olá
 ```
 
-Se o modelo responder, o Ollama está funcionando corretamente.
+Se o modelo responder, o Ollama e o Qwen estão funcionando.
 
 Para sair:
 
@@ -181,106 +224,88 @@ Para sair:
 /bye
 ```
 
-O HealthCheck IA utiliza o servidor local do Ollama em:
+---
+
+# 9. Comunicação com o Ollama
+
+O HealthCheck IA utiliza o servidor local disponibilizado pelo Ollama.
+
+Normalmente ele está disponível em:
 
 ```text
 http://localhost:11434
 ```
 
+O backend envia as solicitações ao Ollama durante a análise das alegações.
+
+Não é necessário manter:
+
+```powershell
+ollama run qwen2.5:7b
+```
+
+aberto interativamente durante o uso normal do projeto.
+
+O importante é que o serviço do Ollama esteja disponível.
+
 ---
 
-# 8. Entrar no backend
+# 10. Primeira execução do backend
 
-Na raiz do projeto:
+Com o ambiente virtual ativo, entre na pasta:
 
-```bash
+```powershell
 cd backend
 ```
 
-A pasta contém atualmente arquivos como:
+Execute:
 
-```text
-backend/
-│
-├── main.py
-├── rag.py
-├── busca_semantica.py
-├── carregar_documentos.py
-├── teste_embedding.py
-└── teste_ollama.py
-```
-
----
-
-# 9. Executar a API
-
-Dentro de:
-
-```text
-HealthCheck_IA/backend
-```
-
-execute:
-
-```bash
+```powershell
 python -m uvicorn main:app --reload
 ```
 
-Também pode funcionar:
+Quando o backend estiver funcionando deverá aparecer uma mensagem semelhante a:
 
-```bash
-uvicorn main:app --reload
+```text
+Uvicorn running on http://127.0.0.1:8000
 ```
 
-A primeira inicialização pode demorar um pouco porque o projeto utiliza o modelo de embeddings:
+Mantenha esse terminal aberto enquanto utilizar o HealthCheck IA.
+
+---
+
+# 11. Primeira inicialização
+
+Na primeira execução, o projeto poderá baixar o modelo de embeddings:
 
 ```text
 sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
 ```
 
-Esse modelo poderá ser baixado automaticamente na primeira execução.
+Por isso, a primeira inicialização pode demorar mais.
+
+Depois do carregamento, o sistema prepara os documentos e seus chunks para a busca semântica.
+
+A configuração atual da base possui:
+
+```text
+18 documentos
+73 chunks após processamento
+```
 
 ---
 
-# 10. Confirmar se a API está funcionando
+# 12. Swagger
 
-Quando aparecer:
-
-```text
-INFO: Uvicorn running on http://127.0.0.1:8000
-```
-
-abra no navegador:
-
-```text
-http://127.0.0.1:8000
-```
-
-A resposta esperada é:
-
-```json
-{
-  "mensagem": "HealthCheck IA API funcionando"
-}
-```
-
-Isso confirma que o backend está ativo.
-
----
-
-# 11. Abrir a documentação da API
-
-Abra:
+Com o backend funcionando, abra:
 
 ```text
 http://127.0.0.1:8000/docs
 ```
 
-O FastAPI disponibiliza automaticamente uma interface Swagger.
+O FastAPI disponibiliza a interface Swagger.
 
-Nela será possível visualizar e testar os endpoints do HealthCheck IA.
-
-Atualmente, um dos principais endpoints é:
+O principal endpoint do HealthCheck IA é:
 
 ```text
 POST /analisar
@@ -288,9 +313,9 @@ POST /analisar
 
 ---
 
-# 12. Testar uma análise
+# 13. Testar o backend
 
-No Swagger, abra:
+No Swagger:
 
 ```text
 POST /analisar
@@ -302,132 +327,494 @@ Clique em:
 Try it out
 ```
 
-Utilize, por exemplo:
+Exemplo:
 
 ```json
 {
-  "titulo": "Chá de boldo cura diabetes",
-  "descricao": "O consumo de chá de boldo é capaz de curar diabetes."
+  "titulo": "Vacina contra gripe",
+  "descricao": "A vacina contra gripe ajuda a reduzir casos graves."
 }
 ```
 
-Depois clique em:
+Clique em:
 
 ```text
 Execute
 ```
 
----
-
-# 13. Fluxo atual do sistema
-
-O funcionamento atual pode ser resumido assim:
+O sistema executará aproximadamente:
 
 ```text
-Alegação do usuário
-        ↓
-Backend FastAPI
-        ↓
+Alegação
+   ↓
 Busca semântica
-        ↓
-Embeddings
-        ↓
-Recuperação das evidências mais relevantes
-        ↓
+   ↓
+Top 5 evidências
+   ↓
 RAG
-        ↓
-Prompt com alegação + evidências
-        ↓
-Ollama
-        ↓
-Llama 3.2 3B
-        ↓
+   ↓
+Qwen 2.5 7B
+   ↓
 Classificação
-        ↓
+   ↓
 Explicação
-        ↓
+   ↓
 Evidências utilizadas
 ```
 
----
-
-# 14. Principais componentes
-
-## main.py
-
-É o ponto principal da API.
-
-Responsável por:
-
-* iniciar o FastAPI;
-* receber requisições;
-* chamar a busca de evidências;
-* montar o RAG;
-* enviar a requisição ao Ollama;
-* devolver a classificação.
+A primeira análise também pode levar mais tempo devido ao carregamento dos modelos.
 
 ---
 
-## carregar_documentos.py
+# 14. Carregar a extensão no Chrome
 
-Responsável por carregar os documentos da base de conhecimento e prepará-los para utilização pelo sistema.
-
----
-
-## busca_semantica.py
-
-Responsável pela recuperação das evidências mais semanticamente relacionadas à alegação analisada.
-
-Utiliza:
+Com o backend funcionando, abra no Google Chrome:
 
 ```text
-Sentence Transformers
+chrome://extensions/
 ```
 
-com o modelo:
+Ative:
 
 ```text
-paraphrase-multilingual-MiniLM-L12-v2
+Modo do desenvolvedor
+```
+
+Clique em:
+
+```text
+Carregar sem compactação
 ```
 
 ---
 
-## rag.py
+# 15. Selecionar a pasta correta
 
-Responsável por organizar a alegação e as evidências recuperadas em um prompt que será enviado ao LLM.
+Não selecione a raiz inteira do projeto.
+
+Errado:
+
+```text
+HealthCheck_IA/
+```
+
+Correto:
+
+```text
+HealthCheck_IA/extension/
+```
+
+O Chrome precisa encontrar diretamente:
+
+```text
+manifest.json
+```
+
+A pasta selecionada deve conter:
+
+```text
+extension/
+├── manifest.json
+├── content.js
+├── styles.css
+└── teste-visual.html
+```
+
+Selecione:
+
+```text
+extension
+```
+
+A extensão deverá aparecer na página de extensões do Chrome.
+
+Mantenha-a ativada.
 
 ---
 
-## Ollama
+# 16. Atualizar a extensão após alterações
 
-Responsável por executar localmente o modelo de linguagem.
-
-Modelo atual:
+Se modificar:
 
 ```text
-llama3.2:3b
+content.js
+manifest.json
+styles.css
+```
+
+abra:
+
+```text
+chrome://extensions/
+```
+
+e clique no botão de atualização da extensão.
+
+Depois recarregue a página do Google utilizada no teste.
+
+---
+
+# 17. Executar o sistema completo
+
+Com o backend e o Ollama disponíveis e a extensão carregada:
+
+```text
+Usuário
+   ↓
+Pesquisa no Google
+   ↓
+Chrome Extension
+   ↓
+Captura do resultado
+   ↓
+FastAPI
+   ↓
+Busca semântica
+   ↓
+Top 5 evidências
+   ↓
+RAG
+   ↓
+Ollama
+   ↓
+Qwen 2.5 7B
+   ↓
+Classificação + explicação
+   ↓
+FastAPI
+   ↓
+Chrome Extension
+   ↓
+Card HealthCheck IA
 ```
 
 ---
 
-# 15. Comandos completos para uma nova máquina
+# 18. Teste no Google
 
-Para quem acabou de clonar o projeto:
+Realize uma pesquisa relacionada a um dos temas da base.
 
-```bash
+Exemplos:
+
+```text
+vacina contra gripe
+dengue
+diabetes
+hipertensão
+câncer
+medicamentos
+```
+
+A extensão detectará resultados compatíveis com seu mecanismo atual e enviará as análises ao backend.
+
+Como cada resultado analisado pode gerar uma chamada ao modelo local, várias análises simultâneas podem utilizar bastante CPU, memória e outros recursos da máquina.
+
+Para testes técnicos do modelo, prefira o Swagger quando não for necessário validar a integração com o Google.
+
+---
+
+# 19. Teste visual sem executar IA
+
+Existe:
+
+```text
+extension/teste-visual.html
+```
+
+Esse arquivo permite verificar visualmente os cinco estados da interface sem executar:
+
+```text
+FastAPI
+Ollama
+Qwen
+embeddings
+busca no Google
+```
+
+Os cinco estados são:
+
+```text
+🟢 Evidências favoráveis
+🟡 Evidências parcialmente favoráveis
+🟠 Informação potencialmente enganosa
+🔴 Evidências contraditórias
+⚪ Evidências insuficientes
+```
+
+Esse recurso é recomendado quando o objetivo é testar apenas a interface.
+
+---
+
+# 20. Execução diária
+
+Depois da primeira instalação, não é necessário reinstalar as dependências ou baixar novamente o modelo.
+
+Abra o PowerShell na raiz do projeto.
+
+Ative o ambiente:
+
+```powershell
+.\backend\.venv\Scripts\Activate.ps1
+```
+
+Entre no backend:
+
+```powershell
+cd backend
+```
+
+Execute:
+
+```powershell
+python -m uvicorn main:app --reload
+```
+
+Depois utilize:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+ou a extensão no Google Chrome.
+
+---
+
+# 21. Encerrar o backend
+
+No terminal onde o Uvicorn está executando, pressione:
+
+```text
+Ctrl + C
+```
+
+Isso encerra o servidor FastAPI.
+
+---
+
+# 22. Desativar o ambiente virtual
+
+Execute:
+
+```powershell
+deactivate
+```
+
+---
+
+# 23. MLflow
+
+O HealthCheck IA utiliza MLflow para registrar os experimentos da avaliação científica.
+
+O armazenamento oficial atual é:
+
+```text
+mlflow.db
+```
+
+O experimento final é:
+
+```text
+HealthCheck_IA_Avaliacao_Final
+```
+
+Run:
+
+```text
+qwen2.5_7b_avaliacao_final_200
+```
+
+---
+
+# 24. Abrir o MLflow
+
+Na raiz do projeto, com o ambiente virtual disponível, execute:
+
+```powershell
+.\backend\.venv\Scripts\python.exe -m mlflow ui --backend-store-uri "sqlite:///mlflow.db" --port 5001
+```
+
+Abra:
+
+```text
+http://127.0.0.1:5001
+```
+
+O experimento do HealthCheck IA poderá ser consultado pela interface do MLflow.
+
+Para encerrar:
+
+```text
+Ctrl + C
+```
+
+---
+
+# 25. Atualizar o projeto pelo Git
+
+Antes de trabalhar em uma cópia já existente:
+
+```powershell
+git pull origin main
+```
+
+Verifique:
+
+```powershell
+git status
+```
+
+---
+
+# 26. Problemas comuns
+
+## Python não encontrado
+
+Se:
+
+```text
+python
+```
+
+não for reconhecido, verifique a instalação do Python e sua configuração no PATH.
+
+---
+
+## Ollama não encontrado
+
+Teste:
+
+```powershell
+ollama --version
+```
+
+Se necessário, feche e abra novamente o terminal após instalar o Ollama.
+
+---
+
+## Modelo não encontrado
+
+Execute:
+
+```powershell
+ollama pull qwen2.5:7b
+```
+
+Confirme:
+
+```powershell
+ollama list
+```
+
+---
+
+## Backend não inicia
+
+Confirme que o ambiente virtual está ativo:
+
+```text
+(.venv)
+```
+
+Depois verifique as dependências:
+
+```powershell
+pip install -r requirements.txt
+```
+
+---
+
+## Erro ao carregar a extensão
+
+Confirme que foi selecionada:
+
+```text
+HealthCheck_IA/extension/
+```
+
+e não:
+
+```text
+HealthCheck_IA/
+```
+
+O arquivo:
+
+```text
+manifest.json
+```
+
+deve estar diretamente dentro da pasta selecionada.
+
+---
+
+## Extensão não consegue analisar
+
+Verifique se o backend está funcionando:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+Também confirme que o Ollama está disponível e que:
+
+```text
+qwen2.5:7b
+```
+
+está instalado.
+
+---
+
+## Primeira execução lenta
+
+Pode ser normal.
+
+O modelo de embeddings pode precisar ser baixado e carregado na primeira execução.
+
+O Qwen também utiliza recursos consideráveis da máquina durante as análises.
+
+---
+
+# 27. Checklist de instalação
+
+Antes de utilizar o sistema completo:
+
+```text
+[ ] Git instalado
+[ ] Python instalado
+[ ] Ollama instalado
+[ ] Google Chrome instalado
+[ ] Repositório clonado
+[ ] backend/.venv criado
+[ ] Ambiente virtual ativado
+[ ] requirements.txt instalado
+[ ] qwen2.5:7b instalado
+[ ] Ollama disponível
+[ ] Backend funcionando
+[ ] Swagger funcionando
+[ ] POST /analisar testado
+[ ] Extensão carregada
+[ ] Pasta extension selecionada corretamente
+```
+
+---
+
+# 28. Sequência rápida — primeira instalação
+
+```powershell
 git clone https://github.com/dida0982/HealthCheck_IA.git
 
 cd HealthCheck_IA
 
-python -m venv .venv
+python -m venv backend/.venv
 
-.venv\Scripts\activate
+.\backend\.venv\Scripts\Activate.ps1
 
 python -m pip install --upgrade pip
 
-pip install fastapi uvicorn requests pydantic sentence-transformers scikit-learn
+pip install -r requirements.txt
 
-ollama pull llama3.2:3b
+ollama pull qwen2.5:7b
 
 ollama list
 
@@ -436,196 +823,41 @@ cd backend
 python -m uvicorn main:app --reload
 ```
 
-Depois abrir:
+Depois:
 
 ```text
 http://127.0.0.1:8000/docs
 ```
 
+E no Chrome:
+
+```text
+chrome://extensions/
+→ Modo do desenvolvedor
+→ Carregar sem compactação
+→ selecionar HealthCheck_IA/extension/
+```
+
 ---
 
-# 16. Trabalhando no projeto depois da instalação
+# 29. Sequência rápida — uso diário
 
-Nas próximas vezes não será necessário instalar tudo novamente.
+Na raiz do projeto:
 
-Abra o terminal dentro do projeto e execute:
+```powershell
+.\backend\.venv\Scripts\Activate.ps1
 
-```bash
-cd HealthCheck_IA
-```
-
-Ative o ambiente:
-
-```bash
-.venv\Scripts\activate
-```
-
-Entre no backend:
-
-```bash
 cd backend
-```
 
-Inicie:
-
-```bash
 python -m uvicorn main:app --reload
 ```
 
----
-
-# 17. Atualizando o projeto
-
-Antes de começar a trabalhar, recomenda-se atualizar a branch local:
-
-```bash
-git pull origin main
-```
-
-Depois:
-
-```bash
-.venv\Scripts\activate
-```
-
-e:
-
-```bash
-cd backend
-```
-
-```bash
-python -m uvicorn main:app --reload
-```
+Depois utilize o Swagger ou a extensão.
 
 ---
 
-# 18. Antes de fazer alterações
+## HealthCheck IA
 
-Crie uma branch própria:
+**Inteligência Artificial + Evidências + Pensamento Crítico**
 
-```bash
-git checkout -b nome-da-branch
-```
-
-Exemplo:
-
-```bash
-git checkout -b feature-validacao-rag
-```
-
-Faça as alterações e depois:
-
-```bash
-git status
-```
-
-```bash
-git add .
-```
-
-```bash
-git commit -m "Implementa validação do RAG"
-```
-
-```bash
-git push origin feature-validacao-rag
-```
-
-Depois abra um Pull Request no GitHub.
-
-Evite desenvolver diretamente na branch:
-
-```text
-main
-```
-
----
-
-# 19. Problemas comuns
-
-## Python não encontrado
-
-Se aparecer:
-
-```text
-'python' não é reconhecido...
-```
-
-instale o Python e confirme que a opção de adicionar o Python ao PATH está habilitada.
-
----
-
-## Uvicorn não encontrado
-
-Utilize:
-
-```bash
-python -m uvicorn main:app --reload
-```
-
----
-
-## Ollama não encontrado
-
-Feche e abra novamente o terminal após instalar o Ollama.
-
-Teste:
-
-```bash
-ollama --version
-```
-
----
-
-## Modelo do Ollama não encontrado
-
-Execute:
-
-```bash
-ollama pull llama3.2:3b
-```
-
----
-
-## Erro de conexão com localhost:11434
-
-Confirme que o Ollama está funcionando.
-
-Teste:
-
-```bash
-ollama run llama3.2:3b
-```
-
----
-
-## Primeira inicialização lenta
-
-Pode ser normal.
-
-O Sentence Transformers precisa baixar o modelo de embeddings na primeira execução.
-
----
-
-# 20. Checklist para novos integrantes
-
-Antes de começar a desenvolver, confirme:
-
-```text
-[ ] Git instalado
-[ ] Python instalado
-[ ] Ollama instalado
-[ ] Repositório clonado
-[ ] Ambiente virtual criado
-[ ] Ambiente virtual ativado
-[ ] Dependências Python instaladas
-[ ] llama3.2:3b instalado
-[ ] Ollama funcionando
-[ ] Backend iniciado
-[ ] http://127.0.0.1:8000 funcionando
-[ ] http://127.0.0.1:8000/docs funcionando
-[ ] POST /analisar testado
-```
-
-Se todos os itens estiverem funcionando, o ambiente de desenvolvimento do HealthCheck IA está pronto.
+Se o backend, o Ollama e a extensão estiverem funcionando, o ambiente está pronto para executar o HealthCheck IA.
