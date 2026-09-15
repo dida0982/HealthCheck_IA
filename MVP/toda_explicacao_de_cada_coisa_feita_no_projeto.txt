@@ -12271,3 +12271,195 @@ Com isso, conceitualmente:
 O próximo será **14.2 — Impedir respostas sem suporte das evidências**. Aí vamos verificar o `system_prompt` atual do `rag.py` e descobrir se essa regra está realmente sendo imposta ao Qwen, em vez de apenas existir na documentação.
 
 
+Verifiquei o `backend/rag.py` atual no seu repositório, e a boa notícia é que a **14.2 já está fortemente implementada no prompt**.
+
+As regras mais importantes já dizem explicitamente que o modelo deve:
+
+```text id="sswbvq"
+1. Utilizar somente as evidências fornecidas.
+2. Não utilizar conhecimento externo.
+3. Não inventar fatos, dados, estudos, fontes ou informações.
+4. Não presumir informações ausentes.
+9. Basear a explicação exclusivamente nas evidências recuperadas.
+37. Não fazer inferências sem apoio explícito.
+```
+
+E o `user_prompt` reforça isso de novo, exigindo que cada afirmação da explicação esteja explicitamente presente nas evidências utilizadas.
+
+Então, conceitualmente, podemos dizer que:
+
+```text id="zqh21k"
+[x] 14.2 — Impedir respostas sem suporte das evidências
+```
+
+Mas há um detalhe importante: hoje essa proteção é feita principalmente por **instrução ao LLM**. Isso reduz alucinação, mas não é uma garantia matemática de que o modelo obedecerá sempre.
+
+Para deixar a segurança mais forte depois, podemos criar uma segunda camada no backend, por exemplo:
+
+```text id="lw1e7h"
+LLM responde
+    ↓
+backend valida
+    ↓
+evidencias_utilizadas válidas?
+classificação permitida?
+há evidência?
+JSON válido?
+    ↓
+só então envia para a extensão
+```
+
+Isso seria uma proteção adicional, independente da obediência do Qwen.
+
+Mas, mantendo nosso passo a passo, **não vamos implementar isso agora**.
+
+O próximo é:
+
+```text id="t4eesm"
+14.3 — Tratar evidências insuficientes
+```
+
+Nessa parte vamos verificar se a regra `NÃO FOI POSSÍVEL VERIFICAR` está corretamente definida tanto no prompt quanto na resposta exibida ao usuário.
+
+
+
+Vamos para a **14.3 — Tratar evidências insuficientes**.
+
+Aqui temos que garantir uma regra fundamental:
+
+> Se o sistema não possui evidência suficiente para confirmar **nem contradizer** a alegação, ele deve se abster.
+
+No `rag.py` atual isso já está bem protegido. O prompt estabelece que evidências insuficientes devem resultar em `NÃO FOI POSSÍVEL VERIFICAR`, diferencia ausência de evidência de contradição e ainda determina que, quando nenhuma evidência for suficiente, `evidencias_utilizadas` deve ser `[]`.
+
+A lógica desejada fica:
+
+```text id="fmbjjq"
+Alegação
+   ↓
+Existem evidências diretamente relacionadas?
+   ↓
+NÃO
+   ↓
+⚪ NÃO FOI POSSÍVEL VERIFICAR
+   ↓
+evidencias_utilizadas: []
+```
+
+E nunca:
+
+```text id="lvmn5f"
+Não encontrei evidência
+        ↓
+❌ Logo a alegação é falsa
+```
+
+Além disso, na Etapa 13 nós já preparamos a interface para comunicar ao usuário:
+
+> ⚪ **Evidências insuficientes**
+>
+> O HealthCheck IA não encontrou evidências suficientes na base consultada para confirmar ou contradizer esta afirmação.
+>
+> **Isso não significa que a informação seja verdadeira ou falsa.**
+
+Portanto temos proteção nos dois lados:
+
+```text id="v0m7da"
+BACKEND / RAG
+→ abstém-se da classificação conclusiva
+
+FRONTEND
+→ explica ao usuário o significado da abstenção
+```
+
+Isso é exatamente o comportamento de segurança que queremos.
+
+Podemos marcar:
+
+```text id="q92sbq"
+[x] 14.1 — Definir política de abstenção
+[x] 14.2 — Impedir respostas sem suporte das evidências
+[x] 14.3 — Tratar evidências insuficientes
+```
+
+Não precisamos ligar o Ollama nem fazer teste pesado agora, porque já verificamos o código e o estado visual correspondente na etapa anterior.
+
+O próximo é **14.4 — Tratar evidências contraditórias**. Aqui há uma questão interessante: precisamos definir o que o sistema deve fazer quando **as próprias fontes recuperadas discordam entre si**, e não apenas quando elas contradizem a alegação.
+
+
+
+Vamos para a **14.4 — Tratar evidências contraditórias entre si**.
+
+Aqui precisamos separar duas situações, porque elas são diferentes:
+
+```text
+CASO A
+Alegação: "A vacina aumenta casos graves."
+
+Fontes confiáveis:
+→ vacinação reduz casos graves
+→ vacinação reduz hospitalizações
+
+Resultado:
+🔴 CONTRADITA PELAS EVIDÊNCIAS
+```
+
+Nesse caso, **as fontes concordam entre si** e contradizem a alegação. O sistema pode classificar como `CONTRADITA PELAS EVIDÊNCIAS`.
+
+O problema de segurança aparece no **Caso B**:
+
+```text
+CASO B
+
+Fonte 1 → afirma X
+Fonte 2 → afirma o contrário de X
+
+            ↓
+
+As próprias evidências estão em conflito.
+```
+
+Nesse cenário, o HealthCheck não deveria escolher arbitrariamente uma das fontes e apresentar uma conclusão como se houvesse consenso.
+
+E o nosso `system_prompt` já possui uma regra importante:
+
+```text
+Se as evidências forem insuficientes, conflitantes ou
+não permitirem uma conclusão segura, classifique como:
+
+"NÃO FOI POSSÍVEL VERIFICAR".
+```
+
+Portanto, a política fica:
+
+```text
+Evidências consistentes
+        +
+contradizem a alegação
+        ↓
+🔴 CONTRADITA PELAS EVIDÊNCIAS
+
+
+Evidências relevantes
+        +
+discordam entre si
+        ↓
+⚪ NÃO FOI POSSÍVEL VERIFICAR
+```
+
+Isso também evita um problema perigoso em saúde: o modelo simplesmente selecionar a evidência que melhor combina com a resposta que ele “prefere”.
+
+A regra oficial da documentação pode ser:
+
+> **Conflito entre evidências:** quando fontes relevantes recuperadas apresentarem informações incompatíveis entre si e esse conflito impedir uma conclusão segura, o HealthCheck IA deverá se abster de emitir uma conclusão, utilizando a classificação **“NÃO FOI POSSÍVEL VERIFICAR”**. O sistema não deverá selecionar arbitrariamente uma das evidências conflitantes para produzir uma resposta conclusiva.
+
+Com isso:
+
+```text
+[x] 14.4 — Tratar evidências contraditórias
+```
+
+E não precisamos rodar o Qwen para concluir essa parte, porque a regra já está explicitamente implementada no `system_prompt` que verificamos.
+
+O próximo passo é **14.5 — Documentar as limitações do sistema**. Essa é importante para o trabalho acadêmico: vamos registrar claramente **o que o HealthCheck IA consegue fazer e o que ele não consegue garantir**.
+
+
