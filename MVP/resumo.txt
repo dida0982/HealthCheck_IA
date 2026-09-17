@@ -1,0 +1,421 @@
+O HealthCheck IA gera as respostas usando um fluxo RAG local: captura os resultados do Google, procura trechos relacionados na base oficial, envia esses trechos ao modelo `qwen2.5:7b` pelo Ollama e transforma a resposta em um card visual.
+
+```mermaid
+flowchart TD
+    A["Resultado do Google"] --> B["Título + descrição"]
+    B --> C["FastAPI /analisar"]
+    C --> D["Busca semântica na base"]
+    D --> E["5 evidências mais relacionadas"]
+    E --> F["Prompt RAG + Ollama"]
+    F --> G["Classificação em JSON"]
+    G --> H["Card na página do Google"]
+```
+
+## 1. A extensão captura os resultados do Google
+
+O arquivo [`extension/content.js`](https://github.com/dida0982/HealthCheck_IA/blob/main/extension/content.js) procura cada resultado usando:
+
+```javascript
+document.querySelectorAll("div.MjjYud");
+```
+
+De cada resultado, captura:
+
+```javascript
+const item = {
+  titulo: tituloElemento.innerText.trim(),
+  url: linkElemento.href,
+  descricao: descricaoElemento
+    ? descricaoElemento.innerText.trim()
+    : "Descrição não encontrada"
+};
+```
+
+Portanto, a extensão inicialmente conhece:
+
+* título;
+* URL;
+* descrição exibida pelo Google.
+
+Entretanto, ela envia ao backend somente:
+
+```json
+{
+  "titulo": "...",
+  "descricao": "..."
+}
+```
+
+A URL não é enviada e o HealthCheck IA não abre a página encontrada. Assim, o sistema analisa o texto mostrado no resultado do Google, e não o conteúdo completo do site.
+
+## 2. A extensão chama o backend
+
+Para cada resultado encontrado, o JavaScript envia uma requisição:
+
+```http
+POST http://127.0.0.1:8000/analisar
+```
+
+O [`manifest.json`](https://github.com/dida0982/HealthCheck_IA/blob/main/extension/manifest.json) autoriza o acesso ao backend local:
+
+```json
+"host_permissions": [
+  "http://127.0.0.1:8000/*"
+]
+```
+
+Enquanto aguarda, aparece:
+
+```text
+Buscando evidências e consultando a IA...
+```
+
+O `MutationObserver` continua observando alterações na página. Isso permite detectar resultados carregados posteriormente pelo Google.
+
+## 3. O FastAPI cria a alegação analisada
+
+No [`backend/main.py`](https://github.com/dida0982/HealthCheck_IA/blob/main/backend/main.py), o endpoint recebe:
+
+```python
+class AnaliseRequest(BaseModel):
+    titulo: str
+    descricao: str
+```
+
+Depois junta os dois campos:
+
+```python
+texto_para_analisar = (
+    dados.titulo
+    + " "
+    + dados.descricao
+)
+```
+
+Exemplo:
+
+```text
+Título: Câncer tem prevenção?
+Descrição: Há medidas capazes de reduzir o risco de determinados tipos de câncer.
+```
+
+O texto efetivamente analisado será:
+
+```text
+Câncer tem prevenção? Há medidas capazes de reduzir o risco de determinados tipos de câncer.
+```
+
+## 4. A base de conhecimento é preparada
+
+O arquivo [`backend/carregar_documentos.py`](https://github.com/dida0982/HealthCheck_IA/blob/main/backend/carregar_documentos.py) lê os arquivos Markdown em:
+
+```text
+data/
+├── cancer/
+├── dengue/
+├── diabetes/
+├── hipertensao/
+├── medicamentos/
+└── vacinas/
+```
+
+Cada documento contém metadados como:
+
+* título;
+* fonte;
+* URL;
+* tema;
+* subtema;
+* data de acesso;
+* resumo;
+* evidências importantes.
+
+O sistema remove as seções:
+
+```text
+Alegações relacionadas
+Palavras-chave
+```
+
+Isso é importante porque palavras-chave e alegações preparadas manualmente poderiam influenciar artificialmente a busca.
+
+Depois, os documentos são divididos em `chunks`, isto é, trechos menores de aproximadamente 500 caracteres:
+
+```python
+def dividir_em_chunks(texto, tamanho_maximo=500):
+```
+
+Cada trecho mantém os metadados do documento original.
+
+## 5. Os embeddings são gerados
+
+No [`backend/busca_semantica.py`](https://github.com/dida0982/HealthCheck_IA/blob/main/backend/busca_semantica.py), o sistema carrega o modelo:
+
+```python
+SentenceTransformer(
+    "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+)
+```
+
+Esse modelo transforma cada trecho em uma representação numérica chamada embedding:
+
+```python
+embeddings = modelo.encode(textos)
+```
+
+Os embeddings representam aproximadamente o significado semântico dos textos. Eles são produzidos quando o backend importa esse módulo, razão pela qual a inicialização pode demorar mais na primeira execução.
+
+## 6. A pesquisa também vira um embedding
+
+Quando chega uma alegação, o sistema produz o embedding dela:
+
+```python
+embedding_pergunta = modelo.encode([pergunta])
+```
+
+Depois compara esse vetor com os vetores de todos os trechos usando similaridade de cosseno:
+
+```python
+similaridades = cosine_similarity(
+    embedding_pergunta,
+    embeddings
+)[0]
+```
+
+Quanto maior a similaridade, mais semanticamente relacionado o trecho está com a alegação.
+
+Importante: similaridade não significa que a alegação é verdadeira. Um trecho pode ser muito relacionado justamente porque a contradiz.
+
+## 7. Existe também um bônus por palavras iguais
+
+Além da similaridade semântica, o sistema verifica palavras com quatro ou mais caracteres que aparecem tanto na alegação quanto na evidência:
+
+```python
+bonus_lexico = sobreposicao * 0.02
+score_final = similaridade + bonus_lexico
+```
+
+Assim, o ranking combina:
+
+$$
+\text{score final}
+=
+\text{similaridade semântica}
++
+(0{,}02 \times \text{palavras coincidentes})
+$$
+
+Exemplo:
+
+* similaridade semântica: `0,53`;
+* três palavras coincidentes: `3 × 0,02 = 0,06`;
+* score usado no ranking: `0,59`.
+
+Um detalhe técnico importante: o card mostra apenas a similaridade semântica original. O bônus lexical influencia a posição da evidência, mas não aparece para o usuário.
+
+## 8. São selecionadas cinco evidências
+
+No endpoint, a busca é chamada assim:
+
+```python
+evidencias = buscar_evidencias(
+    texto_para_analisar,
+    top_k=5
+)
+```
+
+Portanto, o sistema seleciona os cinco trechos com maior score final.
+
+Cada evidência possui:
+
+```json
+{
+  "arquivo": "...",
+  "chunk_id": 2,
+  "conteudo": "...",
+  "similaridade": 0.53,
+  "titulo": "...",
+  "fonte": "INCA",
+  "url": "...",
+  "tema": "câncer",
+  "subtema": "...",
+  "data_acesso": "..."
+}
+```
+
+## 9. O RAG monta as instruções para o modelo
+
+O arquivo [`backend/rag.py`](https://github.com/dida0982/HealthCheck_IA/blob/main/backend/rag.py) cria dois prompts.
+
+O `system prompt` define as regras gerais. Entre elas:
+
+* usar somente as evidências fornecidas;
+* não utilizar conhecimento externo;
+* não inventar fatos ou fontes;
+* diferenciar falta de evidência de evidência contrária;
+* identificar a afirmação central;
+* não considerar a similaridade uma medida de verdade;
+* escolher uma das cinco classificações;
+* informar quais evidências foram realmente usadas.
+
+O `user prompt` contém:
+
+```text
+ALEGAÇÃO:
+[título + descrição]
+
+EVIDÊNCIAS RECUPERADAS:
+
+EVIDÊNCIA 1
+[trecho]
+
+EVIDÊNCIA 2
+[trecho]
+
+...
+
+EVIDÊNCIA 5
+[trecho]
+```
+
+Depois exige que a saída seja somente um JSON.
+
+## 10. O Ollama gera a classificação
+
+O backend envia os prompts para:
+
+```text
+http://localhost:11434/api/generate
+```
+
+O modelo utilizado é:
+
+```text
+qwen2.5:7b
+```
+
+A configuração é:
+
+```python
+"stream": False,
+"options": {
+    "temperature": 0,
+    "seed": 42
+}
+```
+
+A temperatura `0` reduz a variação. A `seed` fixa também procura tornar os resultados mais reproduzíveis.
+
+O modelo precisa escolher exatamente uma categoria:
+
+| Classificação               | Significado                                                              |
+| --------------------------- | ------------------------------------------------------------------------ |
+| Sustentada pelas evidências | A afirmação central foi confirmada diretamente.                          |
+| Parcialmente sustentada     | Uma parte foi confirmada e outra não pôde ser verificada.                |
+| Enganosa                    | Usa algo verdadeiro para chegar a uma conclusão exagerada ou distorcida. |
+| Contradita pelas evidências | A base apresenta informação incompatível com a afirmação central.        |
+| Não foi possível verificar  | A base não confirma nem contradiz suficientemente.                       |
+
+A resposta esperada é:
+
+```json
+{
+  "classificacao": "CONTRADITA PELAS EVIDÊNCIAS",
+  "explicacao": "As evidências indicam que...",
+  "evidencias_utilizadas": [1, 3]
+}
+```
+
+## 11. O backend valida a resposta
+
+O [`main.py`](https://github.com/dida0982/HealthCheck_IA/blob/main/backend/main.py) tenta converter a resposta do Ollama:
+
+```python
+analise = json.loads(resposta_llm)
+```
+
+Se o modelo retornar texto fora do JSON, a API responde com erro `500`:
+
+```text
+O LLM retornou uma resposta que não é um JSON válido.
+```
+
+Se o Ollama estiver desligado, responde com `503`, que foi exatamente o erro que apareceu no seu Mac.
+
+Quando tudo funciona, a API devolve:
+
+```json
+{
+  "classificacao": "...",
+  "explicacao": "...",
+  "evidencias_utilizadas": [1, 3],
+  "evidencias": [...]
+}
+```
+
+Observe que o backend retorna as cinco evidências recuperadas, mesmo que o modelo tenha usado somente algumas para chegar à conclusão.
+
+## 12. A extensão monta o card visual
+
+O `content.js` recebe o JSON e converte a classificação em:
+
+* ícone;
+* cor;
+* texto de status;
+* recomendação antes de compartilhar.
+
+Exemplos:
+
+```text
+🟢 Evidências favoráveis
+🟡 Evidências parcialmente favoráveis
+🟠 Informação potencialmente enganosa
+🔴 Evidências contraditórias
+⚪ Evidências insuficientes
+```
+
+As evidências indicadas em `evidencias_utilizadas` recebem um `✓`.
+
+O card mostra inicialmente as três primeiras evidências. Se existirem mais, apresenta o botão:
+
+```text
+Ver todas as evidências (5)
+```
+
+Ele também oferece o link da fonte oficial e informa corretamente que:
+
+```text
+Similaridade semântica não representa probabilidade de a informação ser verdadeira.
+```
+
+## Exemplo completo
+
+Suponha que o Google mostre:
+
+```text
+Título: Vacina contra HPV elimina o risco de qualquer câncer
+Descrição: Quem recebe a vacina fica totalmente protegido contra todos os cânceres.
+```
+
+O processo será:
+
+1. A extensão captura título e descrição.
+2. O FastAPI junta os dois textos.
+3. O modelo de embeddings procura trechos relacionados a HPV, vacina e câncer.
+4. São recuperados cinco trechos de Anvisa, INCA, OMS ou outras fontes cadastradas.
+5. O prompt manda o Qwen comparar a afirmação central com esses trechos.
+6. Se as evidências sustentarem proteção limitada, mas não proteção absoluta contra qualquer câncer, o modelo poderá classificar como `ENGANOSA`.
+7. O backend retorna classificação, explicação e evidências.
+8. O Chrome mostra o card laranja abaixo do resultado.
+
+## O que realmente gera a resposta
+
+A resposta final depende de três componentes:
+
+1. **Retrieval:** quais cinco trechos a busca semântica selecionou.
+2. **Prompt:** as 40 regras descritas no `rag.py`.
+3. **Geração:** a interpretação realizada pelo `qwen2.5:7b`.
+
+O modelo não deveria responder com conhecimento próprio. Ele recebe a alegação e os trechos selecionados e deve concluir somente com base neles.
+
+A estrutura está tecnicamente coerente para um MVP de RAG explicável: ela apresenta classificação, justificativa, evidências, similaridade e fonte original. O principal limite atual é que analisa somente o título e a descrição exibidos pelo Google, não o conteúdo integral da página encontrada.
